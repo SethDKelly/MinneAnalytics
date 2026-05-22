@@ -1,17 +1,21 @@
 # MinneAnalytics Conference Planning Demo
 
-Prototype conference planning extension: public abstract submission, private chair/scorer review, core approval, presenter deck upload, and program capacity tracking.
+Prototype conference planning extension: public abstract submission, private committee review, board approval, presenter deck upload, schedule building, and a post-conference slide archive.
 
 **Not affiliated with production [minneanalytics.org](https://minneanalytics.org/).**
 
-## Requirements
+## Who this repo is for
 
-See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for phased scope and status.
+| Goal | Start here |
+|------|------------|
+| Run the app and explore the PoC | [Quick start](#quick-start) → [Explore the demo](docs/exploring-the-demo.md) |
+| Understand URLs and API routes | [Routing](docs/routing.md) |
+| Contribute code | [Developer docs](docs/README.md) |
 
 ## Prerequisites
 
-- Node.js 20+ (this project pins **Node 24 LTS** in `.nvmrc` / `.node-version`)
-- npm (included with Node)
+- **Node.js 20+** (this project pins **Node 24 LTS** in `.nvmrc` / `.node-version`)
+- **npm** (included with Node)
 
 After installing Node, open a **new** terminal and confirm:
 
@@ -87,6 +91,8 @@ fnm use
 
 ## Quick start
 
+Setup scripts copy `.env.example` → `.env`, install dependencies, apply the schema, and seed demo data (including **private URLs printed to the terminal**).
+
 ### Windows
 
 ```powershell
@@ -117,45 +123,45 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The seed command prints **private reviewer URLs** and sample **presenter portal** links in the terminal. Save them for demo sessions.
+**Important:** After `npm run db:seed`, copy the **chair**, **review**, **schedule**, and **presenter** URLs from the terminal output. Tokens change every seed; old bookmarks will 404.
 
-## Demo flows
+### Explore the proof of concept
 
-| Role | URL pattern |
-|------|-------------|
-| Public home | `/` |
-| About / events | `/about` · `/upcoming` |
-| Post-conference decks | `/archive/data-tech-2027` (after board publishes) |
-| Submit abstract | `/submit/data-tech-2027` |
-| Board member | `/review/{token}` (score) · `/chair/{token}` (approve, decks, publish archive) · `/schedule/{token}` |
-| Conference co-chair | `/review/{token}` (score) · `/chair/{token}` (decks, no approval) |
-| Presenter | `/presenter/{token}` (from confirmation page after submit) |
+Follow the guided walkthrough in **[docs/exploring-the-demo.md](docs/exploring-the-demo.md)** (public submit → committee score → chair approve → presenter deck → schedule → publish archive).
 
-## Features (implemented)
+Short reference — roles and URL patterns:
+
+| Role | Pages |
+|------|--------|
+| Public | `/`, `/about`, `/upcoming`, `/submit/data-tech-2027`, `/archive/data-tech-2027` (when published) |
+| Board member | `/review/{token}` · `/chair/{token}` · `/schedule/{token}` |
+| Co-chair | `/review/{token}` · `/chair/{token}` (no approve / no schedule) |
+| Presenter | `/presenter/{token}` (from submit confirmation or seed output) |
+
+How URLs map to code: **[docs/routing.md](docs/routing.md)**.
+
+## Features
 
 - Full submission form with multi-select degrees and 1–5 technical scale
 - Optional co-presenter (1–2 presenters)
-- Program status: Pending, Approved, Declined, Backup, Withdrawn
-- Presenter withdraw **including after approval**
-- Backup → Approved promotion (core only)
-- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule
-- **Co-chairs** (1–2 per conference): score and deck review only
-- Scoring: 0.0–1.0 slider (0.1 increments) + notes, once per reviewer, aggregated and sorted
+- Program status: Pending, Approved, Declined, Backup, Withdrawn (withdraw allowed after approval)
+- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule, publish archive
+- **Co-chairs**: score and deck review only
+- Scoring: 0.0–1.0 (0.1 steps) + notes; demo auto-scores on approve/decline
 - Capacity widget: 8×8 − EOD − Graeme − sponsors → ~44 community target
-- Deck upload after approval; deck statuses: Submitted, Reviewed, Approved, Concern
-- **Post-conference archive**: board publishes `/archive/{slug}`; per-session **non-shareable** flag excludes decks from the public library
-- Chair **deck queue** tab with committee download; CSV export; submission rate limit + honeypot
-- **VIP event registration** flag on approved talks (board and co-chairs)
-- **Schedule builder**: 8-room grid (Data Tech layout), auto-generate with technical/variety balance per time row, drag-and-drop adjustments
+- Deck workflow and post-conference archive with per-session non-shareable flag
+- VIP event registration flag on approved talks
+- Schedule builder: 8-room Data Tech grid, auto-generate, drag-and-drop
 
 ## Project structure
 
 ```
-app/           Next.js routes (public, review, chair, presenter, API)
-components/    UI (form, dashboards, layout)
-lib/           DB, validation, tokens, capacity math
-prisma/        Schema, seed
-docs/          Implementation plan
+app/           Next.js App Router pages and API routes
+components/    UI (forms, dashboards, layout, schedule)
+lib/           Business logic (scoring, roles, schedule, decks)
+prisma/        Schema and seed
+docs/          Routing, architecture, demo walkthrough, contributing
+scripts/       setup.ps1 / setup.sh
 uploads/       Deck files (gitignored)
 ```
 
@@ -163,19 +169,38 @@ uploads/       Deck files (gitignored)
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
+| `npm run dev` | Development server at port 3000 |
+| `npm run build` | Production build (`prisma generate` + Next.js) |
+| `npm run start` | Run production build |
+| `npm run lint` | ESLint |
 | `npm run db:push` | Apply Prisma schema to SQLite |
-| `npm run db:seed` | Reset demo data and print tokens |
+| `npm run db:seed` | Reset demo data and print new tokens |
 
 ## Environment
 
-| Variable | Default |
-|----------|---------|
-| `DATABASE_URL` | `file:./prisma/dev.db` |
-| `UPLOAD_DIR` | `./uploads` |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` (email stub links) |
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | `file:./prisma/dev.db` | SQLite database |
+| `UPLOAD_DIR` | `./uploads` | Presenter deck storage |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Links in email stubs |
+
+See `.env.example` for production notes (PostgreSQL, object storage).
+
+## Troubleshooting
+
+| Problem | What to do |
+|---------|------------|
+| 404 on `/chair/...` or `/review/...` | Re-run `npm run db:seed` and use the new URLs from the terminal. |
+| `prisma generate` EPERM (Windows) | Stop `npm run dev`, run `npx prisma generate`, restart dev. |
+| Empty archive | Board must publish from chair Deck queue; decks need upload + Approved + Shareable. |
+| No committee scores on seed talks | Approved/declined seed rows are auto-scored; pending rows need manual scoring at `/review/...`. |
+
+More detail: [docs/development.md](docs/development.md).
 
 ## Production notes
 
-For a real deployment, use PostgreSQL and object storage for deck files (see comments in `.env.example`). Email stubs log to the server console in this demo.
+For a real deployment, use PostgreSQL and object storage for deck files (see `.env.example`). Email stubs log to the server console in this demo. Do not deploy with real PII without HTTPS, proper auth, and a retention policy.
+
+## Developer documentation
+
+[docs/README.md](docs/README.md) — architecture, routing, local development, and contributing guidelines.
