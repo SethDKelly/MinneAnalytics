@@ -13,28 +13,102 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for phased scope 
 - Node.js 20+ (this project pins **Node 24 LTS** in `.nvmrc` / `.node-version`)
 - npm (included with Node)
 
+After installing Node, open a **new** terminal and confirm:
+
+```bash
+node --version
+npm --version
+```
+
 ### First-time machine setup (Windows)
 
-Node.js LTS can be installed with:
+Install Node.js LTS with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
 
 ```powershell
 winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 ```
 
-Then open a **new** terminal so `node` and `npm` are on your PATH.
+Close and reopen your terminal (or restart Cursor) so `node` and `npm` are on your PATH.
+
+### First-time machine setup (macOS)
+
+**Option A — Homebrew (recommended)**
+
+```bash
+brew install node
+```
+
+**Option B — nvm** (matches `.nvmrc`)
+
+```bash
+# install nvm: https://github.com/nvm-sh/nvm#installing-and-updating
+nvm install
+nvm use
+```
+
+**Option C — Official installer**
+
+Download the LTS installer from [nodejs.org](https://nodejs.org/).
+
+### First-time machine setup (Linux)
+
+**Option A — NodeSource (Debian / Ubuntu)**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Option B — distro packages**
+
+```bash
+# Fedora / RHEL
+sudo dnf install nodejs npm
+
+# Arch
+sudo pacman -S nodejs npm
+```
+
+**Option C — nvm** (matches `.nvmrc`)
+
+```bash
+# install nvm: https://github.com/nvm-sh/nvm#installing-and-updating
+nvm install
+nvm use
+```
+
+**Option D — fnm**
+
+```bash
+# install fnm: https://github.com/Schniz/fnm
+fnm install
+fnm use
+```
 
 ## Quick start
 
+### Windows
+
 ```powershell
 cd Minneanalytics
-.\scripts\setup.ps1    # copies .env, npm install, db push, seed
+.\scripts\setup.ps1
 npm run dev
 ```
 
-Or manually:
+### macOS / Linux
 
 ```bash
-copy .env.example .env   # Windows: copy
+cd Minneanalytics
+chmod +x scripts/setup.sh   # first time only
+./scripts/setup.sh
+npm run dev
+```
+
+### Manual setup (all platforms)
+
+```bash
+cd Minneanalytics
+cp .env.example .env        # Windows: copy .env.example .env
 npm install
 npm run db:push
 npm run db:seed
