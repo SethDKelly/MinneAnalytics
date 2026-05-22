@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getReviewerByToken } from "@/lib/reviewer";
+import { canScore, getReviewerByToken } from "@/lib/reviewer";
 import { roundScore } from "@/lib/scoring-scale";
 import { scoreSchema } from "@/lib/validation";
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer) {
+  if (!reviewer || !canScore(reviewer.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

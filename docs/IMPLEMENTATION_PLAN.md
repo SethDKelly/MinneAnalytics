@@ -22,6 +22,13 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 | Validation | Zod |
 | Auth (demo) | Unguessable URL tokens (hashed server-side) |
 
+## Roles (MinneAnalytics governance)
+
+| Role | Who | Score abstracts | Approve program | Decline / backup | Review slide decks | Schedule builder |
+|------|-----|-----------------|-----------------|------------------|-------------------|------------------|
+| **BOARD** | Dan Atkins, Sean Larson, Graeme Thickins, John Hogue | Yes | Yes | Yes | Yes | Yes |
+| **CHAIR** | 1–2 conference co-chairs (per event) | Yes | No | No | Yes | No |
+
 ## Program & deck status
 
 **Program:** `PENDING` | `APPROVED` | `DECLINED` | `BACKUP` | `WITHDRAWN`  
@@ -76,9 +83,9 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 
 ---
 
-### Phase 4 — Core approval & backups ✅ (this sprint)
+### Phase 4 — Board approval & backups ✅ (this sprint)
 
-- [x] Core role token: manual **Approve** on `PENDING` and **Promote** on `BACKUP`
+- [x] Board members: manual **Approve** on `PENDING` and **Promote** on `BACKUP` (co-chairs cannot approve)
 - [x] Approved count updates capacity meter
 - [x] Deck portal unlocked on approve
 
@@ -100,7 +107,7 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 ### Phase 5b — Schedule auto-builder ✅ (this sprint)
 
 - [x] Data Tech–style grid: 8 rooms, morning registration (8:00), kickoff/Applied AI (9:00), 30-minute session rows, breaks/lunch/networking
-- [x] `/schedule/{token}` for chair/core planners
+- [x] `/schedule/{token}` for board members only
 - [x] **Generate schedule** — balances technical level (1–5) variety per time row
 - [x] Unscheduled pool + drag-and-drop into cells / back to pool
 - [x] Swap when dropping onto occupied cell
@@ -136,9 +143,8 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 |------|------|-------|
 | Home | `/` | Facsimile landing |
 | Submit | `/submit/data-tech-2027` | Public form |
-| Scorer | `/review/{token}` | From seed |
-| Chair | `/chair/{token}` | From seed |
-| Core | `/chair/{token}` with `CORE` role | Approve / promote |
+| Board | `/review/{token}` + `/chair/{token}` + `/schedule/{token}` | Dan, Sean, Graeme, John — seed |
+| Co-chair | `/review/{token}` + `/chair/{token}` | No approval — seed |
 | Presenter | `/presenter/{token}` | Per submission |
 
 Tokens are printed when running `npm run db:seed`.

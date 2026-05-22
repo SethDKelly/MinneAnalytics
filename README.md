@@ -125,11 +125,9 @@ The seed command prints **private reviewer URLs** and sample **presenter portal*
 |------|-------------|
 | Public home | `/` |
 | Submit abstract | `/submit/data-tech-2027` |
-| Scorer / co-chair | `/review/{token}` |
-| Program chair | `/chair/{token}` |
-| Core approver | `/chair/{token}` (CORE role — Approve / Promote) |
+| Board member | `/review/{token}` (score) · `/chair/{token}` (approve, decks) · `/schedule/{token}` |
+| Conference co-chair | `/review/{token}` (score) · `/chair/{token}` (decks, no approval) |
 | Presenter | `/presenter/{token}` (from confirmation page after submit) |
-| Schedule builder | `/schedule/{token}` (chair / core — seed prints URL) |
 
 ## Features (implemented)
 
@@ -138,7 +136,9 @@ The seed command prints **private reviewer URLs** and sample **presenter portal*
 - Program status: Pending, Approved, Declined, Backup, Withdrawn
 - Presenter withdraw **including after approval**
 - Backup → Approved promotion (core only)
-- Chair scoring: 0.0–1.0 slider (0.1 increments) + notes, once per reviewer, aggregated and sorted
+- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule
+- **Co-chairs** (1–2 per conference): score and deck review only
+- Scoring: 0.0–1.0 slider (0.1 increments) + notes, once per reviewer, aggregated and sorted
 - Capacity widget: 8×8 − EOD − Graeme − sponsors → ~44 community target
 - Deck upload after approval; deck statuses: Submitted, Reviewed, Approved, Concern
 - **Schedule builder**: 8-room grid (Data Tech layout), auto-generate with technical/variety balance per time row, drag-and-drop adjustments

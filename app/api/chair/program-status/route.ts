@@ -36,9 +36,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (status === "APPROVED" && reviewer.role !== "CORE") {
+  if (status === "APPROVED" && !canApprove(reviewer.role)) {
     return NextResponse.json(
-      { error: "Only core approver can set Approved" },
+      { error: "Only MinneAnalytics board members can approve talks" },
       { status: 403 }
     );
   }

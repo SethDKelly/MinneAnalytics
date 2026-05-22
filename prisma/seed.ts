@@ -2,6 +2,7 @@ import { PrismaClient, ProgramStatus } from "@prisma/client";
 import { generateToken, hashToken } from "../lib/tokens";
 import { serializeDegrees } from "../lib/degrees";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
+import { BOARD_MEMBER_NAMES } from "../lib/roles";
 
 const prisma = new PrismaClient();
 
@@ -22,18 +23,25 @@ async function main() {
     },
   });
 
-  const tokens = {
-    scorer1: generateToken(),
-    scorer2: generateToken(),
-    chair: generateToken(),
-    core: generateToken(),
-  };
+  const boardTokens: Record<string, string> = {};
+  for (const name of BOARD_MEMBER_NAMES) {
+    boardTokens[name] = generateToken();
+  }
+  const coChairAToken = generateToken();
+  const coChairBToken = generateToken();
 
-  const accessRows = [
-    { role: "SCORER" as const, label: "Co-Chair A", token: tokens.scorer1 },
-    { role: "SCORER" as const, label: "Co-Chair B", token: tokens.scorer2 },
-    { role: "CHAIR" as const, label: "Program Chair", token: tokens.chair },
-    { role: "CORE" as const, label: "Core Approver", token: tokens.core },
+  const accessRows: Array<{
+    role: "BOARD" | "CHAIR";
+    label: string;
+    token: string;
+  }> = [
+    ...BOARD_MEMBER_NAMES.map((name) => ({
+      role: "BOARD" as const,
+      label: name,
+      token: boardTokens[name],
+    })),
+    { role: "CHAIR", label: "Conference Co-Chair A", token: coChairAToken },
+    { role: "CHAIR", label: "Conference Co-Chair B", token: coChairBToken },
   ];
 
   for (const row of accessRows) {
@@ -210,21 +218,34 @@ async function main() {
 
   await ensureScheduleGrid(conference.id);
 
+  const danToken = boardTokens["Dan Atkins"];
+
   console.log("\n=== MinneAnalytics Conference Demo — Seed Complete ===\n");
   console.log(`Conference: ${conference.name}`);
   console.log(`Submit form:  /submit/${conference.slug}\n`);
-  console.log("Reviewer URLs (keep secret):");
-  for (const row of accessRows) {
-    const path = row.role === "SCORER" ? "review" : "chair";
-    console.log(`  ${row.label} (${row.role}): http://localhost:3000/${path}/${row.token}`);
+
+  console.log("MinneAnalytics board (score + approve + decks + schedule):");
+  for (const row of accessRows.filter((r) => r.role === "BOARD")) {
+    console.log(`  ${row.label}: http://localhost:3000/chair/${row.token}`);
+    console.log(`    Score abstracts: http://localhost:3000/review/${row.token}`);
   }
-  console.log("\nSchedule builder (chair / core):");
-  console.log(`  http://localhost:3000/schedule/${tokens.chair}`);
-  console.log("\nCo-chair workflow:");
-  console.log("  1. Co-Chair A & B score pending talks (0/1 + notes) at /review/...");
-  console.log("  2. Program Chair ranks & marks backup/decline at /chair/...");
-  console.log("  3. Core Approver gives final Approve at /chair/... (CORE token)");
-  console.log("\nPresenter portal URLs (sample submissions):");
+
+  console.log("\nConference co-chairs (score + decks only — no approval):");
+  for (const row of accessRows.filter((r) => r.role === "CHAIR")) {
+    console.log(`  ${row.label}: http://localhost:3000/chair/${row.token}`);
+    console.log(`    Score abstracts: http://localhost:3000/review/${row.token}`);
+  }
+
+  console.log("\nSchedule builder (board only):");
+  console.log(`  http://localhost:3000/schedule/${danToken}`);
+
+  console.log("\nWorkflow:");
+  console.log("  1. Board + co-chairs score at /review/{token}");
+  console.log("  2. Board reviews rankings & decks at /chair/{token}; approves talks");
+  console.log("  3. Co-chairs review rankings & decks at /chair/{token} (no approve)");
+  console.log("  4. Board builds schedule at /schedule/{token}");
+
+  console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
   });

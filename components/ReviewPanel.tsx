@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProgramStatusBadge } from "./StatusBadge";
 import type { SubmissionListItem } from "@/lib/submissions";
+import type { ReviewerRole } from "@prisma/client";
+import { isBoard, roleDisplayName } from "@/lib/roles";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { TECHNICAL_LABELS } from "@/lib/constants";
 import {
@@ -17,11 +20,12 @@ import {
 type Props = {
   token: string;
   label: string;
+  role: ReviewerRole;
   needsScore: SubmissionListItem[];
   scored: SubmissionListItem[];
 };
 
-export function ReviewPanel({ token, label, needsScore, scored }: Props) {
+export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -48,9 +52,17 @@ export function ReviewPanel({ token, label, needsScore, scored }: Props) {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-3xl font-bold text-minne-navy">Abstract review</h1>
       <p className="mt-1 text-gray-700">
-        {label} — score each talk once on a 0.0–1.0 scale (0.1 increments). Newest
-        submissions appear first; after you save a score, the talk moves to the scored
-        queue below.
+        {label} · {roleDisplayName(role)} — score each talk once on a 0.0–1.0 scale (0.1
+        increments). Newest submissions appear first; after you save a score, the talk moves
+        to the scored queue below.
+      </p>
+      <p className="mt-2 text-sm">
+        <Link href={`/chair/${token}`} className="text-minne-navy underline">
+          Open program dashboard
+        </Link>
+        {isBoard(role)
+          ? " to approve talks and review decks."
+          : " to review committee rankings and slide decks (approval is board-only)."}
       </p>
       <p className="mt-2 text-sm text-gray-600">
         {needsScore.length} awaiting your score · {scored.length} scored by you · {total}{" "}

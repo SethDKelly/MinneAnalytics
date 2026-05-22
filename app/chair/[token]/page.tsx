@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { ChairDashboard } from "@/components/ChairDashboard";
 import { getCapacityForConference, getConferenceSubmissions } from "@/lib/conference-data";
-import { getReviewerByToken } from "@/lib/reviewer";
+import {
+  canAccessCommitteeDashboard,
+  committeeDashboardTitle,
+  getReviewerByToken,
+  roleDisplayName,
+} from "@/lib/reviewer";
 import { sortByAggregate, toListItem } from "@/lib/submissions";
 import { prisma } from "@/lib/db";
 
@@ -12,7 +17,7 @@ export default async function ChairPage({
 }) {
   const { token } = await params;
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || (reviewer.role !== "CHAIR" && reviewer.role !== "CORE")) {
+  if (!reviewer || !canAccessCommitteeDashboard(reviewer.role)) {
     notFound();
   }
 
@@ -53,7 +58,8 @@ export default async function ChairPage({
     <ChairDashboard
       token={token}
       role={reviewer.role}
-      label={reviewer.label ?? reviewer.role}
+      label={reviewer.label ?? roleDisplayName(reviewer.role)}
+      dashboardTitle={committeeDashboardTitle(reviewer.role)}
       items={items}
       capacity={capacity}
       allScores={allScores}
