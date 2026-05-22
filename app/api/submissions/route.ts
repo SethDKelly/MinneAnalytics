@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { serializeDegrees } from "@/lib/degrees";
+import { clientIp, checkRateLimit } from "@/lib/rate-limit";
+import { sendEmailStub } from "@/lib/email-stub";
 import { generateToken, hashToken } from "@/lib/tokens";
 import { submissionSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    const limit = checkRateLimit(`submit:${ip}`);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: `Too many submissions. Try again in ${limit.retryAfterSec}s.` },
+        { status: 429 }
+      );
+    }
+
     const form = await request.formData();
+
+    if (String(form.get("website") ?? "").trim()) {
+      return NextResponse.json({ error: "Submission rejected" }, { status: 400 });
+    }
     const degrees = JSON.parse(String(form.get("degrees") ?? "[]"));
     const coDegreesRaw = form.get("coPresenterDegrees");
     const hasCoPresenter = form.get("hasCoPresenter") === "true";
@@ -104,6 +119,15 @@ export async function POST(request: Request) {
         travelReimbursementRequired: d.travelReimbursementRequired,
         additionalInfo: d.additionalInfo ?? null,
       },
+    });
+
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+    sendEmailStub({
+      to: d.email,
+      subject: `Submission received — ${d.title}`,
+      template: "submission-confirmation",
+      body: `Hi ${d.firstName},\n\nWe received your presentation "${d.title}". Track status and upload your deck after approval:\n\n${base}/presenter/${presenterToken}\n\nThank you,\nMinneAnalytics`,
     });
 
     return NextResponse.json({

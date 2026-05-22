@@ -117,23 +117,26 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 
 ---
 
-### Phase 6 — Deck chair review (partial)
+### Phase 6 — Deck chair review
 
-- [x] Per-submission deck status buttons (Reviewed / Approved / Concern) on chair dashboard
-- [ ] Dedicated deck queue filter on chair view
-- [ ] File download for chairs
+- [x] Dedicated **Deck queue** tab on chair dashboard (approved sessions)
+- [x] Committee deck download via `/api/decks/download`
+- [x] Deck status workflow (Reviewed / Approved / Concern)
+- [x] Board **non-shareable** flag per session (`deckShareable`)
+- [x] Board **publish / unpublish** post-conference archive (`decksPublished`)
 
 **Exit criteria:** Chairs process all submitted decks without leaving chair UI.
 
 ---
 
-### Phase 7 — Polish & demo hardening (follow-up)
+### Phase 7 — Polish & demo hardening
 
-- [ ] Additional static pages (About, Upcoming) as facsimile
-- [ ] CSV export of submissions + scores
-- [ ] Rate limiting / honeypot on public form
-- [ ] Email stubs (approval + presenter link)
-- [ ] Production Postgres + S3 for files
+- [x] Static facsimile pages: `/about`, `/upcoming`
+- [x] Public post-conference archive: `/archive/{slug}` (when published)
+- [x] CSV export (`/api/chair/export`)
+- [x] Rate limiting + honeypot on public submission form
+- [x] Email stubs (submission confirmation, abstract approval)
+- [ ] Production Postgres + S3 for files (documented in `.env.example` only)
 
 ---
 
@@ -142,6 +145,8 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 | Role | Path | Notes |
 |------|------|-------|
 | Home | `/` | Facsimile landing |
+| About / Events | `/about`, `/upcoming` | Static facsimile |
+| Slide archive | `/archive/data-tech-2027` | Public when board publishes |
 | Submit | `/submit/data-tech-2027` | Public form |
 | Board | `/review/{token}` + `/chair/{token}` + `/schedule/{token}` | Dan, Sean, Graeme, John — seed |
 | Co-chair | `/review/{token}` + `/chair/{token}` | No approval — seed |

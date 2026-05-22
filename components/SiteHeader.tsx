@@ -1,21 +1,9 @@
 import Link from "next/link";
 
 const nav = [
-  {
-    label: "Community",
-    href: "#",
-    children: ["About Us", "News", "Scholarships", "Startups", "Leadership"],
-  },
-  {
-    label: "Events",
-    href: "#",
-    children: ["Upcoming", "Past Events", "Meetups"],
-  },
-  {
-    label: "Jobs",
-    href: "#",
-    children: ["Job Listings", "Post Job"],
-  },
+  { label: "About", href: "/about" },
+  { label: "Events", href: "/upcoming" },
+  { label: "Slide decks", href: "/archive/data-tech-2027" },
 ];
 
 export function SiteHeader() {
@@ -47,9 +35,13 @@ export function SiteHeader() {
         </Link>
         <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-minne-navy">
           {nav.map((item) => (
-            <div key={item.label} className="group relative">
-              <span className="cursor-default">{item.label}</span>
-            </div>
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-minne-navy no-underline hover:underline"
+            >
+              {item.label}
+            </Link>
           ))}
           <Link
             href="/submit/data-tech-2027"

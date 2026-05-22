@@ -8,7 +8,7 @@ export function SiteFooter() {
           <h3 className="mb-3 text-sm font-bold uppercase text-minne-navy">Community</h3>
           <ul className="space-y-1 text-sm text-gray-700">
             <li>
-              <Link href="#">About Us</Link>
+              <Link href="/about">About Us</Link>
             </li>
             <li>
               <Link href="#">News Blog</Link>
@@ -22,7 +22,10 @@ export function SiteFooter() {
           <h3 className="mb-3 text-sm font-bold uppercase text-minne-navy">Get Involved</h3>
           <ul className="space-y-1 text-sm text-gray-700">
             <li>
-              <Link href="#">Upcoming Events</Link>
+              <Link href="/upcoming">Upcoming Events</Link>
+            </li>
+            <li>
+              <Link href="/archive/data-tech-2027">Slide deck archive</Link>
             </li>
             <li>
               <Link href="/submit/data-tech-2027">Submit a Talk</Link>

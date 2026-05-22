@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ChairDashboard } from "@/components/ChairDashboard";
 import { getCapacityForConference, getConferenceSubmissions } from "@/lib/conference-data";
+import { getDeckQueue } from "@/lib/decks";
 import {
   canAccessCommitteeDashboard,
   committeeDashboardTitle,
@@ -21,7 +22,21 @@ export default async function ChairPage({
     notFound();
   }
 
-  const subs = await getConferenceSubmissions(reviewer.conferenceId);
+  const [subs, capacity, deckQueue, conference] = await Promise.all([
+    getConferenceSubmissions(reviewer.conferenceId),
+    getCapacityForConference(reviewer.conferenceId),
+    getDeckQueue(reviewer.conferenceId),
+    prisma.conference.findUniqueOrThrow({
+      where: { id: reviewer.conferenceId },
+      select: {
+        slug: true,
+        name: true,
+        decksPublished: true,
+        decksPublishedAt: true,
+      },
+    }),
+  ]);
+
   const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
   const items = sortByAggregate(active.map((s) => toListItem(s))).map((item) => {
     const full = subs.find((s) => s.id === item.id)!;
@@ -29,10 +44,9 @@ export default async function ChairPage({
       ...item,
       abstract: full.abstract,
       email: full.email,
+      deckShareable: full.deckShareable,
     };
   });
-
-  const capacity = await getCapacityForConference(reviewer.conferenceId);
 
   const accessList = await prisma.reviewerAccess.findMany({
     where: { conferenceId: reviewer.conferenceId },
@@ -63,6 +77,11 @@ export default async function ChairPage({
       items={items}
       capacity={capacity}
       allScores={allScores}
+      deckQueue={deckQueue}
+      conferenceSlug={conference.slug}
+      conferenceName={conference.name}
+      decksPublished={conference.decksPublished}
+      decksPublishedAt={conference.decksPublishedAt?.toISOString() ?? null}
     />
   );
 }

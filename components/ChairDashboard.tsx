@@ -6,17 +6,27 @@ import { useState } from "react";
 import { CapacityWidget } from "./CapacityWidget";
 import { DeckStatusBadge, ProgramStatusBadge } from "./StatusBadge";
 import type { CapacitySnapshot } from "@/lib/capacity";
+import type { DeckQueueItem } from "@/lib/decks";
 import type { SubmissionListItem } from "@/lib/submissions";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { formatScore } from "@/lib/scoring-scale";
 import { TECHNICAL_LABELS } from "@/lib/constants";
 import type { ReviewerRole } from "@prisma/client";
-import { isBoard, roleDisplayName } from "@/lib/roles";
+import {
+  canExportCsv,
+  canPublishDeckArchive,
+  canSetDeckShareable,
+  isBoard,
+  roleDisplayName,
+} from "@/lib/roles";
 
 type SubmissionDetail = SubmissionListItem & {
   abstract: string;
   email: string;
+  deckShareable: boolean;
 };
+
+type Tab = "program" | "decks";
 
 type Props = {
   token: string;
@@ -26,6 +36,11 @@ type Props = {
   items: SubmissionDetail[];
   capacity: CapacitySnapshot;
   allScores: Record<string, { reviewer: string; value: number; notes: string | null }[]>;
+  deckQueue: DeckQueueItem[];
+  conferenceSlug: string;
+  conferenceName: string;
+  decksPublished: boolean;
+  decksPublishedAt: string | null;
 };
 
 export function ChairDashboard({
@@ -36,11 +51,19 @@ export function ChairDashboard({
   items: initialItems,
   capacity: initialCapacity,
   allScores,
+  deckQueue: initialDeckQueue,
+  conferenceSlug,
+  conferenceName,
+  decksPublished: initialDecksPublished,
+  decksPublishedAt,
 }: Props) {
   const router = useRouter();
   const items = initialItems;
   const capacity = initialCapacity;
+  const deckQueue = initialDeckQueue;
+  const [tab, setTab] = useState<Tab>("program");
   const [loading, setLoading] = useState<string | null>(null);
+  const [decksPublished, setDecksPublished] = useState(initialDecksPublished);
   const board = isBoard(role);
 
   async function setStatus(submissionId: string, status: string) {
@@ -51,9 +74,8 @@ export function ChairDashboard({
       body: JSON.stringify({ token, submissionId, status }),
     });
     setLoading(null);
-    if (res.ok) {
-      router.refresh();
-    } else {
+    if (res.ok) router.refresh();
+    else {
       const data = await res.json();
       alert(data.error ?? "Action failed");
     }
@@ -74,11 +96,59 @@ export function ChairDashboard({
     }
   }
 
+  async function setShareable(submissionId: string, shareable: boolean) {
+    setLoading(submissionId + "share");
+    const res = await fetch("/api/chair/deck-shareable", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, submissionId, shareable }),
+    });
+    setLoading(null);
+    if (res.ok) router.refresh();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Could not update sharing");
+    }
+  }
+
+  async function toggleArchivePublish(publish: boolean) {
+    if (
+      publish &&
+      !confirm(
+        "Publish the post-conference slide archive? Only shareable decks with uploads will appear publicly."
+      )
+    ) {
+      return;
+    }
+    setLoading("publish");
+    const res = await fetch("/api/chair/publish-archive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, publish }),
+    });
+    setLoading(null);
+    if (res.ok) {
+      setDecksPublished(publish);
+      router.refresh();
+    } else {
+      const data = await res.json();
+      alert(data.error ?? "Publish failed");
+    }
+  }
+
+  const deckDownloadUrl = (fileId: string) =>
+    `/api/decks/download?token=${encodeURIComponent(token)}&fileId=${encodeURIComponent(fileId)}`;
+
+  const decksWithFiles = deckQueue.filter((d) => d.deckFileId);
+  const decksPendingReview = deckQueue.filter(
+    (d) => d.deckFileId && (d.deckStatus === "SUBMITTED" || d.deckStatus === "REVIEWED")
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-3xl font-bold text-minne-navy">{dashboardTitle}</h1>
       <p className="mt-1 text-gray-700">
-        {label} · {roleDisplayName(role)} — submissions sorted by committee average
+        {label} · {roleDisplayName(role)} — {conferenceName}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -90,6 +160,19 @@ export function ChairDashboard({
             Schedule builder
           </Link>
         )}
+        {canExportCsv(role) && (
+          <a
+            href={`/api/chair/export?token=${encodeURIComponent(token)}`}
+            className="btn-secondary no-underline"
+          >
+            Export CSV
+          </a>
+        )}
+        {decksPublished && (
+          <Link href={`/archive/${conferenceSlug}`} className="btn-secondary" target="_blank">
+            Public archive ↗
+          </Link>
+        )}
       </div>
 
       <div className="mt-6">
@@ -98,128 +181,276 @@ export function ChairDashboard({
 
       {board ? (
         <p className="mt-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-          As a <strong>board member</strong>, you may approve talks, mark backups or declines,
-          and update deck status for approved sessions.
+          As a <strong>board member</strong>, you may approve talks, review decks, mark sessions
+          non-shareable for the post-conference archive, and publish that archive when ready.
         </p>
       ) : (
         <p className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-          As a <strong>conference co-chair</strong>, you may score abstracts and review slide
-          decks. Program approval is reserved for the MinneAnalytics board (Dan Atkins, Sean
-          Larson, Graeme Thickins, John Hogue).
+          As a <strong>conference co-chair</strong>, you may score abstracts and review slide decks.
+          Program approval and public archive controls are reserved for the board.
         </p>
       )}
 
-      <ul className="mt-8 space-y-6">
-        {items.map((item) => {
-          const agg = item.aggregate ?? EMPTY_AGGREGATE;
-          return (
-            <li key={item.id} className="card">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-xl font-bold text-minne-navy">{item.title}</h2>
-                  <p className="text-sm text-gray-600">
-                    {item.firstName} {item.lastName} · {item.organization} · {item.email}
-                  </p>
-                  <p className="mt-1 text-sm">
-                    Technical {item.technicalLevel}:{" "}
-                    {TECHNICAL_LABELS[item.technicalLevel]}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <ProgramStatusBadge status={item.programStatus} />
-                  <DeckStatusBadge status={item.deckStatus} />
-                  <span className="text-sm font-semibold text-minne-navy">
-                    Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
-                    {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
+      <div className="mt-6 flex border-b border-gray-200">
+        <button
+          type="button"
+          className={`px-4 py-2 text-sm font-semibold ${
+            tab === "program"
+              ? "border-b-2 border-minne-navy text-minne-navy"
+              : "text-gray-600"
+          }`}
+          onClick={() => setTab("program")}
+        >
+          Program ({items.length})
+        </button>
+        <button
+          type="button"
+          className={`px-4 py-2 text-sm font-semibold ${
+            tab === "decks"
+              ? "border-b-2 border-minne-navy text-minne-navy"
+              : "text-gray-600"
+          }`}
+          onClick={() => setTab("decks")}
+        >
+          Deck queue ({deckQueue.length})
+          {decksPendingReview.length > 0 && (
+            <span className="ml-1 rounded bg-amber-100 px-1.5 text-xs text-amber-900">
+              {decksPendingReview.length} to review
+            </span>
+          )}
+        </button>
+      </div>
+
+      {tab === "decks" && (
+        <section className="mt-6 space-y-6">
+          {board && (
+            <div className="card border-minne-navy/20">
+              <h2 className="text-lg font-bold text-minne-navy">Post-conference slide archive</h2>
+              <p className="mt-1 text-sm text-gray-700">
+                When published, shareable approved sessions with uploaded decks appear at{" "}
+                <code className="text-xs">/archive/{conferenceSlug}</code>. Mark individual decks
+                as <strong>non-shareable</strong> to exclude them even after publishing.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <span
+                  className={`rounded px-2 py-1 text-xs font-semibold ${
+                    decksPublished
+                      ? "bg-green-100 text-green-900"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {decksPublished ? "Published" : "Not published"}
+                </span>
+                {decksPublishedAt && (
+                  <span className="text-xs text-gray-500">
+                    Since {new Date(decksPublishedAt).toLocaleString()}
                   </span>
-                </div>
-              </div>
-
-              <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
-
-              {allScores[item.id]?.length > 0 && (
-                <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
-                  {allScores[item.id].map((s, i) => (
-                    <li key={i}>
-                      <strong>{s.reviewer}:</strong> {formatScore(s.value)}
-                      {s.notes ? ` — ${s.notes}` : ""}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {board && item.programStatus === "PENDING" && (
+                )}
+                {canPublishDeckArchive(role) && (
                   <>
+                    {!decksPublished ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!loading || decksWithFiles.length === 0}
+                        title={
+                          decksWithFiles.length === 0
+                            ? "No uploaded decks yet"
+                            : undefined
+                        }
+                        onClick={() => toggleArchivePublish(true)}
+                      >
+                        Publish archive
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        disabled={!!loading}
+                        onClick={() => toggleArchivePublish(false)}
+                      >
+                        Unpublish archive
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {deckQueue.length === 0 ? (
+            <p className="text-gray-600 italic">No approved sessions yet.</p>
+          ) : (
+            <ul className="space-y-4">
+              {deckQueue.map((deck) => (
+                <li key={deck.submissionId} className="card">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-bold text-minne-navy">{deck.title}</h2>
+                      <p className="text-sm text-gray-600">
+                        {deck.presenters} · {deck.organization}
+                      </p>
+                      {deck.deckFilename && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          v{deck.deckVersion} · {deck.deckFilename}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <DeckStatusBadge status={deck.deckStatus} />
+                      {board && (
+                        <span
+                          className={`text-xs font-semibold ${
+                            deck.deckShareable ? "text-green-800" : "text-red-800"
+                          }`}
+                        >
+                          {deck.deckShareable ? "Shareable" : "Non-shareable"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {deck.deckFileId ? (
+                      <a
+                        href={deckDownloadUrl(deck.deckFileId)}
+                        className="btn-secondary text-sm no-underline"
+                      >
+                        Download deck
+                      </a>
+                    ) : (
+                      <span className="text-sm italic text-gray-500">Awaiting upload</span>
+                    )}
+
+                    {deck.deckFileId &&
+                      (["REVIEWED", "APPROVED", "CONCERN"] as const).map((ds) => (
+                        <button
+                          key={ds}
+                          type="button"
+                          className="btn-secondary text-xs"
+                          disabled={!!loading}
+                          onClick={() => setDeckStatus(deck.submissionId, ds)}
+                        >
+                          Mark {ds.toLowerCase()}
+                        </button>
+                      ))}
+
+                    {canSetDeckShareable(role) && deck.deckFileId && (
+                      <button
+                        type="button"
+                        className="btn-secondary text-xs"
+                        disabled={!!loading}
+                        onClick={() =>
+                          setShareable(deck.submissionId, !deck.deckShareable)
+                        }
+                      >
+                        {deck.deckShareable
+                          ? "Mark non-shareable"
+                          : "Allow sharing"}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {tab === "program" && (
+        <ul className="mt-8 space-y-6">
+          {items.map((item) => {
+            const agg = item.aggregate ?? EMPTY_AGGREGATE;
+            return (
+              <li key={item.id} className="card">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl font-bold text-minne-navy">{item.title}</h2>
+                    <p className="text-sm text-gray-600">
+                      {item.firstName} {item.lastName} · {item.organization} · {item.email}
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Technical {item.technicalLevel}:{" "}
+                      {TECHNICAL_LABELS[item.technicalLevel]}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <ProgramStatusBadge status={item.programStatus} />
+                    <DeckStatusBadge status={item.deckStatus} />
+                    {board && item.programStatus === "APPROVED" && (
+                      <span
+                        className={`text-xs ${
+                          item.deckShareable ? "text-green-800" : "text-red-800"
+                        }`}
+                      >
+                        Archive: {item.deckShareable ? "shareable" : "non-shareable"}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold text-minne-navy">
+                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
+                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
+
+                {allScores[item.id]?.length > 0 && (
+                  <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
+                    {allScores[item.id].map((s, i) => (
+                      <li key={i}>
+                        <strong>{s.reviewer}:</strong> {formatScore(s.value)}
+                        {s.notes ? ` — ${s.notes}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {board && item.programStatus === "PENDING" && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "APPROVED")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "BACKUP")}
+                      >
+                        Mark backup
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "DECLINED")}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  {board && item.programStatus === "BACKUP" && (
                     <button
                       type="button"
                       className="btn-primary"
                       disabled={!!loading}
                       onClick={() => setStatus(item.id, "APPROVED")}
                     >
-                      Approve
+                      Promote to approved
                     </button>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      disabled={!!loading}
-                      onClick={() => setStatus(item.id, "BACKUP")}
-                    >
-                      Mark backup
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      disabled={!!loading}
-                      onClick={() => setStatus(item.id, "DECLINED")}
-                    >
-                      Decline
-                    </button>
-                  </>
-                )}
-                {board && item.programStatus === "BACKUP" && (
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    disabled={!!loading}
-                    onClick={() => setStatus(item.id, "APPROVED")}
-                  >
-                    Promote to approved
-                  </button>
-                )}
-                {item.programStatus === "APPROVED" && (
-                  <>
-                    <span className="self-center text-sm font-semibold text-gray-600">
-                      Slide deck:
-                    </span>
-                    {!item.deckStatus && (
-                      <span className="self-center text-xs text-gray-500 italic">
-                        Awaiting upload or not yet submitted
-                      </span>
-                    )}
-                    {(["REVIEWED", "APPROVED", "CONCERN"] as const).map((ds) => (
-                      <button
-                        key={ds}
-                        type="button"
-                        className="btn-secondary text-xs"
-                        disabled={!!loading || item.deckStatus == null}
-                        title={
-                          item.deckStatus == null
-                            ? "Available after presenter uploads a deck"
-                            : undefined
-                        }
-                        onClick={() => setDeckStatus(item.id, ds)}
-                      >
-                        Mark deck {ds.toLowerCase()}
-                      </button>
-                    ))}
-                  </>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

@@ -34,11 +34,25 @@ export function canManageDeck(role: ReviewerRole): boolean {
   return role === "BOARD" || role === "CHAIR";
 }
 
+/** Mark decks non-shareable on public post-conference archive. */
+export function canSetDeckShareable(role: ReviewerRole): boolean {
+  return role === "BOARD";
+}
+
+/** Publish slide decks to public archive after the event. */
+export function canPublishDeckArchive(role: ReviewerRole): boolean {
+  return role === "BOARD";
+}
+
 export function canAccessSchedule(role: ReviewerRole): boolean {
   return role === "BOARD";
 }
 
 export function canAccessCommitteeDashboard(role: ReviewerRole): boolean {
+  return role === "BOARD" || role === "CHAIR";
+}
+
+export function canExportCsv(role: ReviewerRole): boolean {
   return role === "BOARD" || role === "CHAIR";
 }
 

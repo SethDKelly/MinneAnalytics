@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { ProgramStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { emailAbstractApproved } from "@/lib/email-stub";
 import { canApprove, canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
 
 const ALLOWED: ProgramStatus[] = [
@@ -65,6 +66,16 @@ export async function POST(request: Request) {
       withdrawnAt: null,
     },
   });
+
+  if (status === "APPROVED") {
+    emailAbstractApproved({
+      email: submission.email,
+      presenterName: `${submission.firstName} ${submission.lastName}`,
+      title: submission.title,
+      presenterPortalUrl:
+        "Use the presenter portal link from your original submission confirmation email.",
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

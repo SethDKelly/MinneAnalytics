@@ -23,6 +23,9 @@ export default function HomePage() {
             We support the analytics community through accessible, authentic, and engaging
             events.
           </p>
+          <Link href="/about" className="mt-3 inline-block text-sm text-minne-navy underline">
+            Learn more
+          </Link>
         </article>
         <article className="card">
           <h2 className="mb-2 text-xl font-bold text-minne-navy">Become a Member</h2>
@@ -31,11 +34,19 @@ export default function HomePage() {
           </p>
         </article>
         <article className="card">
-          <h2 className="mb-2 text-xl font-bold text-minne-navy">Conference planning</h2>
+          <h2 className="mb-2 text-xl font-bold text-minne-navy">Events &amp; decks</h2>
           <p className="text-sm text-gray-700">
-            Board and chairs use private review links to score abstracts, manage backups, and
-            approve final program slots.
+            After the conference, the board can publish a public slide library. Sessions marked
+            non-shareable stay off the archive.
           </p>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+            <Link href="/upcoming" className="text-minne-navy underline">
+              Upcoming events
+            </Link>
+            <Link href="/archive/data-tech-2027" className="text-minne-navy underline">
+              Data Tech slide decks
+            </Link>
+          </div>
         </article>
       </section>
 

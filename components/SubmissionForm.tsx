@@ -62,7 +62,7 @@ export function SubmissionForm({ conferenceSlug, conferenceName }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+    <form onSubmit={handleSubmit} className="relative mx-auto max-w-3xl space-y-8 px-4 py-8">
       <div>
         <h1 className="text-3xl font-bold text-minne-navy">Submit a presentation</h1>
         <p className="mt-2 text-gray-700">{conferenceName}</p>
@@ -73,6 +73,17 @@ export function SubmissionForm({ conferenceSlug, conferenceName }: Props) {
           {error}
         </div>
       )}
+
+      <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-minne-navy">Primary presenter</h2>

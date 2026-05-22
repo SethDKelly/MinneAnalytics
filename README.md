@@ -124,8 +124,10 @@ The seed command prints **private reviewer URLs** and sample **presenter portal*
 | Role | URL pattern |
 |------|-------------|
 | Public home | `/` |
+| About / events | `/about` · `/upcoming` |
+| Post-conference decks | `/archive/data-tech-2027` (after board publishes) |
 | Submit abstract | `/submit/data-tech-2027` |
-| Board member | `/review/{token}` (score) · `/chair/{token}` (approve, decks) · `/schedule/{token}` |
+| Board member | `/review/{token}` (score) · `/chair/{token}` (approve, decks, publish archive) · `/schedule/{token}` |
 | Conference co-chair | `/review/{token}` (score) · `/chair/{token}` (decks, no approval) |
 | Presenter | `/presenter/{token}` (from confirmation page after submit) |
 
@@ -141,6 +143,8 @@ The seed command prints **private reviewer URLs** and sample **presenter portal*
 - Scoring: 0.0–1.0 slider (0.1 increments) + notes, once per reviewer, aggregated and sorted
 - Capacity widget: 8×8 − EOD − Graeme − sponsors → ~44 community target
 - Deck upload after approval; deck statuses: Submitted, Reviewed, Approved, Concern
+- **Post-conference archive**: board publishes `/archive/{slug}`; per-session **non-shareable** flag excludes decks from the public library
+- Chair **deck queue** tab with committee download; CSV export; submission rate limit + honeypot
 - **Schedule builder**: 8-room grid (Data Tech layout), auto-generate with technical/variety balance per time row, drag-and-drop adjustments
 
 ## Project structure
@@ -169,10 +173,8 @@ uploads/       Deck files (gitignored)
 |----------|---------|
 | `DATABASE_URL` | `file:./prisma/dev.db` |
 | `UPLOAD_DIR` | `./uploads` |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` (email stub links) |
 
-## Next steps (Phase 6–7)
+## Production notes
 
-- Deck download for chairs
-- CSV export
-- Rate limiting on public form
-- Additional facsimile pages (About, Upcoming)
+For a real deployment, use PostgreSQL and object storage for deck files (see comments in `.env.example`). Email stubs log to the server console in this demo.

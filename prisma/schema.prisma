@@ -37,6 +37,8 @@ model Conference {
   graemeSlots Int    @default(4) @map("graeme_slots")
   sponsorMin Int     @default(7) @map("sponsor_min")
   sponsorMax Int     @default(11) @map("sponsor_max")
+  decksPublished Boolean @default(false) @map("decks_published")
+  decksPublishedAt DateTime? @map("decks_published_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -102,6 +104,7 @@ model Submission {
   presenterTokenHash String  @unique @map("presenter_token_hash")
   programStatus ProgramStatus @default(PENDING) @map("program_status")
   deckStatus    DeckStatus?   @map("deck_status")
+  deckShareable Boolean       @default(true) @map("deck_shareable")
   isSponsorSession Boolean    @default(false) @map("is_sponsor_session")
   isSoftSkill   Boolean       @default(false) @map("is_soft_skill")
   approvedAt    DateTime?     @map("approved_at")
@@ -176,6 +179,7 @@ model Score {
 model DeckFile {
   id           String   @id @default(cuid())
   submissionId String   @map("submission_id")
+  publicId     String   @unique @default(cuid()) @map("public_id")
   version      Int
   filename     String
   storagePath  String   @map("storage_path")
