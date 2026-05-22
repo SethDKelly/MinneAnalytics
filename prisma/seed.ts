@@ -1,6 +1,7 @@
 import { PrismaClient, ProgramStatus } from "@prisma/client";
 import { generateToken, hashToken } from "../lib/tokens";
 import { serializeDegrees } from "../lib/degrees";
+import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
 
@@ -180,7 +181,16 @@ async function main() {
       abstract:
         "Practical tools for identifying sponsors, resistors, and neutral parties before launching a high-visibility analytics initiative.",
       technicalLevel: 1,
-      programStatus: "PENDING",
+      programStatus: "DECLINED",
+    },
+    {
+      firstName: "Skyler",
+      lastName: "Reed",
+      title: "Hype-Driven AI Without a Business Case",
+      abstract:
+        "A cautionary walkthrough of pilots that never reached production — what went wrong and how committees spot weak proposals early.",
+      technicalLevel: 2,
+      programStatus: "DECLINED",
     },
   ];
 
@@ -189,12 +199,13 @@ async function main() {
   for (const talk of sampleTalks) {
     const presenterToken = generateToken();
     presenterTokens.push(presenterToken);
-    await prisma.submission.create({
+    const programStatus = talk.programStatus ?? "PENDING";
+    const submission = await prisma.submission.create({
       data: {
         conferenceId: conference.id,
         presenterTokenHash: hashToken(presenterToken),
-        programStatus: talk.programStatus ?? "PENDING",
-        approvedAt: talk.programStatus === "APPROVED" ? new Date() : null,
+        programStatus,
+        approvedAt: programStatus === "APPROVED" ? new Date() : null,
         firstName: talk.firstName,
         lastName: talk.lastName,
         degrees: serializeDegrees(talk.degrees ?? ["MS"]),
@@ -214,6 +225,10 @@ async function main() {
         isSoftSkill: talk.isSoftSkill ?? false,
       },
     });
+
+    if (programStatus === "APPROVED" || programStatus === "DECLINED") {
+      await autoPopulateDemoScores(submission.id, conference.id, programStatus);
+    }
   }
 
   await ensureScheduleGrid(conference.id);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { ProgramStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
 import { canApprove, canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
 
@@ -66,6 +67,14 @@ export async function POST(request: Request) {
       withdrawnAt: null,
     },
   });
+
+  if (status === "APPROVED" || status === "DECLINED") {
+    await autoPopulateDemoScores(
+      submissionId,
+      reviewer.conferenceId,
+      status
+    );
+  }
 
   if (status === "APPROVED") {
     emailAbstractApproved({
