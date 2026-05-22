@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import type { ProgramStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
+import { getConferenceThemes } from "@/lib/conference-queries";
+import { getConferenceSubmissions } from "@/lib/conference-data";
+import {
+  approvedThemeSaturationWarning,
+  computeThemeStats,
+} from "@/lib/theme-stats";
 import { canApprove, canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
 
 const ALLOWED: ProgramStatus[] = [
@@ -31,11 +38,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Core approval required" }, { status: 403 });
   }
 
+  try {
+    await assertConferenceAcceptsMutations(reviewer.conferenceId);
+  } catch {
+    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+  }
+
   const submission = await prisma.submission.findFirst({
     where: { id: submissionId, conferenceId: reviewer.conferenceId },
+    include: { themes: { select: { themeId: true } } },
   });
   if (!submission) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const force = Boolean(body.force);
+
+  if (status === "APPROVED" && !force) {
+    const [themes, subs] = await Promise.all([
+      getConferenceThemes(reviewer.conferenceId),
+      getConferenceSubmissions(reviewer.conferenceId),
+    ]);
+    const stats = computeThemeStats(
+      themes,
+      subs.map((s) => ({
+        programStatus: s.programStatus,
+        themes: s.themes.map((t) => ({ themeId: t.themeId })),
+      }))
+    );
+    const warning = approvedThemeSaturationWarning(
+      stats,
+      submission.themes.map((t) => t.themeId)
+    );
+    if (warning) {
+      return NextResponse.json({ warning, requiresConfirm: true }, { status: 409 });
+    }
   }
 
   if (status === "APPROVED" && !canApprove(reviewer.role)) {

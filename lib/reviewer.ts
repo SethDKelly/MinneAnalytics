@@ -1,21 +1,29 @@
-import type { ReviewerRole } from "@prisma/client";
 import { prisma } from "./db";
 import { hashToken } from "./tokens";
 
 export {
+  adminDashboardTitle,
+  canAccessAdmin,
   canAccessCommitteeDashboard,
   canAccessSchedule,
   canApprove,
+  canArchiveConference,
   canExportCsv,
+  canManageConferenceSettings,
   canManageDeck,
+  canManageThemes,
+  canMutateActiveConference,
   canPublishDeckArchive,
   canScore,
   canSetDeckShareable,
   canSetVipRegistered,
   canSetProgramStatus,
+  canViewHistoricalCommittee,
   committeeDashboardTitle,
+  isAdmin,
   isBoard,
   isChair,
+  roleCapabilitySummary,
   roleDisplayName,
 } from "./roles";
 

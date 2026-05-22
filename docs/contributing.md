@@ -16,7 +16,11 @@ Thank you for improving the MinneAnalytics conference planning demo. This projec
 |--------|------------|
 | Data model | `prisma/schema.prisma` → `npm run db:push` |
 | Demo data / tokens | `prisma/seed.ts` |
-| Role permissions | `lib/roles.ts` |
+| Role permissions | `lib/roles.ts` (ADMIN / BOARD / CHAIR are separate) |
+| Admin panel | `app/admin/[token]/page.tsx`, `components/AdminDashboard.tsx`, `app/api/admin/*` |
+| Submission window | `lib/submission-window.ts` |
+| Theme stats | `lib/theme-stats.ts` |
+| Technicality balance | `lib/program-balance.ts` |
 | Submission validation | `lib/validation.ts`, `app/api/submissions/route.ts` |
 | Scoring rules | `lib/scoring-scale.ts`, `lib/scoring.ts`, `app/api/scores/route.ts` |
 | Chair / deck / VIP / archive APIs | `app/api/chair/*`, `lib/decks.ts` |
@@ -53,6 +57,10 @@ npm run build
 Manually exercise the flow affected by your change (see [Development → Demo workflow](development.md#demo-workflow-manual-qa)).
 
 We do not require automated tests for every change today; meaningful manual checks on chair, review, presenter, or schedule flows are expected.
+
+## Proposed features
+
+Planned work that is **not yet implemented** is listed in **[roadmap.md](roadmap.md)**. Reference an item there when opening an issue or starting a feature branch. Update [Architecture](architecture.md) and [Exploring the demo](exploring-the-demo.md) when behavior ships.
 
 ## Pull requests
 

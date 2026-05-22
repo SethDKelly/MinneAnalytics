@@ -13,14 +13,76 @@ async function main() {
   await prisma.scheduleRoom.deleteMany();
   await prisma.score.deleteMany();
   await prisma.deckFile.deleteMany();
+  await prisma.submissionTheme.deleteMany();
   await prisma.submission.deleteMany();
+  await prisma.theme.deleteMany();
   await prisma.reviewerAccess.deleteMany();
   await prisma.conference.deleteMany();
+
+  const openAt = new Date("2026-01-01T14:00:00Z");
+  const closeAt = new Date("2027-06-01T05:00:00Z");
 
   const conference = await prisma.conference.create({
     data: {
       slug: "data-tech-2027",
       name: "Data Tech 2027",
+      status: "ACTIVE",
+      submissionsOpen: true,
+      submissionsOpenAt: openAt,
+      submissionsCloseAt: closeAt,
+    },
+  });
+
+  const themeDefs = [
+    { slug: "leadership", name: "Leadership & Culture", targetMin: 3, targetMax: 6, sortOrder: 1 },
+    { slug: "ml-ops", name: "ML Ops & Engineering", targetMin: 4, targetMax: 8, sortOrder: 2 },
+    { slug: "genai", name: "GenAI & LLMs", targetMin: 2, targetMax: 5, sortOrder: 3 },
+    { slug: "analytics", name: "Analytics & BI", targetMin: 3, targetMax: 7, sortOrder: 4 },
+    { slug: "finops", name: "FinOps & Strategy", targetMin: 2, targetMax: 4, sortOrder: 5 },
+  ];
+  const themeBySlug: Record<string, string> = {};
+  for (const t of themeDefs) {
+    const row = await prisma.theme.create({
+      data: { conferenceId: conference.id, ...t },
+    });
+    themeBySlug[t.slug] = row.id;
+  }
+
+  const archivedConference = await prisma.conference.create({
+    data: {
+      slug: "data-tech-2026",
+      name: "Data Tech 2026",
+      status: "ARCHIVED",
+      archivedAt: new Date("2026-05-01T12:00:00Z"),
+      submissionsOpen: false,
+      decksPublished: true,
+      decksPublishedAt: new Date("2026-05-15T12:00:00Z"),
+    },
+  });
+  await prisma.submission.create({
+    data: {
+      conferenceId: archivedConference.id,
+      presenterTokenHash: hashToken(generateToken()),
+      programStatus: "APPROVED",
+      approvedAt: new Date("2026-03-01"),
+      firstName: "Casey",
+      lastName: "Archive",
+      degrees: serializeDegrees(["MS"]),
+      jobTitle: "Data Architect",
+      organization: "Legacy Corp",
+      title: "Building a Modern Lakehouse (2026)",
+      abstract:
+        "Archived demo session from last year with enough text to satisfy validation rules for historical committee review.",
+      technicalLevel: 4,
+      bio: "Archived speaker bio for committee history demonstration purposes only.",
+      email: "casey.archive@example.com",
+      zipCode: "55401",
+      phone: "612-555-0199",
+      linkedinUrl: "https://www.linkedin.com/in/example",
+      linkedinHasPhoto: true,
+      themes: {
+        create: [{ themeId: themeBySlug["analytics"] }],
+      },
     },
   });
 
@@ -30,12 +92,14 @@ async function main() {
   }
   const coChairAToken = generateToken();
   const coChairBToken = generateToken();
+  const adminToken = generateToken();
 
   const accessRows: Array<{
-    role: "BOARD" | "CHAIR";
+    role: "ADMIN" | "BOARD" | "CHAIR";
     label: string;
     token: string;
   }> = [
+    { role: "ADMIN", label: "Site Administrator", token: adminToken },
     ...BOARD_MEMBER_NAMES.map((name) => ({
       role: "BOARD" as const,
       label: name,
@@ -65,10 +129,12 @@ async function main() {
     isSoftSkill?: boolean;
     programStatus?: ProgramStatus;
     degrees?: string[];
+    themeSlugs?: string[];
   }> = [
     {
       firstName: "Alex",
       lastName: "Rivera",
+      themeSlugs: ["ml-ops"],
       title: "Practical Feature Stores for Regional Retail",
       abstract:
         "This session walks through how a mid-size retailer built a feature store on open-source tooling, with lessons on governance, latency budgets, and team handoffs between analytics and engineering.",
@@ -79,6 +145,7 @@ async function main() {
     {
       firstName: "Jordan",
       lastName: "Kim",
+      themeSlugs: ["leadership"],
       title: "Leading Data Teams Through Budget Uncertainty",
       abstract:
         "A soft-skills focused talk on communicating tradeoffs, protecting roadmap integrity, and keeping analysts engaged when sponsorship dollars shift quarter to quarter.",
@@ -90,6 +157,7 @@ async function main() {
     {
       firstName: "Sam",
       lastName: "Okafor",
+      themeSlugs: ["ml-ops", "genai"],
       title: "Real-Time Fraud Signals at the Edge",
       abstract:
         "We cover streaming ingestion, model deployment patterns, and how to validate alert precision without drowning operations in false positives.",
@@ -100,6 +168,7 @@ async function main() {
     {
       firstName: "Morgan",
       lastName: "Lee",
+      themeSlugs: ["analytics", "leadership"],
       title: "Executive Dashboards That Executives Actually Use",
       abstract:
         "Lessons from redesigning C-suite analytics around decisions, not charts — adoption patterns, narrative structure, and governance.",
@@ -158,6 +227,7 @@ async function main() {
     {
       firstName: "Avery",
       lastName: "Walsh",
+      themeSlugs: ["leadership"],
       title: "Building Analytics Partnerships with HR",
       abstract:
         "People analytics programs that respect privacy, build trust, and still deliver workforce insights to leadership.",
@@ -167,6 +237,7 @@ async function main() {
     {
       firstName: "Drew",
       lastName: "Santos",
+      themeSlugs: ["genai", "ml-ops"],
       title: "Vector Search Patterns for Internal Knowledge Bases",
       abstract:
         "Embedding pipelines, chunking strategies, and evaluation harnesses for enterprise RAG on Confluence and SharePoint.",
@@ -177,6 +248,7 @@ async function main() {
     {
       firstName: "Blake",
       lastName: "Foster",
+      themeSlugs: ["leadership"],
       title: "Stakeholder Mapping for Analytics PMs",
       abstract:
         "Practical tools for identifying sponsors, resistors, and neutral parties before launching a high-visibility analytics initiative.",
@@ -223,6 +295,11 @@ async function main() {
         hasCoPresenter: false,
         travelReimbursementRequired: false,
         isSoftSkill: talk.isSoftSkill ?? false,
+        themes: {
+          create: (talk.themeSlugs ?? ["analytics"]).map((slug) => ({
+            themeId: themeBySlug[slug],
+          })),
+        },
       },
     });
 
@@ -239,6 +316,9 @@ async function main() {
   console.log(`Conference: ${conference.name}`);
   console.log(`Submit form:  /submit/${conference.slug}\n`);
 
+  console.log("Site administrator (conference settings, themes, submission window):");
+  console.log(`  http://localhost:3000/admin/${adminToken}\n`);
+
   console.log("MinneAnalytics board (score + approve + decks + schedule):");
   for (const row of accessRows.filter((r) => r.role === "BOARD")) {
     console.log(`  ${row.label}: http://localhost:3000/chair/${row.token}`);
@@ -254,11 +334,16 @@ async function main() {
   console.log("\nSchedule builder (board only):");
   console.log(`  http://localhost:3000/schedule/${danToken}`);
 
+  console.log("\nHistorical committee view (board):");
+  console.log(`  http://localhost:3000/chair/${danToken}?archive=data-tech-2026`);
+
   console.log("\nWorkflow:");
+  console.log("  0. Admin configures conference at /admin/{token}");
   console.log("  1. Board + co-chairs score at /review/{token}");
   console.log("  2. Board reviews rankings & decks at /chair/{token}; approves talks");
   console.log("  3. Co-chairs review rankings & decks at /chair/{token} (no approve)");
   console.log("  4. Board builds schedule at /schedule/{token}");
+  console.log("  5. Chair Balance tab: theme gaps + technicality distribution");
 
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {

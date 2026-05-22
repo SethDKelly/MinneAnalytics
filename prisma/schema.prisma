@@ -23,14 +23,27 @@ enum DeckStatus {
 }
 
 enum ReviewerRole {
+  ADMIN
   BOARD
   CHAIR
+}
+
+enum ConferenceStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
 }
 
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
   name      String
+  status    ConferenceStatus @default(ACTIVE)
+  archivedAt DateTime? @map("archived_at")
+  timezone  String   @default("America/Chicago")
+  submissionsOpen Boolean @default(true) @map("submissions_open")
+  submissionsOpenAt DateTime? @map("submissions_open_at")
+  submissionsCloseAt DateTime? @map("submissions_close_at")
   rooms     Int      @default(8)
   sessionsPerRoom Int @default(8) @map("sessions_per_room")
   eodTrim   Int      @default(6) @map("eod_trim")
@@ -47,6 +60,7 @@ model Conference {
   scheduleRooms  ScheduleRoom[]
   scheduleSlots  ScheduleSlot[]
   schedulePlacements SchedulePlacement[]
+  themes         Theme[]
 }
 
 enum SlotType {
@@ -56,6 +70,31 @@ enum SlotType {
   BREAK
   LUNCH
   NETWORKING
+}
+
+model Theme {
+  id           String   @id @default(cuid())
+  conferenceId String   @map("conference_id")
+  slug         String
+  name         String
+  targetMin    Int      @default(0) @map("target_min")
+  targetMax    Int      @default(0) @map("target_max")
+  sortOrder    Int      @default(0) @map("sort_order")
+
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  submissions  SubmissionTheme[]
+
+  @@unique([conferenceId, slug])
+}
+
+model SubmissionTheme {
+  submissionId String @map("submission_id")
+  themeId      String @map("theme_id")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  theme      Theme      @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([submissionId, themeId])
 }
 
 model ScheduleRoom {
@@ -147,6 +186,7 @@ model Submission {
   scores     Score[]
   deckFiles  DeckFile[]
   schedulePlacement SchedulePlacement?
+  themes     SubmissionTheme[]
 }
 
 model ReviewerAccess {

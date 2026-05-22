@@ -30,10 +30,13 @@ Server Components load data in `app/**/page.tsx`; mutating actions go through `a
 
 Governance is enforced in **`lib/roles.ts`** and re-exported from **`lib/reviewer.ts`**. API routes call these helpers before updating data.
 
-| Role | `ReviewerRole` | Score | Approve / decline / backup | Deck review | Publish archive | Schedule |
-|------|----------------|-------|----------------------------|-------------|-----------------|----------|
-| MinneAnalytics board | `BOARD` | Yes | Yes | Yes | Yes | Yes |
-| Conference co-chair | `CHAIR` | Yes | No | Yes | No | No |
+| Role | `ReviewerRole` | Score | Approve / decline / backup | Deck review | Publish archive | Schedule | Admin panel | Submission window | Themes | Archive lifecycle |
+|------|----------------|-------|----------------------------|-------------|-----------------|----------|-------------|-------------------|--------|-------------------|
+| Site administrator | `ADMIN` | No | No | No | No | No | Yes | Yes | Yes | Yes |
+| MinneAnalytics board | `BOARD` | Yes | Yes | Yes | Yes | Yes | No | No | No | View history |
+| Conference co-chair | `CHAIR` | Yes | No | Yes | No | No | No | No | No | No |
+
+One token grants one role. The same person may hold separate tokens (e.g. board + admin).
 
 Board member names used in seed data are listed in `BOARD_MEMBER_NAMES` in `lib/roles.ts`.
 
@@ -55,6 +58,38 @@ Additional submission flags:
 
 - `deckShareable` — board can exclude a session from the public post-conference archive
 - `vipRegistered` — board/co-chairs track VIP event registration for approved talks
+
+## Conference lifecycle
+
+`Conference.status`: `DRAFT`, `ACTIVE`, or `ARCHIVED` (with optional `archivedAt`).
+
+- **ACTIVE** — committee may score, approve, and manage decks; mutations enforced via `lib/conference-active.ts`.
+- **ARCHIVED** — read-only committee view; submissions closed. Board (and admin) can open historical data at `/chair/{token}?archive={slug}`.
+- **DRAFT** — not open for public submission (enforced with submission window logic).
+
+Site administrators set lifecycle and submission windows at `/admin/{token}` (`app/api/admin/conference`).
+
+## Submission windows
+
+Per conference: `submissionsOpen`, `submissionsOpenAt`, `submissionsCloseAt`, and `timezone`.
+
+- Public form and `POST /api/submissions` use `lib/submission-window.ts`.
+- Closed CFP shows `components/SubmitClosed.tsx` instead of the form.
+- Committee can still review pending talks after the window closes.
+
+## Themes
+
+`Theme` rows per conference (slug, name, `targetMin` / `targetMax` approved counts). Presenters select up to three at submit (`SubmissionTheme` join). Admins manage taxonomy at `/admin/{token}` (`app/api/admin/themes`).
+
+Chair dashboard:
+
+- Theme filter on the Program tab
+- **Theme coverage** panel (`lib/theme-stats.ts`, `components/ThemeGapPanel.tsx`)
+- Approve saturation warning (`409` + confirm) when approving past theme targets (`app/api/chair/program-status`)
+
+## Technicality balance
+
+`lib/program-balance.ts` compares approved talks by `technicalLevel` (1–5) against default percentage targets. Shown on the chair **Balance** tab (`components/TechnicalityBalance.tsx`). Complements schedule row variety in `lib/schedule/balance.ts`.
 
 ## Scoring
 
@@ -113,19 +148,23 @@ Summary:
 | `/chair/[token]` | Board + co-chairs (program + decks) |
 | `/schedule/[token]` | Board only |
 | `/presenter/[token]` | Presenter (per submission) |
+| `/admin/[token]` | Site administrator |
 
 To walk through these URLs in order, see **[exploring-the-demo.md](exploring-the-demo.md)**.
+
+## Historical committee review
+
+Distinct from the **public** slide archive at `/archive/[slug]`:
+
+- Authenticated board (and admin) browse archived conferences via the chair **History** tab or `?archive={slug}`.
+- Read-only: no approve, score, or deck mutations on archived events.
+- Seed includes **Data Tech 2026** (`ARCHIVED`) for demo.
 
 ## Email and abuse controls (demo)
 
 - **Email:** `lib/email-stub.ts` logs intended messages to the server console (submission confirmation, abstract approval).
 - **Submissions:** In-memory rate limit per IP (`lib/rate-limit.ts`) and honeypot field `website` on the public form.
 
-## Production gaps (intentional)
+## Production and roadmap
 
-This repo targets local demos. For a real deployment you would typically:
-
-- Replace SQLite with PostgreSQL (`DATABASE_URL` in `.env.example`)
-- Store deck files in object storage instead of `UPLOAD_DIR`
-- Replace token-in-URL auth with proper identity, HTTPS, and audit logging
-- Wire real email delivery and durable rate limiting
+This repo targets local demos. Deployment typically requires PostgreSQL, object storage, SSO, and real email—see [Roadmap](roadmap.md) and `.env.example`.

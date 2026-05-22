@@ -17,14 +17,25 @@ This guide is for anyone running the demo locally—evaluators, product owners, 
 
 4. Open [http://localhost:3000](http://localhost:3000). A prototype banner appears at the top of every page.
 
+Seed output includes a **site administrator** URL at `/admin/{token}` (separate from board/co-chair tokens).
+
 ## Suggested walkthrough (~20 minutes)
+
+### 0. Site administration (optional)
+
+| Step | Action |
+|------|--------|
+| 1 | Open the **admin** URL from seed output. |
+| 2 | Review submission window dates and open/closed toggle. |
+| 3 | Adjust theme targets (min/max approved counts) on the taxonomy list. |
+| 4 | After testing, use **Archive conference** only on a throwaway seed—not the main Data Tech 2027 demo unless you re-seed. |
 
 ### 1. Public site and submission
 
 | Step | Action |
 |------|--------|
 | 1 | Browse `/`, `/about`, `/upcoming` from the header. |
-| 2 | Open **Submit a Talk** → `/submit/data-tech-2027`. |
+| 2 | Open **Submit a Talk** → `/submit/data-tech-2027` (pick up to three **themes**). |
 | 3 | Submit a test abstract (required fields only is fine). |
 | 4 | On the thanks page, copy the **presenter portal** link (`/presenter/...`). |
 
@@ -46,11 +57,20 @@ Open a **chair** URL (board member recommended first).
 
 **Program tab**
 
-- Submissions sorted by average score.
-- **Board only:** Approve, Mark backup, Decline on pending talks.
+- Submissions sorted by average score; filter by **theme**.
+- **Theme coverage** panel shows approved vs target counts per theme.
+- **Board only:** Approve, Mark backup, Decline (saturation warning if a theme is over target—confirm to proceed).
 - Promote **backup** → approved.
 - **VIP event registration** toggle on approved talks.
 - Capacity widget shows slot targets (8×8 grid minus EOD/Graeme/sponsors).
+
+**Balance tab**
+
+- Theme gap summary and **technicality balance** histogram for approved talks (vs planning targets).
+
+**History tab** (board)
+
+- Open archived conferences (e.g. **Data Tech 2026**) via `?archive=data-tech-2026` for read-only review.
 
 **Deck queue tab**
 
@@ -103,8 +123,10 @@ Mark a session **non-shareable** and confirm it disappears from the public list 
 
 ## What seed preloads
 
-- **Conference:** Data Tech 2027 (`data-tech-2027`)
-- **~12 sample abstracts** (mix of pending, two approved, two declined with demo scores)
+- **Conferences:** Data Tech 2027 (`ACTIVE`, open CFP) and Data Tech 2026 (`ARCHIVED`, for History tab)
+- **Theme taxonomy** on 2027 with target min/max counts
+- **~12 sample abstracts** on 2027 (mix of pending, approved, declined with demo scores; themes on talks)
+- **Site admin** token at `/admin/...` (submission window + themes + archive action)
 - **Four board members** + **two co-chairs** with fresh tokens each seed
 - **Empty schedule grid** ready for generate/drag
 
@@ -125,3 +147,4 @@ Re-running `npm run db:seed` **wipes** submissions and tokens; save new URLs fro
 - [Routing](routing.md) — file map and API list
 - [Architecture](architecture.md) — roles, statuses, security model
 - [Contributing](contributing.md) — code conventions
+- [Roadmap](roadmap.md) — planned enhancements

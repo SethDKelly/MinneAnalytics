@@ -4,6 +4,7 @@ import { serializeDegrees } from "@/lib/degrees";
 import { clientIp, checkRateLimit } from "@/lib/rate-limit";
 import { sendEmailStub } from "@/lib/email-stub";
 import { generateToken, hashToken } from "@/lib/tokens";
+import { getSubmissionWindowState } from "@/lib/submission-window";
 import { submissionSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Submission rejected" }, { status: 400 });
     }
     const degrees = JSON.parse(String(form.get("degrees") ?? "[]"));
+    const themeIds = JSON.parse(String(form.get("themeIds") ?? "[]"));
     const coDegreesRaw = form.get("coPresenterDegrees");
     const hasCoPresenter = form.get("hasCoPresenter") === "true";
 
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
       travelRestriction: String(form.get("travelRestriction") ?? "") || undefined,
       travelReimbursementRequired: form.get("travelReimbursementRequired") === "true",
       additionalInfo: String(form.get("additionalInfo") ?? "") || undefined,
+      themeIds: Array.isArray(themeIds) ? themeIds.map(String) : [],
     };
 
     const parsed = submissionSchema.safeParse(payload);
@@ -79,6 +82,21 @@ export async function POST(request: Request) {
     });
     if (!conference) {
       return NextResponse.json({ error: "Conference not found" }, { status: 404 });
+    }
+
+    const window = getSubmissionWindowState(conference);
+    if (!window.open) {
+      return NextResponse.json({ error: window.message }, { status: 403 });
+    }
+
+    const validThemes = await prisma.theme.findMany({
+      where: {
+        conferenceId: conference.id,
+        id: { in: parsed.data.themeIds },
+      },
+    });
+    if (validThemes.length !== parsed.data.themeIds.length) {
+      return NextResponse.json({ error: "Invalid theme selection" }, { status: 400 });
     }
 
     const presenterToken = generateToken();
@@ -118,6 +136,9 @@ export async function POST(request: Request) {
         travelRestriction: d.travelRestriction ?? null,
         travelReimbursementRequired: d.travelReimbursementRequired,
         additionalInfo: d.additionalInfo ?? null,
+        themes: {
+          create: parsed.data.themeIds.map((themeId) => ({ themeId })),
+        },
       },
     });
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { prisma } from "@/lib/db";
 import { canSetDeckShareable, getReviewerByToken } from "@/lib/reviewer";
 
@@ -11,6 +12,12 @@ export async function PATCH(request: Request) {
   const reviewer = await getReviewerByToken(token);
   if (!reviewer || !canSetDeckShareable(reviewer.role)) {
     return NextResponse.json({ error: "Board access required" }, { status: 403 });
+  }
+
+  try {
+    await assertConferenceAcceptsMutations(reviewer.conferenceId);
+  } catch {
+    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
   }
 
   const submission = await prisma.submission.findFirst({

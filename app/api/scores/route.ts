@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { prisma } from "@/lib/db";
 import { canScore, getReviewerByToken } from "@/lib/reviewer";
 import { roundScore } from "@/lib/scoring-scale";
@@ -15,6 +16,12 @@ export async function POST(request: Request) {
   const reviewer = await getReviewerByToken(token);
   if (!reviewer || !canScore(reviewer.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertConferenceAcceptsMutations(reviewer.conferenceId);
+  } catch {
+    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
   }
 
   const submission = await prisma.submission.findFirst({

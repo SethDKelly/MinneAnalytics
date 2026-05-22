@@ -43,6 +43,10 @@ export const submissionSchema = z
     travelRestriction: z.string().max(1000).optional(),
     travelReimbursementRequired: z.coerce.boolean(),
     additionalInfo: z.string().max(4000).optional(),
+    themeIds: z
+      .array(z.string().min(1))
+      .min(1, "Select at least one theme")
+      .max(3, "Select at most three themes"),
   })
   .superRefine((data, ctx) => {
     if (!data.hasCoPresenter) return;

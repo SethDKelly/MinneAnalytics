@@ -5,7 +5,10 @@ import { toListItem, sortByAggregate, partitionReviewerQueue } from "./submissio
 export async function getConferenceSubmissions(conferenceId: string) {
   const submissions = await prisma.submission.findMany({
     where: { conferenceId },
-    include: { scores: true },
+    include: {
+      scores: true,
+      themes: { select: { themeId: true, theme: { select: { name: true } } } },
+    },
     orderBy: { createdAt: "desc" },
   });
   return submissions;

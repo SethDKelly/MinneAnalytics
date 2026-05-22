@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { DeckStatus } from "@prisma/client";
+import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { prisma } from "@/lib/db";
 import { canManageDeck, getReviewerByToken } from "@/lib/reviewer";
 
@@ -18,6 +19,12 @@ export async function POST(request: Request) {
   const reviewer = await getReviewerByToken(token);
   if (!reviewer || !canManageDeck(reviewer.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertConferenceAcceptsMutations(reviewer.conferenceId);
+  } catch {
+    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
   }
 
   const submission = await prisma.submission.findFirst({

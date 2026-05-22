@@ -10,7 +10,7 @@ Prototype conference planning extension: public abstract submission, private com
 |------|------------|
 | Run the app and explore the PoC | [Quick start](#quick-start) → [Explore the demo](docs/exploring-the-demo.md) |
 | Understand URLs and API routes | [Routing](docs/routing.md) |
-| Contribute code | [Developer docs](docs/README.md) |
+| Contribute code | [Developer docs](docs/README.md) · [Roadmap](docs/roadmap.md) |
 
 ## Prerequisites
 
@@ -186,13 +186,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Explore the proof of concept
 
-Follow the guided walkthrough in **[docs/exploring-the-demo.md](docs/exploring-the-demo.md)** (public submit → committee score → chair approve → presenter deck → schedule → publish archive).
+Follow the guided walkthrough in **[docs/exploring-the-demo.md](docs/exploring-the-demo.md)** (admin setup → public submit → score → chair approve → balance/themes → deck → schedule → archive).
 
 Short reference — roles and URL patterns:
 
 | Role | Pages |
 |------|--------|
 | Public | `/`, `/about`, `/upcoming`, `/submit/data-tech-2027`, `/archive/data-tech-2027` (when published) |
+| Site administrator | `/admin/{token}` |
 | Board member | `/review/{token}` · `/chair/{token}` · `/schedule/{token}` |
 | Co-chair | `/review/{token}` · `/chair/{token}` (no approve / no schedule) |
 | Presenter | `/presenter/{token}` (from submit confirmation or seed output) |
@@ -204,8 +205,10 @@ How URLs map to code: **[docs/routing.md](docs/routing.md)**.
 - Full submission form with multi-select degrees and 1–5 technical scale
 - Optional co-presenter (1–2 presenters)
 - Program status: Pending, Approved, Declined, Backup, Withdrawn (withdraw allowed after approval)
-- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule, publish archive
+- **Site administrator** (`ADMIN`): submission windows, theme taxonomy, conference archive lifecycle (no scoring or approval)
+- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule, publish archive, historical view
 - **Co-chairs**: score and deck review only
+- **Themes** on submission; chair **Balance** tab (gap analysis + technicality); approve saturation warning
 - Scoring: 0.0–1.0 (0.1 steps) + notes; demo auto-scores on approve/decline
 - Capacity widget: 8×8 − EOD − Graeme − sponsors → ~44 community target
 - Deck workflow and post-conference archive with per-session non-shareable flag
@@ -219,7 +222,7 @@ app/           Next.js App Router pages and API routes
 components/    UI (forms, dashboards, layout, schedule)
 lib/           Business logic (scoring, roles, schedule, decks)
 prisma/        Schema and seed
-docs/          Routing, architecture, demo walkthrough, contributing
+docs/          Architecture, routing, demo walkthrough, contributing, roadmap
 scripts/       setup.ps1 / setup.sh
 uploads/       Deck files (gitignored)
 ```
@@ -262,4 +265,4 @@ For a real deployment, use PostgreSQL and object storage for deck files (see `.e
 
 ## Developer documentation
 
-[docs/README.md](docs/README.md) — architecture, routing, local development, and contributing guidelines.
+[docs/README.md](docs/README.md) — architecture, routing, local development, contributing, and [roadmap](docs/roadmap.md) for planned work.

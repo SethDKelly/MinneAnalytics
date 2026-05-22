@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DegreeMultiSelect } from "./DegreeMultiSelect";
+import { ThemeMultiSelect } from "./ThemeMultiSelect";
 import { TECHNICAL_LABELS } from "@/lib/constants";
 
 type Props = {
   conferenceSlug: string;
   conferenceName: string;
+  themes: { id: string; name: string }[];
 };
 
-export function SubmissionForm({ conferenceSlug, conferenceName }: Props) {
+export function SubmissionForm({ conferenceSlug, conferenceName, themes }: Props) {
   const router = useRouter();
   const [degrees, setDegrees] = useState<string[]>(["None"]);
+  const [themeIds, setThemeIds] = useState<string[]>([]);
   const [coDegrees, setCoDegrees] = useState<string[]>(["None"]);
   const [hasCoPresenter, setHasCoPresenter] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +28,7 @@ export function SubmissionForm({ conferenceSlug, conferenceName }: Props) {
     const form = new FormData(e.currentTarget);
     form.set("conferenceSlug", conferenceSlug);
     form.set("degrees", JSON.stringify(degrees));
+    form.set("themeIds", JSON.stringify(themeIds));
     if (hasCoPresenter) {
       form.set("coPresenterDegrees", JSON.stringify(coDegrees));
     }
@@ -143,6 +147,16 @@ export function SubmissionForm({ conferenceSlug, conferenceName }: Props) {
             ))}
           </select>
         </div>
+        {themes.length > 0 && (
+          <div>
+            <span className="form-label">Themes *</span>
+            <ThemeMultiSelect
+              themes={themes}
+              selected={themeIds}
+              onChange={setThemeIds}
+            />
+          </div>
+        )}
         <div>
           <label className="form-label" htmlFor="bio">Short professional bio *</label>
           <textarea id="bio" name="bio" required rows={4} className="form-input" minLength={20} />

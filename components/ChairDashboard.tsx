@@ -5,18 +5,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapacityWidget } from "./CapacityWidget";
 import { DeckStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import { TechnicalityBalance } from "./TechnicalityBalance";
+import { ThemeGapPanel } from "./ThemeGapPanel";
 import type { CapacitySnapshot } from "@/lib/capacity";
 import type { DeckQueueItem } from "@/lib/decks";
 import type { SubmissionListItem } from "@/lib/submissions";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { formatScore } from "@/lib/scoring-scale";
 import { TECHNICAL_LABELS } from "@/lib/constants";
-import type { ReviewerRole } from "@prisma/client";
+import type { ConferenceStatus, ReviewerRole } from "@prisma/client";
+import type { TechnicalityRow } from "@/lib/program-balance";
+import type { ThemeCountRow } from "@/lib/theme-stats";
 import {
   canExportCsv,
   canPublishDeckArchive,
   canSetDeckShareable,
   canSetVipRegistered,
+  canViewHistoricalCommittee,
   isBoard,
   roleDisplayName,
 } from "@/lib/roles";
@@ -26,9 +31,11 @@ type SubmissionDetail = SubmissionListItem & {
   email: string;
   deckShareable: boolean;
   vipRegistered: boolean;
+  themeNames: string[];
+  themeIds: string[];
 };
 
-type Tab = "program" | "decks";
+type Tab = "program" | "decks" | "balance" | "history";
 
 type Props = {
   token: string;
@@ -41,8 +48,16 @@ type Props = {
   deckQueue: DeckQueueItem[];
   conferenceSlug: string;
   conferenceName: string;
+  conferenceStatus: ConferenceStatus;
   decksPublished: boolean;
   decksPublishedAt: string | null;
+  themeStats: ThemeCountRow[];
+  technicalityRows: TechnicalityRow[];
+  approvedCount: number;
+  readOnly: boolean;
+  archivedConferences: { slug: string; name: string; submissionCount: number }[];
+  viewingArchiveSlug: string | null;
+  themes: { id: string; name: string }[];
 };
 
 export function ChairDashboard({
@@ -56,26 +71,45 @@ export function ChairDashboard({
   deckQueue: initialDeckQueue,
   conferenceSlug,
   conferenceName,
+  conferenceStatus,
   decksPublished: initialDecksPublished,
   decksPublishedAt,
+  themeStats,
+  technicalityRows,
+  approvedCount,
+  readOnly,
+  archivedConferences,
+  viewingArchiveSlug,
+  themes,
 }: Props) {
   const router = useRouter();
-  const items = initialItems;
   const capacity = initialCapacity;
   const deckQueue = initialDeckQueue;
   const [tab, setTab] = useState<Tab>("program");
+  const [themeFilter, setThemeFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [decksPublished, setDecksPublished] = useState(initialDecksPublished);
   const board = isBoard(role);
 
-  async function setStatus(submissionId: string, status: string) {
+  const items = themeFilter
+    ? initialItems.filter((i) => i.themeIds.includes(themeFilter))
+    : initialItems;
+
+  async function setStatus(submissionId: string, status: string, force = false) {
     setLoading(submissionId + status);
     const res = await fetch("/api/chair/program-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, submissionId, status }),
+      body: JSON.stringify({ token, submissionId, status, force }),
     });
     setLoading(null);
+    if (res.status === 409) {
+      const data = await res.json();
+      if (data.requiresConfirm && confirm(`${data.warning}\n\nApprove anyway?`)) {
+        await setStatus(submissionId, status, true);
+      }
+      return;
+    }
     if (res.ok) router.refresh();
     else {
       const data = await res.json();
@@ -170,11 +204,22 @@ export function ChairDashboard({
         {label} · {roleDisplayName(role)} — {conferenceName}
       </p>
 
+      {readOnly && (
+        <p className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <strong>Read-only view</strong>
+          {viewingArchiveSlug
+            ? ` — historical archive for ${conferenceName}.`
+            : ` — conference status is ${conferenceStatus}.`}
+        </p>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-2">
-        <Link href={`/review/${token}`} className="btn-secondary">
-          Score abstracts
-        </Link>
-        {board && (
+        {!readOnly && (
+          <Link href={`/review/${token}`} className="btn-secondary">
+            Score abstracts
+          </Link>
+        )}
+        {board && !readOnly && (
           <Link href={`/schedule/${token}`} className="btn-primary text-white no-underline">
             Schedule builder
           </Link>
@@ -220,7 +265,7 @@ export function ChairDashboard({
         </p>
       )}
 
-      <div className="mt-6 flex border-b border-gray-200">
+      <div className="mt-6 flex flex-wrap border-b border-gray-200">
         <button
           type="button"
           className={`px-4 py-2 text-sm font-semibold ${
@@ -232,25 +277,236 @@ export function ChairDashboard({
         >
           Program ({items.length})
         </button>
+        {!readOnly && (
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-semibold ${
+              tab === "decks"
+                ? "border-b-2 border-minne-navy text-minne-navy"
+                : "text-gray-600"
+            }`}
+            onClick={() => setTab("decks")}
+          >
+            Deck queue ({deckQueue.length})
+            {decksPendingReview.length > 0 && (
+              <span className="ml-1 rounded bg-amber-100 px-1.5 text-xs text-amber-900">
+                {decksPendingReview.length} to review
+              </span>
+            )}
+          </button>
+        )}
         <button
           type="button"
           className={`px-4 py-2 text-sm font-semibold ${
-            tab === "decks"
+            tab === "balance"
               ? "border-b-2 border-minne-navy text-minne-navy"
               : "text-gray-600"
           }`}
-          onClick={() => setTab("decks")}
+          onClick={() => setTab("balance")}
         >
-          Deck queue ({deckQueue.length})
-          {decksPendingReview.length > 0 && (
-            <span className="ml-1 rounded bg-amber-100 px-1.5 text-xs text-amber-900">
-              {decksPendingReview.length} to review
-            </span>
-          )}
+          Balance
         </button>
+        {canViewHistoricalCommittee(role) && archivedConferences.length > 0 && (
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-semibold ${
+              tab === "history"
+                ? "border-b-2 border-minne-navy text-minne-navy"
+                : "text-gray-600"
+            }`}
+            onClick={() => setTab("history")}
+          >
+            History
+          </button>
+        )}
       </div>
 
-      {tab === "decks" && (
+      {tab === "balance" && (
+        <section className="mt-6 space-y-6">
+          <ThemeGapPanel rows={themeStats} />
+          <TechnicalityBalance rows={technicalityRows} approvedCount={approvedCount} />
+        </section>
+      )}
+
+      {tab === "history" && (
+        <section className="mt-6 card">
+          <h2 className="text-lg font-bold text-minne-navy">Archived conferences</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Open a read-only committee view of past events.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {archivedConferences.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  href={`/chair/${token}?archive=${c.slug}`}
+                  className={`text-minne-navy underline ${
+                    viewingArchiveSlug === c.slug ? "font-bold" : ""
+                  }`}
+                >
+                  {c.name}
+                </Link>
+                <span className="ml-2 text-sm text-gray-500">
+                  {c.submissionCount} submissions
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {tab === "program" && (
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-600">Filter by theme:</span>
+            <button
+              type="button"
+              className={`rounded px-2 py-1 text-xs ${
+                !themeFilter ? "bg-minne-navy text-white" : "bg-gray-100"
+              }`}
+              onClick={() => setThemeFilter(null)}
+            >
+              All
+            </button>
+            {themes.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`rounded px-2 py-1 text-xs ${
+                  themeFilter === t.id ? "bg-minne-navy text-white" : "bg-gray-100"
+                }`}
+                onClick={() => setThemeFilter(t.id)}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+            <ThemeGapPanel rows={themeStats} />
+          </div>
+          <ul className="mt-8 space-y-6">
+          {items.map((item) => {
+            const agg = item.aggregate ?? EMPTY_AGGREGATE;
+            return (
+              <li key={item.id} className="card">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl font-bold text-minne-navy">{item.title}</h2>
+                    <p className="text-sm text-gray-600">
+                      {item.firstName} {item.lastName} · {item.organization} · {item.email}
+                    </p>
+                    {item.themeNames.length > 0 && (
+                      <p className="mt-1 text-sm text-gray-600">
+                        Themes: {item.themeNames.join(", ")}
+                      </p>
+                    )}
+                    <p className="mt-1 text-sm">
+                      Technical {item.technicalLevel}:{" "}
+                      {TECHNICAL_LABELS[item.technicalLevel]}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <ProgramStatusBadge status={item.programStatus} />
+                    <DeckStatusBadge status={item.deckStatus} />
+                    {board && item.programStatus === "APPROVED" && (
+                      <span
+                        className={`text-xs ${
+                          item.deckShareable ? "text-green-800" : "text-red-800"
+                        }`}
+                      >
+                        Archive: {item.deckShareable ? "shareable" : "non-shareable"}
+                      </span>
+                    )}
+                    {item.programStatus === "APPROVED" && (
+                      <span
+                        className={`text-xs font-semibold ${
+                          item.vipRegistered ? "text-purple-800" : "text-gray-500"
+                        }`}
+                      >
+                        VIP: {item.vipRegistered ? "Registered" : "Not registered"}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold text-minne-navy">
+                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
+                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
+
+                {allScores[item.id]?.length > 0 && (
+                  <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
+                    {allScores[item.id].map((s, i) => (
+                      <li key={i}>
+                        <strong>{s.reviewer}:</strong> {formatScore(s.value)}
+                        {s.notes ? ` — ${s.notes}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {!readOnly && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {board && item.programStatus === "PENDING" && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "APPROVED")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "BACKUP")}
+                      >
+                        Mark backup
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "DECLINED")}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  {board && item.programStatus === "BACKUP" && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={!!loading}
+                      onClick={() => setStatus(item.id, "APPROVED")}
+                    >
+                      Promote to approved
+                    </button>
+                  )}
+                  {canSetVipRegistered(role) && item.programStatus === "APPROVED" && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs"
+                      disabled={!!loading}
+                      onClick={() => setVipRegistered(item.id, !item.vipRegistered)}
+                    >
+                      {item.vipRegistered
+                        ? "Clear VIP registration"
+                        : "Mark VIP registered"}
+                    </button>
+                  )}
+                </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        </>
+      )}
+
+      {tab === "decks" && !readOnly && (
         <section className="mt-6 space-y-6">
           {board && (
             <div className="card border-minne-navy/20">
@@ -408,121 +664,6 @@ export function ChairDashboard({
         </section>
       )}
 
-      {tab === "program" && (
-        <ul className="mt-8 space-y-6">
-          {items.map((item) => {
-            const agg = item.aggregate ?? EMPTY_AGGREGATE;
-            return (
-              <li key={item.id} className="card">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-bold text-minne-navy">{item.title}</h2>
-                    <p className="text-sm text-gray-600">
-                      {item.firstName} {item.lastName} · {item.organization} · {item.email}
-                    </p>
-                    <p className="mt-1 text-sm">
-                      Technical {item.technicalLevel}:{" "}
-                      {TECHNICAL_LABELS[item.technicalLevel]}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <ProgramStatusBadge status={item.programStatus} />
-                    <DeckStatusBadge status={item.deckStatus} />
-                    {board && item.programStatus === "APPROVED" && (
-                      <span
-                        className={`text-xs ${
-                          item.deckShareable ? "text-green-800" : "text-red-800"
-                        }`}
-                      >
-                        Archive: {item.deckShareable ? "shareable" : "non-shareable"}
-                      </span>
-                    )}
-                    {item.programStatus === "APPROVED" && (
-                      <span
-                        className={`text-xs font-semibold ${
-                          item.vipRegistered ? "text-purple-800" : "text-gray-500"
-                        }`}
-                      >
-                        VIP: {item.vipRegistered ? "Registered" : "Not registered"}
-                      </span>
-                    )}
-                    <span className="text-sm font-semibold text-minne-navy">
-                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
-                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
-                    </span>
-                  </div>
-                </div>
-
-                <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
-
-                {allScores[item.id]?.length > 0 && (
-                  <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
-                    {allScores[item.id].map((s, i) => (
-                      <li key={i}>
-                        <strong>{s.reviewer}:</strong> {formatScore(s.value)}
-                        {s.notes ? ` — ${s.notes}` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {board && item.programStatus === "PENDING" && (
-                    <>
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "APPROVED")}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "BACKUP")}
-                      >
-                        Mark backup
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-danger"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "DECLINED")}
-                      >
-                        Decline
-                      </button>
-                    </>
-                  )}
-                  {board && item.programStatus === "BACKUP" && (
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      disabled={!!loading}
-                      onClick={() => setStatus(item.id, "APPROVED")}
-                    >
-                      Promote to approved
-                    </button>
-                  )}
-                  {canSetVipRegistered(role) && item.programStatus === "APPROVED" && (
-                    <button
-                      type="button"
-                      className="btn-secondary text-xs"
-                      disabled={!!loading}
-                      onClick={() => setVipRegistered(item.id, !item.vipRegistered)}
-                    >
-                      {item.vipRegistered
-                        ? "Clear VIP registration"
-                        : "Mark VIP registered"}
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
     </div>
   );
 }

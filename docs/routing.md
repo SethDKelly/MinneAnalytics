@@ -8,11 +8,12 @@ The app uses the [Next.js App Router](https://nextjs.org/docs/app): URLs map to 
 |-----|------|-----------|
 | `/` | `app/page.tsx` | Server Component — public home |
 | `/about` | `app/about/page.tsx` | Static facsimile page |
-| `/upcoming` | `app/upcoming/page.tsx` | Static facsimile page |
+| `/upcoming` | `app/upcoming/page.tsx` | Lists conferences from DB |
 | `/submit/data-tech-2027` | `app/submit/[slug]/page.tsx` | `slug` → conference lookup |
 | `/submit/data-tech-2027/thanks` | `app/submit/[slug]/thanks/page.tsx` | Post-submit confirmation |
 | `/review/{token}` | `app/review/[token]/page.tsx` | Validates reviewer token server-side |
-| `/chair/{token}` | `app/chair/[token]/page.tsx` | Committee dashboard |
+| `/chair/{token}` | `app/chair/[token]/page.tsx` | Committee dashboard (`?archive=slug` for history) |
+| `/admin/{token}` | `app/admin/[token]/page.tsx` | Site administrator |
 | `/schedule/{token}` | `app/schedule/[token]/page.tsx` | Board-only schedule builder |
 | `/presenter/{token}` | `app/presenter/[token]/page.tsx` | Presenter portal for one submission |
 | `/archive/data-tech-2027` | `app/archive/[slug]/page.tsx` | Public deck library when published |
@@ -33,7 +34,9 @@ Browser pages call these Route Handlers for mutations and downloads. They enforc
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/submissions` | Public abstract submission (rate limit + honeypot) |
+| `POST` | `/api/submissions` | Public abstract submission (rate limit + honeypot + submission window) |
+| `PATCH` | `/api/admin/conference` | Admin: lifecycle, submission window |
+| `POST` / `PATCH` / `DELETE` | `/api/admin/themes` | Admin: theme taxonomy |
 | `POST` | `/api/scores` | Reviewer saves a score |
 | `POST` | `/api/chair/program-status` | Board: approve / decline / backup |
 | `POST` | `/api/chair/deck-status` | Committee deck workflow |
