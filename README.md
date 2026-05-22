@@ -24,7 +24,10 @@ node --version
 npm --version
 ```
 
-### First-time machine setup (Windows)
+**First-time Node.js install** — expand your operating system:
+
+<details>
+<summary><strong>Windows</strong></summary>
 
 Install Node.js LTS with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
 
@@ -34,7 +37,10 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 
 Close and reopen your terminal (or restart Cursor) so `node` and `npm` are on your PATH.
 
-### First-time machine setup (macOS)
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
 
 **Option A — Homebrew (recommended)**
 
@@ -54,7 +60,10 @@ nvm use
 
 Download the LTS installer from [nodejs.org](https://nodejs.org/).
 
-### First-time machine setup (Linux)
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
 
 **Option A — NodeSource (Debian / Ubuntu)**
 
@@ -89,11 +98,18 @@ fnm install
 fnm use
 ```
 
+</details>
+
 ## Quick start
 
 Setup scripts copy `.env.example` → `.env`, install dependencies, apply the schema, and seed demo data (including **private URLs printed to the terminal**).
 
-### Windows
+**Select your operating system** for setup commands:
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+**Automated (recommended)**
 
 ```powershell
 cd Minneanalytics
@@ -101,7 +117,23 @@ cd Minneanalytics
 npm run dev
 ```
 
-### macOS / Linux
+**Manual**
+
+```powershell
+cd Minneanalytics
+copy .env.example .env
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+**Automated (recommended)**
 
 ```bash
 cd Minneanalytics
@@ -110,16 +142,43 @@ chmod +x scripts/setup.sh   # first time only
 npm run dev
 ```
 
-### Manual setup (all platforms)
+**Manual**
 
 ```bash
 cd Minneanalytics
-cp .env.example .env        # Windows: copy .env.example .env
+cp .env.example .env
 npm install
 npm run db:push
 npm run db:seed
 npm run dev
 ```
+
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+**Automated (recommended)**
+
+```bash
+cd Minneanalytics
+chmod +x scripts/setup.sh   # first time only
+./scripts/setup.sh
+npm run dev
+```
+
+**Manual**
+
+```bash
+cd Minneanalytics
+cp .env.example .env
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+</details>
 
 Open [http://localhost:3000](http://localhost:3000).
 

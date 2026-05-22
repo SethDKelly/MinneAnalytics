@@ -12,34 +12,114 @@ node --version
 npm --version
 ```
 
+**First-time Node.js install** — expand your operating system (same options as the [project README](../README.md#prerequisites)):
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+```powershell
+winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+```
+
+Restart your terminal so `node` and `npm` are on your PATH.
+
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install node
+```
+
+Or use [nvm](https://github.com/nvm-sh/nvm) / the [nodejs.org](https://nodejs.org/) installer — see the README for all options.
+
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+Use your distro packages, [NodeSource](https://github.com/nodesource/distributions), [nvm](https://github.com/nvm-sh/nvm), or [fnm](https://github.com/Schniz/fnm) — see the README for commands.
+
+</details>
+
 ## First-time setup
 
-### Automated
+Scripts copy `.env.example` → `.env`, install dependencies, apply the schema, and seed demo data (tokens print to the terminal).
 
-**Windows**
+**Select your operating system:**
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+**Automated (recommended)**
 
 ```powershell
 .\scripts\setup.ps1
+npm run dev
 ```
 
-**macOS / Linux**
+**Manual**
 
-```bash
-chmod +x scripts/setup.sh   # once
-./scripts/setup.sh
-```
-
-### Manual
-
-```bash
-cp .env.example .env          # Windows: copy .env.example .env
+```powershell
+copy .env.example .env
 npm install
 npm run db:push
 npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+If `prisma generate` fails with `EPERM` on `query_engine-windows.dll.node`, stop `npm run dev`, run `npx prisma generate`, then restart dev.
+
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+**Automated (recommended)**
+
+```bash
+chmod +x scripts/setup.sh   # once
+./scripts/setup.sh
+npm run dev
+```
+
+**Manual**
+
+```bash
+cp .env.example .env
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+**Automated (recommended)**
+
+```bash
+chmod +x scripts/setup.sh   # once
+./scripts/setup.sh
+npm run dev
+```
+
+**Manual**
+
+```bash
+cp .env.example .env
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+</details>
+
+Open [http://localhost:3000](http://localhost:3000) after setup.
 
 ## Environment variables
 
@@ -69,10 +149,6 @@ See `.env.example` for production notes (PostgreSQL, S3).
 3. Run `npm run db:seed` to reset demo content and get fresh reviewer/presenter URLs.
 
 **Seed output** includes board, co-chair, schedule, and sample presenter links. Re-seed whenever you need clean tokens or updated sample talks.
-
-### Prisma client on Windows
-
-If `prisma generate` fails with `EPERM` on `query_engine-windows.dll.node`, stop the dev server (`npm run dev`) and run `npx prisma generate` or `npm run build` again.
 
 ### Do not commit
 
