@@ -105,6 +105,7 @@ model Submission {
   programStatus ProgramStatus @default(PENDING) @map("program_status")
   deckStatus    DeckStatus?   @map("deck_status")
   deckShareable Boolean       @default(true) @map("deck_shareable")
+  vipRegistered Boolean       @default(false) @map("vip_registered")
   isSponsorSession Boolean    @default(false) @map("is_sponsor_session")
   isSoftSkill   Boolean       @default(false) @map("is_soft_skill")
   approvedAt    DateTime?     @map("approved_at")

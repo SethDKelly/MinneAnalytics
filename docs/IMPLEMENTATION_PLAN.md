@@ -124,6 +124,7 @@ Prototype extension to the MinneAnalytics experience for conference chairs, scor
 - [x] Deck status workflow (Reviewed / Approved / Concern)
 - [x] Board **non-shareable** flag per session (`deckShareable`)
 - [x] Board **publish / unpublish** post-conference archive (`decksPublished`)
+- [x] **VIP event registration** flag on approved talks (`vipRegistered`; board + co-chairs)
 
 **Exit criteria:** Chairs process all submitted decks without leaving chair UI.
 

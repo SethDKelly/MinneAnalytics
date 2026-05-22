@@ -11,6 +11,7 @@ export type ExportRow = {
   programStatus: string;
   deckStatus: string | null;
   deckShareable: boolean;
+  vipRegistered: boolean;
   technicalLevel: number;
   aggregateAverage: number;
   aggregateCount: number;
@@ -36,6 +37,7 @@ export function submissionsToCsv(rows: ExportRow[]): string {
     "program_status",
     "deck_status",
     "deck_shareable",
+    "vip_registered",
     "technical_level",
     "avg_score",
     "scorer_count",
@@ -56,6 +58,7 @@ export function submissionsToCsv(rows: ExportRow[]): string {
         r.programStatus,
         r.deckStatus ?? "",
         r.deckShareable,
+        r.vipRegistered,
         r.technicalLevel,
         r.aggregateAverage.toFixed(2),
         r.aggregateCount,

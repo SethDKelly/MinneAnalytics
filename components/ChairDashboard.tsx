@@ -16,6 +16,7 @@ import {
   canExportCsv,
   canPublishDeckArchive,
   canSetDeckShareable,
+  canSetVipRegistered,
   isBoard,
   roleDisplayName,
 } from "@/lib/roles";
@@ -24,6 +25,7 @@ type SubmissionDetail = SubmissionListItem & {
   abstract: string;
   email: string;
   deckShareable: boolean;
+  vipRegistered: boolean;
 };
 
 type Tab = "program" | "decks";
@@ -96,6 +98,21 @@ export function ChairDashboard({
     }
   }
 
+  async function setVipRegistered(submissionId: string, registered: boolean) {
+    setLoading(submissionId + "vip");
+    const res = await fetch("/api/chair/vip-registered", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, submissionId, registered }),
+    });
+    setLoading(null);
+    if (res.ok) router.refresh();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Could not update VIP registration");
+    }
+  }
+
   async function setShareable(submissionId: string, shareable: boolean) {
     setLoading(submissionId + "share");
     const res = await fetch("/api/chair/deck-shareable", {
@@ -143,6 +160,8 @@ export function ChairDashboard({
   const decksPendingReview = deckQueue.filter(
     (d) => d.deckFileId && (d.deckStatus === "SUBMITTED" || d.deckStatus === "REVIEWED")
   );
+  const approvedItems = items.filter((i) => i.programStatus === "APPROVED");
+  const vipRegisteredCount = approvedItems.filter((i) => i.vipRegistered).length;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -178,6 +197,16 @@ export function ChairDashboard({
       <div className="mt-6">
         <CapacityWidget cap={capacity} />
       </div>
+
+      {approvedItems.length > 0 && (
+        <p className="mt-4 text-sm text-gray-700">
+          VIP event registration:{" "}
+          <strong>
+            {vipRegisteredCount} / {approvedItems.length}
+          </strong>{" "}
+          approved {approvedItems.length === 1 ? "talk" : "talks"} registered
+        </p>
+      )}
 
       {board ? (
         <p className="mt-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-900">
@@ -307,6 +336,13 @@ export function ChairDashboard({
                           {deck.deckShareable ? "Shareable" : "Non-shareable"}
                         </span>
                       )}
+                      <span
+                        className={`text-xs font-semibold ${
+                          deck.vipRegistered ? "text-purple-800" : "text-gray-500"
+                        }`}
+                      >
+                        VIP: {deck.vipRegistered ? "Registered" : "Not registered"}
+                      </span>
                     </div>
                   </div>
 
@@ -349,6 +385,21 @@ export function ChairDashboard({
                           : "Allow sharing"}
                       </button>
                     )}
+
+                    {canSetVipRegistered(role) && (
+                      <button
+                        type="button"
+                        className="btn-secondary text-xs"
+                        disabled={!!loading}
+                        onClick={() =>
+                          setVipRegistered(deck.submissionId, !deck.vipRegistered)
+                        }
+                      >
+                        {deck.vipRegistered
+                          ? "Clear VIP registration"
+                          : "Mark VIP registered"}
+                      </button>
+                    )}
                   </div>
                 </li>
               ))}
@@ -384,6 +435,15 @@ export function ChairDashboard({
                         }`}
                       >
                         Archive: {item.deckShareable ? "shareable" : "non-shareable"}
+                      </span>
+                    )}
+                    {item.programStatus === "APPROVED" && (
+                      <span
+                        className={`text-xs font-semibold ${
+                          item.vipRegistered ? "text-purple-800" : "text-gray-500"
+                        }`}
+                      >
+                        VIP: {item.vipRegistered ? "Registered" : "Not registered"}
                       </span>
                     )}
                     <span className="text-sm font-semibold text-minne-navy">
@@ -443,6 +503,18 @@ export function ChairDashboard({
                       onClick={() => setStatus(item.id, "APPROVED")}
                     >
                       Promote to approved
+                    </button>
+                  )}
+                  {canSetVipRegistered(role) && item.programStatus === "APPROVED" && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs"
+                      disabled={!!loading}
+                      onClick={() => setVipRegistered(item.id, !item.vipRegistered)}
+                    >
+                      {item.vipRegistered
+                        ? "Clear VIP registration"
+                        : "Mark VIP registered"}
                     </button>
                   )}
                 </div>

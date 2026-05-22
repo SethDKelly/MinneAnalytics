@@ -39,6 +39,11 @@ export function canSetDeckShareable(role: ReviewerRole): boolean {
   return role === "BOARD";
 }
 
+/** Track VIP event registration for approved presenters. */
+export function canSetVipRegistered(role: ReviewerRole): boolean {
+  return role === "BOARD" || role === "CHAIR";
+}
+
 /** Publish slide decks to public archive after the event. */
 export function canPublishDeckArchive(role: ReviewerRole): boolean {
   return role === "BOARD";

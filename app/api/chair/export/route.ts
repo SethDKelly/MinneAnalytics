@@ -42,6 +42,7 @@ export async function GET(request: Request) {
       programStatus: s.programStatus,
       deckStatus: s.deckStatus,
       deckShareable: s.deckShareable,
+      vipRegistered: s.vipRegistered,
       technicalLevel: s.technicalLevel,
       aggregateAverage: agg.average,
       aggregateCount: agg.count,

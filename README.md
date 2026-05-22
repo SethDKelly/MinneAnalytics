@@ -145,6 +145,7 @@ The seed command prints **private reviewer URLs** and sample **presenter portal*
 - Deck upload after approval; deck statuses: Submitted, Reviewed, Approved, Concern
 - **Post-conference archive**: board publishes `/archive/{slug}`; per-session **non-shareable** flag excludes decks from the public library
 - Chair **deck queue** tab with committee download; CSV export; submission rate limit + honeypot
+- **VIP event registration** flag on approved talks (board and co-chairs)
 - **Schedule builder**: 8-room grid (Data Tech layout), auto-generate with technical/variety balance per time row, drag-and-drop adjustments
 
 ## Project structure

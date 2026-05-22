@@ -45,6 +45,7 @@ export default async function ChairPage({
       abstract: full.abstract,
       email: full.email,
       deckShareable: full.deckShareable,
+      vipRegistered: full.vipRegistered,
     };
   });
 

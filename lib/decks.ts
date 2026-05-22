@@ -9,6 +9,7 @@ export type DeckQueueItem = {
   organization: string;
   deckStatus: string | null;
   deckShareable: boolean;
+  vipRegistered: boolean;
   deckFileId: string | null;
   deckPublicId: string | null;
   deckFilename: string | null;
@@ -40,6 +41,7 @@ export async function getDeckQueue(conferenceId: string): Promise<DeckQueueItem[
       organization: s.organization,
       deckStatus: s.deckStatus,
       deckShareable: s.deckShareable,
+      vipRegistered: s.vipRegistered,
       deckFileId: file?.id ?? null,
       deckPublicId: file?.publicId ?? null,
       deckFilename: file?.filename ?? null,

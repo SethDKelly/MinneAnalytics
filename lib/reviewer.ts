@@ -11,6 +11,7 @@ export {
   canPublishDeckArchive,
   canScore,
   canSetDeckShareable,
+  canSetVipRegistered,
   canSetProgramStatus,
   committeeDashboardTitle,
   isBoard,
