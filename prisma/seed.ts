@@ -1,0 +1,239 @@
+import { PrismaClient, ProgramStatus } from "@prisma/client";
+import { generateToken, hashToken } from "../lib/tokens";
+import { serializeDegrees } from "../lib/degrees";
+import { ensureScheduleGrid } from "../lib/schedule/grid";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  await prisma.schedulePlacement.deleteMany();
+  await prisma.scheduleSlot.deleteMany();
+  await prisma.scheduleRoom.deleteMany();
+  await prisma.score.deleteMany();
+  await prisma.deckFile.deleteMany();
+  await prisma.submission.deleteMany();
+  await prisma.reviewerAccess.deleteMany();
+  await prisma.conference.deleteMany();
+
+  const conference = await prisma.conference.create({
+    data: {
+      slug: "data-tech-2027",
+      name: "Data Tech 2027",
+    },
+  });
+
+  const tokens = {
+    scorer1: generateToken(),
+    scorer2: generateToken(),
+    chair: generateToken(),
+    core: generateToken(),
+  };
+
+  const accessRows = [
+    { role: "SCORER" as const, label: "Co-Chair A", token: tokens.scorer1 },
+    { role: "SCORER" as const, label: "Co-Chair B", token: tokens.scorer2 },
+    { role: "CHAIR" as const, label: "Program Chair", token: tokens.chair },
+    { role: "CORE" as const, label: "Core Approver", token: tokens.core },
+  ];
+
+  for (const row of accessRows) {
+    await prisma.reviewerAccess.create({
+      data: {
+        conferenceId: conference.id,
+        role: row.role,
+        label: row.label,
+        tokenHash: hashToken(row.token),
+      },
+    });
+  }
+
+  const sampleTalks: Array<{
+    firstName: string;
+    lastName: string;
+    title: string;
+    abstract: string;
+    technicalLevel: number;
+    isSoftSkill?: boolean;
+    programStatus?: ProgramStatus;
+    degrees?: string[];
+  }> = [
+    {
+      firstName: "Alex",
+      lastName: "Rivera",
+      title: "Practical Feature Stores for Regional Retail",
+      abstract:
+        "This session walks through how a mid-size retailer built a feature store on open-source tooling, with lessons on governance, latency budgets, and team handoffs between analytics and engineering.",
+      technicalLevel: 4,
+      programStatus: "PENDING",
+      degrees: ["MS"],
+    },
+    {
+      firstName: "Jordan",
+      lastName: "Kim",
+      title: "Leading Data Teams Through Budget Uncertainty",
+      abstract:
+        "A soft-skills focused talk on communicating tradeoffs, protecting roadmap integrity, and keeping analysts engaged when sponsorship dollars shift quarter to quarter.",
+      technicalLevel: 2,
+      isSoftSkill: true,
+      programStatus: "PENDING",
+      degrees: ["MBA"],
+    },
+    {
+      firstName: "Sam",
+      lastName: "Okafor",
+      title: "Real-Time Fraud Signals at the Edge",
+      abstract:
+        "We cover streaming ingestion, model deployment patterns, and how to validate alert precision without drowning operations in false positives.",
+      technicalLevel: 5,
+      programStatus: "PENDING",
+      degrees: ["PhD"],
+    },
+    {
+      firstName: "Morgan",
+      lastName: "Lee",
+      title: "Executive Dashboards That Executives Actually Use",
+      abstract:
+        "Lessons from redesigning C-suite analytics around decisions, not charts — adoption patterns, narrative structure, and governance.",
+      technicalLevel: 1,
+      programStatus: "PENDING",
+      degrees: ["MBA"],
+    },
+    {
+      firstName: "Riley",
+      lastName: "Chen",
+      title: "Negotiating Cloud Contracts for Analytics Workloads",
+      abstract:
+        "FinOps and procurement tactics for data teams: unit economics, commit structures, and benchmarking vendor proposals.",
+      technicalLevel: 2,
+      programStatus: "PENDING",
+    },
+    {
+      firstName: "Casey",
+      lastName: "Nguyen",
+      title: "Bridging Product and Data Science Roadmaps",
+      abstract:
+        "Operating rhythms, shared metrics, and prioritization frameworks when product managers and ML engineers plan together.",
+      technicalLevel: 3,
+      programStatus: "PENDING",
+      degrees: ["MS", "MBA"],
+    },
+    {
+      firstName: "Taylor",
+      lastName: "Brooks",
+      title: "Graph Models for Supply Chain Risk",
+      abstract:
+        "Building and evaluating graph neural networks on supplier networks with interpretability requirements for risk officers.",
+      technicalLevel: 5,
+      programStatus: "PENDING",
+      degrees: ["PhD"],
+    },
+    {
+      firstName: "Jamie",
+      lastName: "Patel",
+      title: "Ethical AI Review Boards in Practice",
+      abstract:
+        "How mid-market firms stood up lightweight review processes without slowing delivery — templates and case studies.",
+      technicalLevel: 3,
+      programStatus: "PENDING",
+    },
+    {
+      firstName: "Quinn",
+      lastName: "Hoffman",
+      title: "Modernizing Legacy BI Without a Big Bang",
+      abstract:
+        "Incremental migration patterns from SSRS and Cognos to cloud semantic layers while keeping finance stakeholders whole.",
+      technicalLevel: 4,
+      programStatus: "PENDING",
+      degrees: ["MS"],
+    },
+    {
+      firstName: "Avery",
+      lastName: "Walsh",
+      title: "Building Analytics Partnerships with HR",
+      abstract:
+        "People analytics programs that respect privacy, build trust, and still deliver workforce insights to leadership.",
+      technicalLevel: 2,
+      programStatus: "APPROVED",
+    },
+    {
+      firstName: "Drew",
+      lastName: "Santos",
+      title: "Vector Search Patterns for Internal Knowledge Bases",
+      abstract:
+        "Embedding pipelines, chunking strategies, and evaluation harnesses for enterprise RAG on Confluence and SharePoint.",
+      technicalLevel: 5,
+      programStatus: "APPROVED",
+      degrees: ["MS"],
+    },
+    {
+      firstName: "Blake",
+      lastName: "Foster",
+      title: "Stakeholder Mapping for Analytics PMs",
+      abstract:
+        "Practical tools for identifying sponsors, resistors, and neutral parties before launching a high-visibility analytics initiative.",
+      technicalLevel: 1,
+      programStatus: "PENDING",
+    },
+  ];
+
+  const presenterTokens: string[] = [];
+
+  for (const talk of sampleTalks) {
+    const presenterToken = generateToken();
+    presenterTokens.push(presenterToken);
+    await prisma.submission.create({
+      data: {
+        conferenceId: conference.id,
+        presenterTokenHash: hashToken(presenterToken),
+        programStatus: talk.programStatus ?? "PENDING",
+        approvedAt: talk.programStatus === "APPROVED" ? new Date() : null,
+        firstName: talk.firstName,
+        lastName: talk.lastName,
+        degrees: serializeDegrees(talk.degrees ?? ["MS"]),
+        jobTitle: "Principal Data Scientist",
+        organization: "Example Corp",
+        title: talk.title,
+        abstract: talk.abstract,
+        technicalLevel: talk.technicalLevel,
+        bio: "Speaker bio for demo seed data with enough length to validate forms.",
+        email: `${talk.firstName.toLowerCase()}@example.com`,
+        zipCode: "55401",
+        phone: "612-555-0100",
+        linkedinUrl: "https://www.linkedin.com/in/example",
+        linkedinHasPhoto: true,
+        hasCoPresenter: false,
+        travelReimbursementRequired: false,
+        isSoftSkill: talk.isSoftSkill ?? false,
+      },
+    });
+  }
+
+  await ensureScheduleGrid(conference.id);
+
+  console.log("\n=== MinneAnalytics Conference Demo — Seed Complete ===\n");
+  console.log(`Conference: ${conference.name}`);
+  console.log(`Submit form:  /submit/${conference.slug}\n`);
+  console.log("Reviewer URLs (keep secret):");
+  for (const row of accessRows) {
+    const path = row.role === "SCORER" ? "review" : "chair";
+    console.log(`  ${row.label} (${row.role}): http://localhost:3000/${path}/${row.token}`);
+  }
+  console.log("\nSchedule builder (chair / core):");
+  console.log(`  http://localhost:3000/schedule/${tokens.chair}`);
+  console.log("\nCo-chair workflow:");
+  console.log("  1. Co-Chair A & B score pending talks (0/1 + notes) at /review/...");
+  console.log("  2. Program Chair ranks & marks backup/decline at /chair/...");
+  console.log("  3. Core Approver gives final Approve at /chair/... (CORE token)");
+  console.log("\nPresenter portal URLs (sample submissions):");
+  presenterTokens.slice(0, 3).forEach((t, i) => {
+    console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
+  });
+  console.log("\n");
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

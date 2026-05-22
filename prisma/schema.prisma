@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ProgramStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  BACKUP
+  WITHDRAWN
+}
+
+enum DeckStatus {
+  SUBMITTED
+  REVIEWED
+  APPROVED
+  CONCERN
+}
+
+enum ReviewerRole {
+  SCORER
+  CHAIR
+  CORE
+}
+
+model Conference {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  rooms     Int      @default(8)
+  sessionsPerRoom Int @default(8) @map("sessions_per_room")
+  eodTrim   Int      @default(6) @map("eod_trim")
+  graemeSlots Int    @default(4) @map("graeme_slots")
+  sponsorMin Int     @default(7) @map("sponsor_min")
+  sponsorMax Int     @default(11) @map("sponsor_max")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  submissions    Submission[]
+  reviewerAccess ReviewerAccess[]
+  scheduleRooms  ScheduleRoom[]
+  scheduleSlots  ScheduleSlot[]
+  schedulePlacements SchedulePlacement[]
+}
+
+enum SlotType {
+  REGISTRATION
+  KICKOFF
+  SESSION
+  BREAK
+  LUNCH
+  NETWORKING
+}
+
+model ScheduleRoom {
+  id           String   @id @default(cuid())
+  conferenceId String   @map("conference_id")
+  name         String
+  sortOrder    Int      @map("sort_order")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  placements SchedulePlacement[]
+
+  @@unique([conferenceId, sortOrder])
+}
+
+model ScheduleSlot {
+  id           String   @id @default(cuid())
+  conferenceId String   @map("conference_id")
+  label        String
+  slotType     SlotType @map("slot_type")
+  sortOrder    Int      @map("sort_order")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  placements SchedulePlacement[]
+
+  @@unique([conferenceId, sortOrder])
+}
+
+model SchedulePlacement {
+  id           String  @id @default(cuid())
+  conferenceId String  @map("conference_id")
+  slotId       String  @map("slot_id")
+  roomId       String  @map("room_id")
+  submissionId String? @unique @map("submission_id")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  slot       ScheduleSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  room       ScheduleRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  submission Submission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+
+  @@unique([slotId, roomId])
+}
+
+model Submission {
+  id           String        @id @default(cuid())
+  conferenceId String        @map("conference_id")
+  presenterTokenHash String  @unique @map("presenter_token_hash")
+  programStatus ProgramStatus @default(PENDING) @map("program_status")
+  deckStatus    DeckStatus?   @map("deck_status")
+  isSponsorSession Boolean    @default(false) @map("is_sponsor_session")
+  isSoftSkill   Boolean       @default(false) @map("is_soft_skill")
+  approvedAt    DateTime?     @map("approved_at")
+  withdrawnAt   DateTime?     @map("withdrawn_at")
+
+  firstName     String  @map("first_name")
+  lastName      String  @map("last_name")
+  degrees       String  // JSON array
+  jobTitle      String  @map("job_title")
+  organization  String
+  title         String
+  abstract      String
+  technicalLevel Int    @map("technical_level")
+  bio           String
+  email         String
+  zipCode       String  @map("zip_code")
+  phone         String
+  linkedinUrl   String  @map("linkedin_url")
+  linkedinHasPhoto Boolean @map("linkedin_has_photo")
+
+  hasCoPresenter Boolean @default(false) @map("has_co_presenter")
+  coPresenterName String? @map("co_presenter_name")
+  coPresenterEmail String? @map("co_presenter_email")
+  coPresenterDegrees String? @map("co_presenter_degrees")
+  coPresenterJobTitle String? @map("co_presenter_job_title")
+  coPresenterOrganization String? @map("co_presenter_organization")
+  coPresenterBio String? @map("co_presenter_bio")
+  coPresenterLinkedinUrl String? @map("co_presenter_linkedin_url")
+  coPresenterLinkedinHasPhoto Boolean? @map("co_presenter_linkedin_has_photo")
+
+  travelRestriction String? @map("travel_restriction")
+  travelReimbursementRequired Boolean @default(false) @map("travel_reimbursement_required")
+  additionalInfo String? @map("additional_info")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  scores     Score[]
+  deckFiles  DeckFile[]
+  schedulePlacement SchedulePlacement?
+}
+
+model ReviewerAccess {
+  id           String       @id @default(cuid())
+  conferenceId String       @map("conference_id")
+  tokenHash    String       @unique @map("token_hash")
+  role         ReviewerRole
+  label        String?
+  expiresAt    DateTime?    @map("expires_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  scores     Score[]
+}
+
+model Score {
+  id               String   @id @default(cuid())
+  submissionId     String   @map("submission_id")
+  reviewerAccessId String   @map("reviewer_access_id")
+  value            Float
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  submission     Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, reviewerAccessId])
+}
+
+model DeckFile {
+  id           String   @id @default(cuid())
+  submissionId String   @map("submission_id")
+  version      Int
+  filename     String
+  storagePath  String   @map("storage_path")
+  mimeType     String   @map("mime_type")
+  sizeBytes    Int      @map("size_bytes")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
