@@ -27,17 +27,23 @@ export default async function MudacLandingPage() {
           <p className="mt-2 text-sm text-gray-600">
             Status: {event.status.replace(/_/g, " ").toLowerCase()} ·{" "}
             {event.judgesPerPanel} judges per panel
+            {event.registrationOpen ? " · registration open" : ""}
           </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/mudac/minnemudac-2026/register" className="btn-primary">
+              Register as judge
+            </Link>
+          </div>
           <p className="mt-4 text-sm text-gray-700">
             Tournament directors: open the URL printed by{" "}
             <code className="rounded bg-gray-100 px-1">npm run db:seed</code> (starts with{" "}
             <code className="rounded bg-gray-100 px-1">/mudac/director/…</code>).
           </p>
-          <p className="mt-2 text-sm text-gray-500">
-            Judge registration and scoring arrive in Phase 2–3. See{" "}
-            <code className="rounded bg-gray-100 px-1">docs/mudac-implementation-plan.md</code>{" "}
-            in the repository.
-          </p>
+          {event.registrationCodeHash && (
+            <p className="mt-2 text-sm text-gray-500">
+              Demo registration code: <code className="rounded bg-gray-100 px-1">volunteer</code>
+            </p>
+          )}
         </div>
       ) : (
         <p className="mt-6 text-sm text-amber-800">

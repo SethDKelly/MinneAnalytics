@@ -16,6 +16,8 @@ import {
   MUDAC_STATUS_LABELS,
 } from "@/lib/mudac/constants";
 import { directorCapabilitySummary, directorDashboardTitle } from "@/lib/mudac/roles";
+import { MudacDirectorPanelsTab } from "@/components/MudacDirectorPanelsTab";
+import type { MudacJudgeType } from "@prisma/client";
 
 type CriterionRow = {
   id: string;
@@ -50,7 +52,33 @@ type EventSnapshot = {
   teamIdPadWidth: number;
 };
 
-type Tab = "setup" | "criteria" | "teams";
+type Tab = "setup" | "criteria" | "teams" | "panels";
+
+type PanelRow = {
+  id: string;
+  label: string;
+  sortOrder: number;
+  slotRequirements: Array<{ slotIndex: number; judgeType: MudacJudgeType }>;
+  assignments: Array<{
+    slotIndex: number;
+    judge: {
+      id: string;
+      name: string;
+      email: string;
+      judgeType: MudacJudgeType;
+      revokedAt: string | null;
+    };
+  }>;
+};
+
+type JudgeRow = {
+  id: string;
+  name: string;
+  email: string;
+  judgeType: MudacJudgeType;
+  revokedAt: string | null;
+  assignments: Array<{ panel: { id: string; label: string } }>;
+};
 
 type Props = {
   token: string;
@@ -58,6 +86,8 @@ type Props = {
   event: EventSnapshot;
   criteria: CriterionRow[];
   teams: TeamRow[];
+  panels: PanelRow[];
+  judges: JudgeRow[];
 };
 
 export function MudacDirectorDashboard({
@@ -66,6 +96,8 @@ export function MudacDirectorDashboard({
   event: initialEvent,
   criteria: initialCriteria,
   teams: initialTeams,
+  panels,
+  judges,
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("setup");
@@ -284,6 +316,7 @@ export function MudacDirectorDashboard({
             ["setup", "Setup"],
             ["criteria", "Criteria"],
             ["teams", "Teams"],
+            ["panels", "Panels"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -340,10 +373,28 @@ export function MudacDirectorDashboard({
           </div>
 
           <div className="card p-4">
+            <h2 className="text-lg font-semibold text-minne-navy">Judge registration</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Volunteers self-register at the public link below. Toggle registration open above
+              and optionally set a registration code.
+            </p>
+            <p className="mt-3 break-all rounded bg-gray-100 p-3 font-mono text-xs">
+              /mudac/{event.slug}/register
+            </p>
+            <a
+              href={`/mudac/${event.slug}/register`}
+              className="btn-secondary mt-3"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open registration page
+            </a>
+          </div>
+
+          <div className="card p-4">
             <h2 className="text-lg font-semibold text-minne-navy">Registration code</h2>
             <p className="mt-1 text-sm text-gray-600">
-              Optional shared secret for judge self-registration (Phase 2). Leave blank to
-              clear.
+              Optional shared secret for judge self-registration. Leave blank to clear.
               {event.hasRegistrationCode && " A code is currently set."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -712,6 +763,15 @@ export function MudacDirectorDashboard({
             </div>
           ))}
         </section>
+      )}
+
+      {tab === "panels" && (
+        <MudacDirectorPanelsTab
+          token={token}
+          judgesPerPanel={event.judgesPerPanel}
+          panels={panels}
+          judges={judges}
+        />
       )}
     </div>
   );

@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { MudacDirectorDashboard } from "@/components/MudacDirectorDashboard";
 import { getDirectorByToken } from "@/lib/mudac/auth";
-import { getMudacCriteria, getMudacTeams } from "@/lib/mudac/queries";
+import {
+  getMudacCriteria,
+  getMudacJudges,
+  getMudacPanels,
+  getMudacTeams,
+} from "@/lib/mudac/queries";
 
 export default async function MudacDirectorPage({
   params,
@@ -14,9 +19,11 @@ export default async function MudacDirectorPage({
     notFound();
   }
 
-  const [criteria, teams] = await Promise.all([
+  const [criteria, teams, panels, judges] = await Promise.all([
     getMudacCriteria(director.eventId),
     getMudacTeams(director.eventId),
+    getMudacPanels(director.eventId),
+    getMudacJudges(director.eventId),
   ]);
 
   const event = director.event;
@@ -43,6 +50,27 @@ export default async function MudacDirectorPage({
       }}
       criteria={criteria}
       teams={teams}
+      panels={panels.map((p) => ({
+        id: p.id,
+        label: p.label,
+        sortOrder: p.sortOrder,
+        slotRequirements: p.slotRequirements,
+        assignments: p.assignments.map((a) => ({
+          slotIndex: a.slotIndex,
+          judge: {
+            ...a.judge,
+            revokedAt: a.judge.revokedAt?.toISOString() ?? null,
+          },
+        })),
+      }))}
+      judges={judges.map((j) => ({
+        id: j.id,
+        name: j.name,
+        email: j.email,
+        judgeType: j.judgeType,
+        revokedAt: j.revokedAt?.toISOString() ?? null,
+        assignments: j.assignments,
+      }))}
     />
   );
 }

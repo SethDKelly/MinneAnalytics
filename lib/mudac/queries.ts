@@ -34,3 +34,48 @@ export async function getNextCriterionSortOrder(eventId: string): Promise<number
   });
   return (last?.sortOrder ?? 0) + 1;
 }
+
+export async function getNextPanelSortOrder(eventId: string): Promise<number> {
+  const last = await prisma.mudacJudgePanel.findFirst({
+    where: { eventId },
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
+  return (last?.sortOrder ?? 0) + 1;
+}
+
+export async function getMudacJudges(eventId: string) {
+  return prisma.mudacJudge.findMany({
+    where: { eventId },
+    orderBy: { registeredAt: "desc" },
+    include: {
+      assignments: {
+        include: { panel: { select: { id: true, label: true } } },
+      },
+    },
+  });
+}
+
+export async function getMudacPanels(eventId: string) {
+  return prisma.mudacJudgePanel.findMany({
+    where: { eventId },
+    orderBy: { sortOrder: "asc" },
+    include: {
+      slotRequirements: { orderBy: { slotIndex: "asc" } },
+      assignments: {
+        include: {
+          judge: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              judgeType: true,
+              revokedAt: true,
+            },
+          },
+        },
+        orderBy: { slotIndex: "asc" },
+      },
+    },
+  });
+}

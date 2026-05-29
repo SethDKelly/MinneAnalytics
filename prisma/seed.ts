@@ -4,6 +4,8 @@ import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
+import { createPanelWithSlots } from "../lib/mudac/panels";
+import { hashRegistrationCode } from "../lib/mudac/registration-code";
 
 const prisma = new PrismaClient();
 
@@ -327,8 +329,9 @@ async function main() {
     data: {
       slug: "minnemudac-2026",
       name: "MinneMUDAC 2026",
-      status: "DRAFT",
-      registrationOpen: false,
+      status: "REGISTRATION_OPEN",
+      registrationOpen: true,
+      registrationCodeHash: hashRegistrationCode("volunteer"),
       judgesPerPanel: 3,
       panelAggregateMode: "MEAN",
       idGenerationMode: "SEQUENTIAL",
@@ -358,6 +361,10 @@ async function main() {
     await prisma.mudacScoringCriterion.create({
       data: { eventId: mudacEvent.id, ...c },
     });
+  }
+
+  for (const label of ["Panel A", "Panel B", "Panel C"]) {
+    await createPanelWithSlots(mudacEvent.id, label, mudacEvent.judgesPerPanel);
   }
 
   const danToken = boardTokens["Dan Atkins"];
@@ -402,9 +409,12 @@ async function main() {
 
   console.log("\n=== MinneMUDAC Judging Demo ===\n");
   console.log(`Event: ${mudacEvent.name}`);
-  console.log(`Landing:  http://localhost:3000/mudac`);
-  console.log(`Director: http://localhost:3000/mudac/director/${mudacDirectorToken}`);
-  console.log("\nPhase 1: configure criteria and generate team IDs in the director dashboard.");
+  console.log(`Landing:       http://localhost:3000/mudac`);
+  console.log(`Director:      http://localhost:3000/mudac/director/${mudacDirectorToken}`);
+  console.log(`Judge register: http://localhost:3000/mudac/minnemudac-2026/register`);
+  console.log(`  (demo registration code: volunteer)`);
+  console.log("\nPhase 2: judges self-register; directors assign them on the Panels tab.");
+  console.log("Phase 3: scoring scorecards (not yet implemented).");
   console.log("\n");
 }
 
