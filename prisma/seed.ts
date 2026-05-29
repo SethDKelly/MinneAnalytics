@@ -8,6 +8,18 @@ import { BOARD_MEMBER_NAMES } from "../lib/roles";
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.mudacCriterionScore.deleteMany();
+  await prisma.mudacJudgeScorecard.deleteMany();
+  await prisma.mudacPresentation.deleteMany();
+  await prisma.mudacPanelAssignment.deleteMany();
+  await prisma.mudacPanelSlotRequirement.deleteMany();
+  await prisma.mudacJudge.deleteMany();
+  await prisma.mudacJudgePanel.deleteMany();
+  await prisma.mudacTeam.deleteMany();
+  await prisma.mudacScoringCriterion.deleteMany();
+  await prisma.mudacDirectorAccess.deleteMany();
+  await prisma.mudacEvent.deleteMany();
+
   await prisma.schedulePlacement.deleteMany();
   await prisma.scheduleSlot.deleteMany();
   await prisma.scheduleRoom.deleteMany();
@@ -310,6 +322,44 @@ async function main() {
 
   await ensureScheduleGrid(conference.id);
 
+  const mudacDirectorToken = generateToken();
+  const mudacEvent = await prisma.mudacEvent.create({
+    data: {
+      slug: "minnemudac-2026",
+      name: "MinneMUDAC 2026",
+      status: "DRAFT",
+      registrationOpen: false,
+      judgesPerPanel: 3,
+      panelAggregateMode: "MEAN",
+      idGenerationMode: "SEQUENTIAL",
+      teamIdStart: 1,
+      teamIdEnd: 99,
+      teamIdIncrement: 1,
+      teamIdPadWidth: 2,
+    },
+  });
+
+  await prisma.mudacDirectorAccess.create({
+    data: {
+      eventId: mudacEvent.id,
+      label: "Tournament Director",
+      tokenHash: hashToken(mudacDirectorToken),
+    },
+  });
+
+  const mudacCriteria = [
+    { sortOrder: 1, name: "Problem understanding", maxPoints: 10 },
+    { sortOrder: 2, name: "Analytical approach", maxPoints: 10 },
+    { sortOrder: 3, name: "Insight and impact", maxPoints: 10 },
+    { sortOrder: 4, name: "Presentation clarity", maxPoints: 10 },
+    { sortOrder: 5, name: "Q&A and teamwork", maxPoints: 10 },
+  ];
+  for (const c of mudacCriteria) {
+    await prisma.mudacScoringCriterion.create({
+      data: { eventId: mudacEvent.id, ...c },
+    });
+  }
+
   const danToken = boardTokens["Dan Atkins"];
 
   console.log("\n=== MinneAnalytics Conference Demo — Seed Complete ===\n");
@@ -349,6 +399,12 @@ async function main() {
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
   });
+
+  console.log("\n=== MinneMUDAC Judging Demo ===\n");
+  console.log(`Event: ${mudacEvent.name}`);
+  console.log(`Landing:  http://localhost:3000/mudac`);
+  console.log(`Director: http://localhost:3000/mudac/director/${mudacDirectorToken}`);
+  console.log("\nPhase 1: configure criteria and generate team IDs in the director dashboard.");
   console.log("\n");
 }
 

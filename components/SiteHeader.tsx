@@ -3,6 +3,7 @@ import Link from "next/link";
 const nav = [
   { label: "About", href: "/about" },
   { label: "Events", href: "/upcoming" },
+  { label: "MUDAC demo", href: "/mudac" },
   { label: "Slide decks", href: "/archive/data-tech-2027" },
 ];
 
