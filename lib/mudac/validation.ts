@@ -18,3 +18,18 @@ export const mudacJudgeRegistrationSchema = z.object({
 });
 
 export type MudacJudgeRegistrationInput = z.infer<typeof mudacJudgeRegistrationSchema>;
+
+export const mudacScorecardSchema = z.object({
+  token: z.string().min(1),
+  presentationId: z.string().min(1),
+  scores: z.array(
+    z.object({
+      criterionId: z.string().min(1),
+      value: z.number(),
+    })
+  ),
+  notes: z.string().max(2000).optional(),
+  submit: z.boolean().optional(),
+});
+
+export type MudacScorecardInput = z.infer<typeof mudacScorecardSchema>;

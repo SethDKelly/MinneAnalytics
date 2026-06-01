@@ -25,6 +25,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
     data.status = status;
+    if (status === "LOCKED") {
+      data.scoringLocked = true;
+    }
   }
 
   if (body.registrationOpen !== undefined) {

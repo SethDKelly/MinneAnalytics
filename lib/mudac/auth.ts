@@ -47,3 +47,9 @@ export function canRegisterForEvent(event: {
   }
   return { ok: true };
 }
+
+export function getJudgePanelId(
+  judge: { assignments: Array<{ panelId: string }> }
+): string | null {
+  return judge.assignments[0]?.panelId ?? null;
+}

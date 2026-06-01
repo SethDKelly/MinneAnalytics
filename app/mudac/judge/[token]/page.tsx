@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getJudgeByToken } from "@/lib/mudac/auth";
-import { MUDAC_JUDGE_TYPE_LABELS } from "@/lib/mudac/constants";
+import { getJudgeByToken, getJudgePanelId } from "@/lib/mudac/auth";
+import { MUDAC_DIVISION_LABELS, MUDAC_JUDGE_TYPE_LABELS } from "@/lib/mudac/constants";
+import { getJudgeScoringContext } from "@/lib/mudac/queries";
+import { canJudgeSubmitScores } from "@/lib/mudac/scoring";
 
 export default async function MudacJudgePage({
   params,
@@ -12,7 +14,16 @@ export default async function MudacJudgePage({
   const judge = await getJudgeByToken(token);
   if (!judge) notFound();
 
+  const panelId = getJudgePanelId(judge);
   const assignment = judge.assignments[0];
+  const scoring = canJudgeSubmitScores(judge.event);
+
+  let presentations: Awaited<ReturnType<typeof getJudgeScoringContext>>["presentations"] =
+    [];
+  if (panelId) {
+    const ctx = await getJudgeScoringContext(judge.eventId, panelId, judge.id);
+    presentations = ctx.presentations;
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -29,6 +40,12 @@ export default async function MudacJudgePage({
         Judge type: {MUDAC_JUDGE_TYPE_LABELS[judge.judgeType]}
       </p>
 
+      {!scoring.ok && (
+        <p className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {scoring.message}
+        </p>
+      )}
+
       <div className="card mt-6">
         <h2 className="font-semibold text-minne-navy">Panel assignment</h2>
         {assignment ? (
@@ -44,10 +61,51 @@ export default async function MudacJudgePage({
         )}
       </div>
 
-      <p className="mt-6 rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-        Team scoring arrives in Phase 3. Once presentations are scheduled, you will score
-        assigned teams on each criterion from this portal.
-      </p>
+      {panelId && (
+        <div className="card mt-6">
+          <h2 className="font-semibold text-minne-navy">Teams to score</h2>
+          {presentations.length === 0 ? (
+            <p className="mt-2 text-sm text-gray-600">
+              No teams are scheduled for your panel yet.
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {presentations.map((p) => {
+                const card = p.scorecards[0];
+                const done = Boolean(card?.submittedAt);
+                return (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 px-4 py-3"
+                  >
+                    <div>
+                      <span className="font-mono text-lg font-bold text-minne-navy">
+                        Team {p.team.displayId}
+                      </span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        {MUDAC_DIVISION_LABELS[p.team.division]}
+                      </span>
+                      {done ? (
+                        <span className="ml-2 text-xs font-medium text-green-700">
+                          Submitted
+                        </span>
+                      ) : card ? (
+                        <span className="ml-2 text-xs text-gray-500">Draft saved</span>
+                      ) : null}
+                    </div>
+                    <Link
+                      href={`/mudac/judge/${token}/presentation/${p.id}`}
+                      className="btn-primary text-sm"
+                    >
+                      {done ? "View / edit" : "Score"}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

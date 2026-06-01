@@ -5,6 +5,7 @@ import {
   getMudacCriteria,
   getMudacJudges,
   getMudacPanels,
+  getMudacPresentations,
   getMudacTeams,
 } from "@/lib/mudac/queries";
 
@@ -19,11 +20,12 @@ export default async function MudacDirectorPage({
     notFound();
   }
 
-  const [criteria, teams, panels, judges] = await Promise.all([
+  const [criteria, teams, panels, judges, presentations] = await Promise.all([
     getMudacCriteria(director.eventId),
     getMudacTeams(director.eventId),
     getMudacPanels(director.eventId),
     getMudacJudges(director.eventId),
+    getMudacPresentations(director.eventId),
   ]);
 
   const event = director.event;
@@ -70,6 +72,22 @@ export default async function MudacDirectorPage({
         judgeType: j.judgeType,
         revokedAt: j.revokedAt?.toISOString() ?? null,
         assignments: j.assignments,
+      }))}
+      presentations={presentations.map((p) => ({
+        id: p.id,
+        panelId: p.panelId,
+        team: {
+          id: p.team.id,
+          displayId: p.team.displayId,
+          division: p.team.division,
+          name: p.team.name,
+        },
+        panel: p.panel,
+        scorecards: p.scorecards.map((sc) => ({
+          id: sc.id,
+          submittedAt: sc.submittedAt?.toISOString() ?? null,
+          judge: sc.judge,
+        })),
       }))}
     />
   );

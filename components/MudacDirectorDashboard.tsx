@@ -17,6 +17,7 @@ import {
 } from "@/lib/mudac/constants";
 import { directorCapabilitySummary, directorDashboardTitle } from "@/lib/mudac/roles";
 import { MudacDirectorPanelsTab } from "@/components/MudacDirectorPanelsTab";
+import { MudacDirectorPresentationsTab } from "@/components/MudacDirectorPresentationsTab";
 import type { MudacJudgeType } from "@prisma/client";
 
 type CriterionRow = {
@@ -52,7 +53,19 @@ type EventSnapshot = {
   teamIdPadWidth: number;
 };
 
-type Tab = "setup" | "criteria" | "teams" | "panels";
+type Tab = "setup" | "criteria" | "teams" | "panels" | "presentations";
+
+type PresentationRow = {
+  id: string;
+  panelId: string;
+  team: TeamRow;
+  panel: { label: string };
+  scorecards: Array<{
+    id: string;
+    submittedAt: string | null;
+    judge: { name: string };
+  }>;
+};
 
 type PanelRow = {
   id: string;
@@ -88,6 +101,7 @@ type Props = {
   teams: TeamRow[];
   panels: PanelRow[];
   judges: JudgeRow[];
+  presentations: PresentationRow[];
 };
 
 export function MudacDirectorDashboard({
@@ -98,6 +112,7 @@ export function MudacDirectorDashboard({
   teams: initialTeams,
   panels,
   judges,
+  presentations,
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("setup");
@@ -317,6 +332,7 @@ export function MudacDirectorDashboard({
             ["criteria", "Criteria"],
             ["teams", "Teams"],
             ["panels", "Panels"],
+            ["presentations", "Presentations"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -771,6 +787,16 @@ export function MudacDirectorDashboard({
           judgesPerPanel={event.judgesPerPanel}
           panels={panels}
           judges={judges}
+        />
+      )}
+
+      {tab === "presentations" && (
+        <MudacDirectorPresentationsTab
+          token={token}
+          panels={panels.map((p) => ({ id: p.id, label: p.label }))}
+          teams={teams}
+          presentations={presentations}
+          judgesPerPanel={event.judgesPerPanel}
         />
       )}
     </div>

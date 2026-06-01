@@ -79,3 +79,71 @@ export async function getMudacPanels(eventId: string) {
     },
   });
 }
+
+export async function getMudacPresentations(eventId: string) {
+  return prisma.mudacPresentation.findMany({
+    where: { eventId },
+    include: {
+      team: true,
+      panel: { select: { id: true, label: true } },
+      scorecards: {
+        include: {
+          judge: { select: { id: true, name: true } },
+          scores: true,
+        },
+      },
+    },
+    orderBy: [{ panel: { sortOrder: "asc" } }, { team: { displayId: "asc" } }],
+  });
+}
+
+export async function getJudgeScoringContext(
+  eventId: string,
+  panelId: string,
+  judgeId: string
+) {
+  const [criteria, presentations] = await Promise.all([
+    prisma.mudacScoringCriterion.findMany({
+      where: { eventId },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.mudacPresentation.findMany({
+      where: { panelId },
+      include: {
+        team: true,
+        scorecards: {
+          where: { judgeId },
+          include: { scores: true },
+        },
+      },
+      orderBy: { team: { displayId: "asc" } },
+    }),
+  ]);
+
+  return { criteria, presentations };
+}
+
+export async function getPresentationForJudgeScore(
+  presentationId: string,
+  judgeId: string
+) {
+  return prisma.mudacPresentation.findFirst({
+    where: {
+      id: presentationId,
+      panel: { assignments: { some: { judgeId } } },
+    },
+    include: {
+      team: true,
+      panel: { select: { label: true } },
+      event: true,
+      scorecards: {
+        where: { judgeId },
+        include: {
+          scores: {
+            include: { criterion: true },
+          },
+        },
+      },
+    },
+  });
+}

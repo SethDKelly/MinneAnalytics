@@ -39,11 +39,10 @@ export default async function MudacLandingPage() {
             <code className="rounded bg-gray-100 px-1">npm run db:seed</code> (starts with{" "}
             <code className="rounded bg-gray-100 px-1">/mudac/director/…</code>).
           </p>
-          {event.registrationCodeHash && (
-            <p className="mt-2 text-sm text-gray-500">
-              Demo registration code: <code className="rounded bg-gray-100 px-1">volunteer</code>
-            </p>
-          )}
+          <p className="mt-2 text-sm text-gray-500">
+            Demo registration code: <code className="rounded bg-gray-100 px-1">volunteer</code>.
+            After seeding, demo judges can score teams 01–03 on Panel A.
+          </p>
         </div>
       ) : (
         <p className="mt-6 text-sm text-amber-800">

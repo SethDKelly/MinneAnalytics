@@ -1,4 +1,4 @@
-import { PrismaClient, ProgramStatus } from "@prisma/client";
+import { PrismaClient, ProgramStatus, MudacJudgeType } from "@prisma/client";
 import { generateToken, hashToken } from "../lib/tokens";
 import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
@@ -329,7 +329,7 @@ async function main() {
     data: {
       slug: "minnemudac-2026",
       name: "MinneMUDAC 2026",
-      status: "REGISTRATION_OPEN",
+      status: "JUDGING",
       registrationOpen: true,
       registrationCodeHash: hashRegistrationCode("volunteer"),
       judgesPerPanel: 3,
@@ -365,6 +365,88 @@ async function main() {
 
   for (const label of ["Panel A", "Panel B", "Panel C"]) {
     await createPanelWithSlots(mudacEvent.id, label, mudacEvent.judgesPerPanel);
+  }
+
+  const panelA = await prisma.mudacJudgePanel.findFirst({
+    where: { eventId: mudacEvent.id, label: "Panel A" },
+  });
+
+  const demoTeams = [
+    { displayId: "01", division: "UNDERGRADUATE" as const },
+    { displayId: "02", division: "UNDERGRADUATE" as const },
+    { displayId: "03", division: "UNDERGRADUATE" as const },
+  ];
+  const teamRows: Array<{ id: string; displayId: string }> = [];
+  for (const t of demoTeams) {
+    const row = await prisma.mudacTeam.create({
+      data: { eventId: mudacEvent.id, ...t },
+    });
+    teamRows.push({ id: row.id, displayId: row.displayId });
+  }
+
+  if (panelA) {
+    for (const team of teamRows) {
+      await prisma.mudacPresentation.create({
+        data: {
+          eventId: mudacEvent.id,
+          panelId: panelA.id,
+          teamId: team.id,
+        },
+      });
+    }
+
+    const demoJudgeDefs: Array<{
+      name: string;
+      email: string;
+      judgeType: MudacJudgeType;
+      slotIndex: number;
+    }> = [
+      {
+        name: "Alex Academic",
+        email: "alex.judge@example.com",
+        judgeType: "ACADEMIC",
+        slotIndex: 0,
+      },
+      {
+        name: "Blake Business",
+        email: "blake.judge@example.com",
+        judgeType: "INDUSTRY_BUSINESS",
+        slotIndex: 1,
+      },
+      {
+        name: "Casey Technical",
+        email: "casey.judge@example.com",
+        judgeType: "INDUSTRY_TECHNICAL",
+        slotIndex: 2,
+      },
+    ];
+
+    const judgeUrls: string[] = [];
+    for (const def of demoJudgeDefs) {
+      const judgeToken = generateToken();
+      const judge = await prisma.mudacJudge.create({
+        data: {
+          eventId: mudacEvent.id,
+          name: def.name,
+          email: def.email,
+          judgeType: def.judgeType,
+          tokenHash: hashToken(judgeToken),
+        },
+      });
+      await prisma.mudacPanelAssignment.create({
+        data: {
+          panelId: panelA.id,
+          judgeId: judge.id,
+          slotIndex: def.slotIndex,
+        },
+      });
+      judgeUrls.push(
+        `  ${def.name}: http://localhost:3000/mudac/judge/${judgeToken}`
+      );
+    }
+
+    console.log("\nDemo judges (Panel A — score teams 01–03):");
+    judgeUrls.forEach((line) => console.log(line));
   }
 
   const danToken = boardTokens["Dan Atkins"];
@@ -413,8 +495,8 @@ async function main() {
   console.log(`Director:      http://localhost:3000/mudac/director/${mudacDirectorToken}`);
   console.log(`Judge register: http://localhost:3000/mudac/minnemudac-2026/register`);
   console.log(`  (demo registration code: volunteer)`);
-  console.log("\nPhase 2: judges self-register; directors assign them on the Panels tab.");
-  console.log("Phase 3: scoring scorecards (not yet implemented).");
+  console.log("\nPhase 3: assign teams on Presentations tab; judges score at /mudac/judge/{token}");
+  console.log("Seed includes Panel A teams 01–03 and three demo judges.");
   console.log("\n");
 }
 
