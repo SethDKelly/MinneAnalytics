@@ -70,4 +70,34 @@ Private pages (`review`, `chair`, `schedule`, `presenter`) call `notFound()` whe
 - **Chair dashboard** links to Review, Schedule (board), CSV export, and public archive when published.
 - **Review panel** links back to Chair.
 
-Tokens are **not** listed in the app; copy them from the terminal after `npm run db:seed` (see [Exploring the demo](exploring-the-demo.md)).
+Tokens are **not** listed in the app; copy them from the terminal after `npm run db:seed` (see [Exploring the demo](exploring-the-demo.md) and [Exploring MUDAC](exploring-mudac-demo.md)).
+
+## MinneMUDAC judging routes
+
+| URL | File | Rendering |
+|-----|------|-----------|
+| `/mudac` | `app/mudac/page.tsx` | Public landing |
+| `/mudac/{slug}/register` | `app/mudac/[slug]/register/page.tsx` | Judge registration |
+| `/mudac/{slug}/register/thanks` | `app/mudac/[slug]/register/thanks/page.tsx` | Post-registration link |
+| `/mudac/director/{token}` | `app/mudac/director/[token]/page.tsx` | Director dashboard |
+| `/mudac/judge/{token}` | `app/mudac/judge/[token]/page.tsx` | Judge team list |
+| `/mudac/judge/{token}/presentation/{id}` | `app/mudac/judge/[token]/presentation/[presentationId]/page.tsx` | Scorecard form |
+
+### MUDAC API routes
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/api/mudac/register` | Judge self-registration |
+| `POST` | `/api/mudac/scorecards` | Judge save/submit scorecard |
+| `PATCH` | `/api/mudac/director/event` | Director event settings |
+| `POST/PATCH/DELETE` | `/api/mudac/director/criteria` | Scoring criteria |
+| `POST/PATCH/DELETE` | `/api/mudac/director/teams` | Teams |
+| `POST` | `/api/mudac/director/teams/generate-ids` | Bulk team ID generation |
+| `POST/PATCH/DELETE` | `/api/mudac/director/panels` | Judge panels |
+| `PATCH` | `/api/mudac/director/panel-slots` | Slot judge-type requirements |
+| `POST/DELETE` | `/api/mudac/director/panel-assignments` | Assign judges to slots |
+| `PATCH` | `/api/mudac/director/judges` | Revoke judge |
+| `POST/DELETE` | `/api/mudac/director/presentations` | Team ↔ panel |
+| `GET` | `/api/mudac/director/export` | Rankings CSV (`?token=`) |
+
+Full MUDAC design: **[mudac-architecture.md](mudac-architecture.md)**.

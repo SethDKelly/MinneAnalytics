@@ -26,7 +26,7 @@ export default async function MudacJudgeScorePage({
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-12">
+    <div className="mx-auto max-w-xl px-4 py-6 sm:py-10">
       <MudacJudgeScorecardForm
         token={token}
         presentationId={presentation.id}

@@ -152,6 +152,19 @@ Summary:
 
 To walk through these URLs in order, see **[exploring-the-demo.md](exploring-the-demo.md)**.
 
+## MinneMUDAC judging demo
+
+Separate domain under `/mudac/*` for [MinneMUDAC](https://minneanalytics.org/minnemudac-2026/) student team judging. Does not use `Conference` or `ReviewerAccess` models.
+
+| Path | Access |
+|------|--------|
+| `/mudac` | Public landing |
+| `/mudac/{slug}/register` | Judge self-registration |
+| `/mudac/director/{token}` | Tournament director |
+| `/mudac/judge/{token}` | Volunteer judge |
+
+See **[mudac-architecture.md](mudac-architecture.md)** and **[exploring-mudac-demo.md](exploring-mudac-demo.md)**.
+
 ## Historical committee review
 
 Distinct from the **public** slide archive at `/archive/[slug]`:

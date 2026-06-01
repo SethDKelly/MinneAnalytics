@@ -30,7 +30,7 @@ export function SiteHeader() {
               MinneAnalytics
             </span>
             <span className="text-xs text-gray-600">
-              Conference planning demo
+              Conference &amp; MUDAC demos
             </span>
           </div>
         </Link>

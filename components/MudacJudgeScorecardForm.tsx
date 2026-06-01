@@ -29,6 +29,87 @@ type Props = {
   initialSubmitted: boolean;
 };
 
+function clampScore(value: number, maxPoints: number): number {
+  const v = Math.round(value * 10) / 10;
+  return Math.min(maxPoints, Math.max(0, v));
+}
+
+function CriterionScoreRow({
+  criterion,
+  value,
+  disabled,
+  onChange,
+}: {
+  criterion: CriterionRow;
+  value: number;
+  disabled: boolean;
+  onChange: (value: number) => void;
+}) {
+  const step = 0.5;
+
+  function adjust(delta: number) {
+    onChange(clampScore(value + delta, criterion.maxPoints));
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="font-semibold text-minne-navy">
+            {criterion.sortOrder}. {criterion.name}
+          </p>
+          <p className="text-xs text-gray-500">0 – {criterion.maxPoints} points</p>
+        </div>
+        <div className="flex items-center justify-center gap-2 sm:justify-end">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => adjust(-step)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-gray-300 bg-white text-lg font-semibold text-minne-navy hover:bg-gray-100 disabled:opacity-50"
+            aria-label={`Decrease ${criterion.name}`}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={0}
+            max={criterion.maxPoints}
+            step={0.1}
+            inputMode="decimal"
+            disabled={disabled}
+            value={value}
+            onChange={(e) =>
+              onChange(clampScore(Number(e.target.value), criterion.maxPoints))
+            }
+            className="form-input w-20 text-center text-base sm:w-24"
+            aria-label={`Score for ${criterion.name}`}
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => adjust(step)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-gray-300 bg-white text-lg font-semibold text-minne-navy hover:bg-gray-100 disabled:opacity-50"
+            aria-label={`Increase ${criterion.name}`}
+          >
+            +
+          </button>
+        </div>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={criterion.maxPoints}
+        step={0.1}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(clampScore(Number(e.target.value), criterion.maxPoints))}
+        className="mt-4 h-3 w-full cursor-pointer accent-minne-navy disabled:opacity-50"
+        aria-label={`Slider for ${criterion.name}`}
+      />
+    </div>
+  );
+}
+
 export function MudacJudgeScorecardForm({
   token,
   presentationId,
@@ -98,13 +179,15 @@ export function MudacJudgeScorecardForm({
   const readOnly = scoringLocked;
 
   return (
-    <div>
+    <div className="pb-28 sm:pb-0">
       <p className="text-sm text-gray-600">
         <Link href={`/mudac/judge/${token}`} className="text-minne-navy underline">
           ← Back to teams
         </Link>
       </p>
-      <h1 className="mt-2 text-3xl font-bold text-minne-navy">Score team {teamDisplayId}</h1>
+      <h1 className="mt-2 text-2xl font-bold text-minne-navy sm:text-3xl">
+        Score team {teamDisplayId}
+      </h1>
       <p className="mt-1 text-gray-700">
         {divisionLabel} · {panelLabel}
       </p>
@@ -125,37 +208,23 @@ export function MudacJudgeScorecardForm({
       )}
 
       <form
-        className="card mt-6 space-y-6"
+        className="mt-6 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           save(true);
         }}
       >
         {criteria.map((c) => (
-          <div key={c.id} className="border-b border-gray-100 pb-4 last:border-0">
-            <label className="block text-sm font-semibold text-minne-navy">
-              {c.sortOrder}. {c.name}
-              <span className="ml-2 font-normal text-gray-500">
-                (0–{c.maxPoints} pts)
-              </span>
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={c.maxPoints}
-              step={0.1}
-              required
-              disabled={readOnly}
-              value={scores[c.id] ?? 0}
-              onChange={(e) =>
-                setScores((s) => ({ ...s, [c.id]: Number(e.target.value) }))
-              }
-              className="form-input mt-2 w-32"
-            />
-          </div>
+          <CriterionScoreRow
+            key={c.id}
+            criterion={c}
+            value={scores[c.id] ?? 0}
+            disabled={readOnly}
+            onChange={(v) => setScores((s) => ({ ...s, [c.id]: v }))}
+          />
         ))}
 
-        <label className="block text-sm">
+        <label className="card block p-4 text-sm">
           <span className="form-label">Notes (optional)</span>
           <textarea
             name="notes"
@@ -163,32 +232,65 @@ export function MudacJudgeScorecardForm({
             disabled={readOnly}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="form-input mt-1 w-full"
+            className="form-input mt-2 w-full text-base"
           />
         </label>
 
-        <p className="text-sm font-medium text-minne-navy">
-          Your subtotal: {liveSubtotal} / {maxTotal}
-          {submitted && (
-            <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
-              Submitted
-            </span>
+        <div className="card hidden p-4 sm:block">
+          <p className="text-sm font-medium text-minne-navy">
+            Your subtotal: {liveSubtotal} / {maxTotal}
+            {submitted && (
+              <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                Submitted
+              </span>
+            )}
+          </p>
+          {!readOnly && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-secondary min-h-11"
+                disabled={loading !== null}
+                onClick={() => save(false)}
+              >
+                {loading === "draft" ? "Saving…" : "Save draft"}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary min-h-11"
+                disabled={loading !== null}
+              >
+                {loading === "submit" ? "Submitting…" : "Submit scorecard"}
+              </button>
+            </div>
           )}
-        </p>
+        </div>
 
         {!readOnly && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={loading !== null}
-              onClick={() => save(false)}
-            >
-              {loading === "draft" ? "Saving…" : "Save draft"}
-            </button>
-            <button type="submit" className="btn-primary" disabled={loading !== null}>
-              {loading === "submit" ? "Submitting…" : "Submit scorecard"}
-            </button>
+          <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:hidden">
+            <p className="text-center text-sm font-medium text-minne-navy">
+              Subtotal: {liveSubtotal} / {maxTotal}
+              {submitted && (
+                <span className="ml-2 text-xs text-green-700">(submitted)</span>
+              )}
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className="btn-secondary min-h-12 w-full"
+                disabled={loading !== null}
+                onClick={() => save(false)}
+              >
+                {loading === "draft" ? "…" : "Save draft"}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary min-h-12 w-full"
+                disabled={loading !== null}
+              >
+                {loading === "submit" ? "…" : "Submit"}
+              </button>
+            </div>
           </div>
         )}
       </form>

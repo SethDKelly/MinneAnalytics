@@ -404,10 +404,10 @@ Align with public event facts:
 
 ### Phase 5 — Polish and docs
 
-- [ ] `/mudac` landing page + header nav entry
-- [ ] `docs/exploring-mudac-demo.md` walkthrough
-- [ ] Update `docs/architecture.md` with MUDAC section (or `docs/mudac-architecture.md`)
-- [ ] Mobile-friendly scorecard layout (judges often use tablets)
+- [x] `/mudac` landing page + header nav entry
+- [x] `docs/exploring-mudac-demo.md` walkthrough
+- [x] `docs/mudac-architecture.md` + architecture cross-links
+- [x] Mobile-friendly scorecard layout (judges often use tablets)
 
 ---
 

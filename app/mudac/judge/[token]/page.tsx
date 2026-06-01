@@ -26,13 +26,13 @@ export default async function MudacJudgePage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
       <p className="text-sm text-gray-600">
         <Link href="/mudac" className="text-minne-navy underline">
           MinneMUDAC demo
         </Link>
       </p>
-      <h1 className="mt-2 text-3xl font-bold text-minne-navy">Judge portal</h1>
+      <h1 className="mt-2 text-2xl font-bold text-minne-navy sm:text-3xl">Judge portal</h1>
       <p className="mt-2 text-gray-700">
         {judge.name} · {judge.event.name}
       </p>
@@ -69,35 +69,33 @@ export default async function MudacJudgePage({
               No teams are scheduled for your panel yet.
             </p>
           ) : (
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-4 space-y-3">
               {presentations.map((p) => {
                 const card = p.scorecards[0];
                 const done = Boolean(card?.submittedAt);
                 return (
                   <li
                     key={p.id}
-                    className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 px-4 py-3"
+                    className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <span className="font-mono text-lg font-bold text-minne-navy">
+                      <span className="font-mono text-2xl font-bold text-minne-navy sm:text-lg">
                         Team {p.team.displayId}
                       </span>
-                      <span className="ml-2 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-gray-600">
                         {MUDAC_DIVISION_LABELS[p.team.division]}
-                      </span>
-                      {done ? (
-                        <span className="ml-2 text-xs font-medium text-green-700">
-                          Submitted
-                        </span>
-                      ) : card ? (
-                        <span className="ml-2 text-xs text-gray-500">Draft saved</span>
-                      ) : null}
+                        {done ? (
+                          <span className="ml-2 font-medium text-green-700">· Submitted</span>
+                        ) : card ? (
+                          <span className="ml-2 text-gray-500">· Draft saved</span>
+                        ) : null}
+                      </p>
                     </div>
                     <Link
                       href={`/mudac/judge/${token}/presentation/${p.id}`}
-                      className="btn-primary text-sm"
+                      className="btn-primary min-h-12 w-full text-center text-base no-underline sm:w-auto sm:min-h-0 sm:text-sm"
                     >
-                      {done ? "View / edit" : "Score"}
+                      {done ? "View / edit" : "Score team"}
                     </Link>
                   </li>
                 );
