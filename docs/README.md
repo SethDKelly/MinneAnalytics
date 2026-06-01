@@ -12,6 +12,6 @@ Documentation for the MinneAnalytics Conference Planning Demo and MinneMUDAC jud
 | [Development](development.md) | Contributors | Setup, database, scripts, debugging |
 | [Contributing](contributing.md) | Contributors | Code conventions and pull requests |
 | [Roadmap](roadmap.md) | Contributors, PMs | Planned conference-demo enhancements |
-| [MUDAC implementation plan](mudac-implementation-plan.md) | Contributors | MUDAC phased delivery (branch `feature/mudac-demo`) |
+| [MUDAC implementation plan](mudac-implementation-plan.md) | Contributors | MUDAC delivery record (Phases 1–5 complete on `feature/mudac-demo`) |
 
 The project [README](../README.md) is the main entry for installing and running the app locally.

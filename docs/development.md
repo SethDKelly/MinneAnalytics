@@ -148,7 +148,12 @@ See `.env.example` for production notes (PostgreSQL, S3).
 2. Run `npm run db:push` to sync SQLite (no migration files in this demo).
 3. Run `npm run db:seed` to reset demo content and get fresh reviewer/presenter URLs.
 
-**Seed output** includes board, co-chair, schedule, and sample presenter links. Re-seed whenever you need clean tokens or updated sample talks.
+**Seed output** includes:
+
+- **Data Tech 2027** — board, co-chair, admin, schedule, and sample presenter links
+- **MinneMUDAC 2026** — director URL, judge registration (`/mudac/minnemudac-2026/register`, code `volunteer`), and three demo judge URLs with preloaded Panel A scores
+
+Re-seed whenever you need clean tokens or updated sample data.
 
 ### Do not commit
 
@@ -158,9 +163,12 @@ See `.env.example` for production notes (PostgreSQL, S3).
 
 ## Exploring the demo
 
-Evaluators and new contributors should follow **[exploring-the-demo.md](exploring-the-demo.md)** for a full proof-of-concept walkthrough (seed tokens, board vs co-chair, archive publish).
+Evaluators and new contributors should follow:
 
-URL and file mapping: **[routing.md](routing.md)**.
+- **[exploring-the-demo.md](exploring-the-demo.md)** — Data Tech conference planning (seed tokens, board vs co-chair, archive publish)
+- **[exploring-mudac-demo.md](exploring-mudac-demo.md)** — MinneMUDAC judging (director, judges, rankings)
+
+URL and file mapping: **[routing.md](routing.md)** (includes a MUDAC section).
 
 ## Demo workflow (manual QA checklist)
 
@@ -170,6 +178,8 @@ URL and file mapping: **[routing.md](routing.md)**.
 4. **Presenter** — `/presenter/{token}`: upload deck after approval, test withdraw.
 5. **Schedule** — `/schedule/{token}` (board): generate grid, drag-and-drop.
 6. **Archive** — After board publishes, visit `/archive/data-tech-2027`.
+
+**MinneMUDAC** (optional): director `/mudac/director/{token}` → Rankings tab; judge URLs from seed → score a team.
 
 Approving or declining from the chair UI triggers demo auto-scoring (see [Architecture](architecture.md#scoring)).
 

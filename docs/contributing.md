@@ -7,6 +7,7 @@ Thank you for improving the MinneAnalytics conference planning demo. This projec
 1. Read [Development](development.md) and get `npm run dev` working.
 2. Skim [Architecture](architecture.md) for roles and statuses; read [Routing](routing.md) for the App Router layout.
 3. Run through [Exploring the demo](exploring-the-demo.md) once with fresh seed tokens.
+4. For MinneMUDAC judging, also run [Exploring MUDAC](exploring-mudac-demo.md).
 
 ## Making changes
 
@@ -29,8 +30,11 @@ Thank you for improving the MinneAnalytics conference planning demo. This projec
 | Schedule | `lib/schedule/*`, `components/schedule/*`, `app/api/schedule/*` |
 | Public shell | `components/SiteHeader.tsx`, `app/page.tsx`, static pages under `app/` |
 | Styling / tokens | `app/globals.css`, `tailwind.config.ts` |
+| **MUDAC judging** | `app/mudac/*`, `app/api/mudac/*`, `lib/mudac/*`, `components/Mudac*.tsx` |
 
 Prefer extending existing `lib/` helpers over duplicating logic in Route Handlers.
+
+MUDAC MVP is complete on `feature/mudac-demo`; see [MUDAC implementation plan](mudac-implementation-plan.md) and [MUDAC architecture](mudac-architecture.md).
 
 ### Code style
 
@@ -54,9 +58,9 @@ npm run lint
 npm run build
 ```
 
-Manually exercise the flow affected by your change (see [Development → Demo workflow](development.md#demo-workflow-manual-qa)).
+Manually exercise the flow affected by your change (see [Development → Demo workflow](development.md#demo-workflow-manual-qa)). For MUDAC changes, follow [Exploring MUDAC](exploring-mudac-demo.md).
 
-We do not require automated tests for every change today; meaningful manual checks on chair, review, presenter, or schedule flows are expected.
+We do not require automated tests for every change today; meaningful manual checks on chair, review, presenter, schedule, or MUDAC director/judge flows are expected.
 
 ## Proposed features
 

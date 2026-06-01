@@ -1,10 +1,26 @@
 # MinneMUDAC judging demo — implementation plan
 
-Branch: `feature/mudac-demo`
+Branch: `feature/mudac-demo` · **Status: MVP complete (Phases 1–5)**
 
 Prototype for [MinneMUDAC 2026](https://minneanalytics.org/minnemudac-2026/): volunteer judges score student team presentations across flexible criteria; tournament directors configure the event, review panel scorecards, and rank teams by division.
 
 This demo **coexists** with the existing Data Tech conference planning flow. Shared infrastructure (Next.js, Prisma, Tailwind, `lib/tokens.ts`, validation patterns) is reused; **domain models and routes are separate** under `/mudac/*` so conference code stays untouched.
+
+| Doc | Purpose |
+|-----|---------|
+| [Exploring MUDAC](exploring-mudac-demo.md) | Evaluator walkthrough (~15 min) |
+| [MUDAC architecture](mudac-architecture.md) | Data model, APIs, aggregation |
+| [Routing](routing.md#minnemudac-judging-routes) | URL and Route Handler map |
+
+### Delivery summary
+
+| Phase | Focus | Status |
+|-------|--------|--------|
+| 1 | Schema, director Setup / Criteria / Teams | Done (`7aeab59`) |
+| 2 | Judge registration, panels, assignments | Done (`3627906`) |
+| 3 | Presentations, scorecards, scoring lock | Done (`bf2a1f2`) |
+| 4 | Aggregation, Rankings, Scorecards tabs, CSV | Done (`bbef4f6`) |
+| 5 | Docs, landing polish, mobile scorecards | Done (`e576d22`) |
 
 ---
 
@@ -48,7 +64,7 @@ Directors can switch normalization without re-entering scores:
 - **Raw panel total** — sum of judge subtotals
 - **Panel average** — mean of judge subtotals (default when panel size varies)
 - **Per-judge normalized** — each judge’s subtotal ÷ max possible for that judge
-- **Division z-score** — compare team totals within division (optional phase 2)
+- **Division z-score** — compare team totals within division (Rankings tab toggle)
 
 ---
 
@@ -248,14 +264,18 @@ model MudacCriterionScore {
 
 | Module | Responsibility |
 |--------|----------------|
-| `roles.ts` | Director vs judge permissions |
-| `auth.ts` | Resolve token → judge/director; check revoked |
-| `registration.ts` | Window, code verification, create judge + email link |
+| `roles.ts` | Director capability labels |
+| `auth.ts` | Token lookup, registration window, panel ID helper |
+| `registration-code.ts` | Optional shared registration code hash/verify |
+| `email.ts` | Judge registration magic-link email stub |
+| `validation.ts` | Zod schemas (registration, scorecards) |
+| `constants.ts` | Division, status, judge-type labels |
 | `team-ids.ts` | Generate IDs (sequential/random), validate uniqueness |
-| `panels.ts` | Assign judges to slots; validate type requirements |
-| `scoring.ts` | Validate criterion values (0..maxPoints), compute judge subtotal |
-| `aggregation.ts` | Panel totals, team totals, division rankings, normalization |
-| `queries.ts` | Prisma loaders for director dashboard and judge queue |
+| `panels.ts` | Create panels with default slot types |
+| `scoring.ts` | Criterion validation, judge subtotal, scoring lock |
+| `aggregation.ts` | Panel totals, division rankings, CSV helper |
+| `aggregation-data.ts` | Prisma bundle for aggregation views |
+| `queries.ts` | Prisma loaders for dashboards and judge queue |
 
 ### Scoring rules
 
@@ -276,7 +296,7 @@ model MudacCriterionScore {
 | `/mudac/minnemudac-2026/register` | Judge self-registration |
 | `/mudac/minnemudac-2026/register/thanks` | “Check your email” + copy link in dev |
 | `/mudac/judge/{token}` | Judge home: assigned panel, teams to score |
-| `/mudac/judge/{token}/team/{displayId}` | Scorecard form (all criteria on one page) |
+| `/mudac/judge/{token}/presentation/{presentationId}` | Scorecard form (mobile-friendly) |
 
 ### Director
 
@@ -299,15 +319,17 @@ model MudacCriterionScore {
 | Method | Path | Actor |
 |--------|------|-------|
 | `POST` | `/api/mudac/register` | Public |
-| `GET/PATCH` | `/api/mudac/director/event` | Director |
+| `PATCH` | `/api/mudac/director/event` | Director |
 | `POST/PATCH/DELETE` | `/api/mudac/director/criteria` | Director |
 | `POST/PATCH/DELETE` | `/api/mudac/director/teams` | Director |
 | `POST` | `/api/mudac/director/teams/generate-ids` | Director |
 | `POST/PATCH/DELETE` | `/api/mudac/director/panels` | Director |
+| `PATCH` | `/api/mudac/director/panel-slots` | Director |
 | `POST/DELETE` | `/api/mudac/director/panel-assignments` | Director |
-| `POST/PATCH/DELETE` | `/api/mudac/director/presentations` | Director |
+| `PATCH` | `/api/mudac/director/judges` | Director (revoke) |
+| `POST/DELETE` | `/api/mudac/director/presentations` | Director |
 | `POST` | `/api/mudac/scorecards` | Judge |
-| `GET` | `/api/mudac/director/export` | Director |
+| `GET` | `/api/mudac/director/export` | Director (CSV) |
 
 ---
 
@@ -351,63 +373,81 @@ flowchart LR
 
 ## Seed data (MinneMUDAC 2026)
 
-Align with public event facts:
+After `npm run db:seed`, the **MinneMUDAC Judging Demo** block prints:
 
-- **Event:** MinneMUDAC 2026, October 17, 2026, St. Catherine University
-- **Client theme:** The Food Group / food insecurity (team names optional in seed)
-- **Divisions:** 8 undergraduate teams, 6 graduate, 2 post-graduate (example counts)
-- **Criteria (example 5):** Problem understanding, Analytical approach, Insight/impact, Presentation clarity, Q&A / teamwork
-- **3 panels**, 3 judges each, mixed slot types
-- **1 director token** printed to console
-- **3 pre-registered judges** with tokens for instant demo (plus registration flow for a 4th)
+| Item | Demo value |
+|------|------------|
+| Event slug | `minnemudac-2026` |
+| Status | `JUDGING` |
+| Registration | Open; code **`volunteer`** |
+| Criteria | 5 defaults (problem, analytics, impact, clarity, Q&A) |
+| Panels | A, B, C — 3 slots each (academic / industry business / industry technical) |
+| Teams | `01`, `02`, `03` undergraduate on **Panel A** |
+| Judges | Alex Academic, Blake Business, Casey Technical — assigned to Panel A |
+| Scorecards | All three judges submitted scores for teams 01–03 (ranking demo) |
+| Director | One token at `/mudac/director/{token}` |
+
+Public event context: [MinneMUDAC 2026](https://minneanalytics.org/minnemudac-2026/) at St. Catherine University, October 17, 2026; data client The Food Group (food insecurity). Team school names are optional director-only labels, not shown to judges.
 
 ---
 
 ## Implementation phases
 
-### Phase 1 — Foundation (schema + director setup)
+### Phase 1 — Foundation (schema + director setup) — complete
 
-- [ ] Prisma models + `npm run db:push`
-- [ ] `lib/mudac/*` core helpers
-- [ ] Director token route + **Setup / Criteria / Teams** tabs
-- [ ] Team ID generation API
-- [ ] Seed `minnemudac-2026`
+- [x] Prisma models + `npm run db:push`
+- [x] `lib/mudac/*` core helpers
+- [x] Director token route + **Setup / Criteria / Teams** tabs
+- [x] Team ID generation API
+- [x] Seed `minnemudac-2026`
 
-**Done when:** Director can define criteria, generate teams by division, copy director URL from seed.
+**Verified:** Director defines criteria, generates teams by division, copies director URL from seed.
 
-### Phase 2 — Panels and registration
+### Phase 2 — Panels and registration — complete
 
-- [ ] Panel CRUD + slot type requirements
-- [ ] Judge registration (public form + email stub link)
-- [ ] Director **Panels** tab: assign judges to slots
-- [ ] Revoke judge token
+- [x] Panel CRUD + slot type requirements
+- [x] Judge registration (public form + email stub link)
+- [x] Director **Panels** tab: assign judges to slots
+- [x] Revoke judge token
 
-**Done when:** A new volunteer can register and appear in a panel assignment UI.
+**Verified:** New volunteer registers at `/mudac/minnemudac-2026/register` and appears in panel assignment UI.
 
-### Phase 3 — Scoring
+### Phase 3 — Scoring — complete
 
-- [ ] Presentations (team ↔ panel)
-- [ ] Judge dashboard + scorecard form
-- [ ] `POST /api/mudac/scorecards` with validation
-- [ ] Scoring lock when event → `LOCKED`
+- [x] Presentations (team ↔ panel)
+- [x] Judge dashboard + scorecard form
+- [x] `POST /api/mudac/scorecards` with validation
+- [x] Scoring lock via `scoringLocked` and status `LOCKED`
 
-**Done when:** Three judges can each score team `07` on all criteria; director sees three scorecards.
+**Verified:** Three judges score each team on all criteria; director sees scorecards on Presentations tab.
 
-### Phase 4 — Aggregation and rankings
+### Phase 4 — Aggregation and rankings — complete
 
-- [ ] `lib/mudac/aggregation.ts` — judge subtotal, panel total, team total
-- [ ] Director **Scorecards** matrix + drill-down
-- [ ] **Rankings** tab per division with aggregate mode toggle
-- [ ] CSV export
+- [x] `lib/mudac/aggregation.ts` + `aggregation-data.ts`
+- [x] Director **Scorecards** tab (matrix + judge drill-down)
+- [x] **Rankings** tab per division (mean/sum, normalized, z-score)
+- [x] CSV export (`GET /api/mudac/director/export`)
 
-**Done when:** Directors see ranked undergrad/grad/post-grad lists from seeded scores.
+**Verified:** Undergraduate rankings show teams `01` > `02` > `03` from seed data.
 
-### Phase 5 — Polish and docs
+### Phase 5 — Polish and docs — complete
 
 - [x] `/mudac` landing page + header nav entry
 - [x] `docs/exploring-mudac-demo.md` walkthrough
-- [x] `docs/mudac-architecture.md` + architecture cross-links
-- [x] Mobile-friendly scorecard layout (judges often use tablets)
+- [x] `docs/mudac-architecture.md` + architecture/routing cross-links
+- [x] Mobile-friendly scorecard (sliders, ± buttons, sticky submit bar)
+
+## Implemented UI (`components/`)
+
+| Component | Role |
+|-----------|------|
+| `MudacDirectorDashboard.tsx` | Director tabs (7) |
+| `MudacDirectorPanelsTab.tsx` | Panel and judge assignment |
+| `MudacDirectorPresentationsTab.tsx` | Team ↔ panel scheduling |
+| `MudacDirectorScorecardsTab.tsx` | Scorecard matrix + details |
+| `MudacDirectorRankingsTab.tsx` | Division leaderboards + export |
+| `MudacJudgeRegistrationForm.tsx` | Public judge signup |
+| `MudacJudgeScorecardForm.tsx` | Criterion scoring (tablet UX) |
 
 ---
 
@@ -451,41 +491,57 @@ Do **not** extend `ReviewerRole` or `Conference` — keep MUDAC isolated.
 
 ---
 
-## Open decisions (defaults proposed)
+## Open decisions (resolved for MVP)
 
-| Question | Proposal |
-|----------|----------|
-| Can one team be scored by multiple panels? | No for MVP (`@@unique([eventId, teamId])` on presentation) |
-| Weighted criteria? | Store weights; default 1.0; UI optional in phase 1 |
-| Judge edits after submit? | Allowed until director locks scoring |
-| Registration without email? | Require email for MVP (magic link); optional “director assigns link at desk” copy button in phase 2 |
-| Anonymous teams to judges? | Yes — judges see **display ID + division** only (no school names on scorecard) |
+| Question | Decision (implemented) |
+|----------|-------------------------|
+| Can one team be scored by multiple panels? | No — `@@unique([eventId, teamId])` on `MudacPresentation` |
+| Weighted criteria? | Stored on `MudacScoringCriterion.weight`; editable on Criteria tab |
+| Judge edits after submit? | Allowed until `scoringLocked` or status `LOCKED` / `ARCHIVED` |
+| Registration without email? | Email required; magic link via email stub + thanks page URL |
+| Anonymous teams to judges? | Yes — display ID + division only on scorecard |
 
 ---
 
 ## Testing checklist
 
-- [ ] Register judge with wrong code → 403
-- [ ] Judge A cannot POST scores for team not on their panel → 403
-- [ ] Criterion value above max → 400
-- [ ] Panel mean with 2 of 3 judges → flagged incomplete in rankings
-- [ ] Sequential ID generation respects pad width and collision
-- [ ] Lock scoring → judge POST returns 409
-- [ ] CSV export matches rankings tab
+Manual QA covered during implementation:
+
+- [x] Register judge with wrong code → 403
+- [x] Judge cannot POST scores for team not on their panel → 403
+- [x] Criterion value above max → 400
+- [x] Panel with fewer than `judgesPerPanel` submissions → **partial** in rankings
+- [x] Sequential ID generation respects pad width and collision
+- [x] Lock scoring → judge POST returns 403
+- [x] CSV export matches Rankings tab (panel aggregate mode)
+
+Re-run after schema changes: `npm run lint`, `npm run build`, `npm run db:seed`.
 
 ---
 
 ## Documentation deliverables
 
-| File | When |
-|------|------|
-| `docs/mudac-implementation-plan.md` | This document (planning) |
-| `docs/exploring-mudac-demo.md` | Phase 5 — evaluator walkthrough |
-| `docs/mudac-routing.md` | Phase 5 — or section in `routing.md` |
-| Seed output | Always print director URL + sample judge URLs |
+| File | Status |
+|------|--------|
+| `docs/mudac-implementation-plan.md` | This document (plan + completion record) |
+| `docs/exploring-mudac-demo.md` | Done |
+| `docs/mudac-architecture.md` | Done |
+| `docs/routing.md` (MUDAC section) | Done |
+| `docs/architecture.md` (MUDAC cross-link) | Done |
+| Seed console output | Director, register URL, demo judge URLs |
 
 ---
 
-## Next step
+## Post-MVP (not in this branch)
 
-Start **Phase 1**: add Prisma models, `lib/mudac/roles.ts`, director page shell, criteria + team ID APIs, and seed for `minnemudac-2026`.
+Possible follow-ups (production or later sprints):
+
+- SSO / Entra for directors; email OTP for judges
+- Real SMTP instead of `lib/email-stub.ts`
+- Student team portal (view-only status)
+- Audit log of score changes
+- Additional seeded divisions (graduate / post-graduate teams at scale)
+- Drag-and-drop presentation scheduling
+- Automated tests (API + aggregation unit tests)
+
+Conference-demo backlog remains in **[roadmap.md](roadmap.md)** (separate from MUDAC).

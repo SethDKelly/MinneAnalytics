@@ -96,5 +96,5 @@ Judges only see **team ID** and **division**, not school names.
 ## Next steps for developers
 
 - [MUDAC architecture](mudac-architecture.md) — data model and aggregation
-- [MUDAC implementation plan](mudac-implementation-plan.md) — phased delivery history
+- [MUDAC implementation plan](mudac-implementation-plan.md) — delivery record (Phases 1–5 complete)
 - [Routing](routing.md) — MUDAC routes and APIs
