@@ -9,6 +9,30 @@ import { hashRegistrationCode } from "../lib/mudac/registration-code";
 
 const prisma = new PrismaClient();
 
+async function seedMudacScorecard(
+  presentationId: string,
+  judgeId: string,
+  criteria: Array<{ id: string }>,
+  values: number[]
+) {
+  const card = await prisma.mudacJudgeScorecard.create({
+    data: {
+      presentationId,
+      judgeId,
+      submittedAt: new Date(),
+    },
+  });
+  for (let i = 0; i < criteria.length; i++) {
+    await prisma.mudacCriterionScore.create({
+      data: {
+        scorecardId: card.id,
+        criterionId: criteria[i].id,
+        value: values[i],
+      },
+    });
+  }
+}
+
 async function main() {
   await prisma.mudacCriterionScore.deleteMany();
   await prisma.mudacJudgeScorecard.deleteMany();
@@ -357,10 +381,12 @@ async function main() {
     { sortOrder: 4, name: "Presentation clarity", maxPoints: 10 },
     { sortOrder: 5, name: "Q&A and teamwork", maxPoints: 10 },
   ];
+  const criterionRows: Array<{ id: string }> = [];
   for (const c of mudacCriteria) {
-    await prisma.mudacScoringCriterion.create({
+    const row = await prisma.mudacScoringCriterion.create({
       data: { eventId: mudacEvent.id, ...c },
     });
+    criterionRows.push({ id: row.id });
   }
 
   for (const label of ["Panel A", "Panel B", "Panel C"]) {
@@ -385,14 +411,16 @@ async function main() {
   }
 
   if (panelA) {
+    const presentationIds: string[] = [];
     for (const team of teamRows) {
-      await prisma.mudacPresentation.create({
+      const pres = await prisma.mudacPresentation.create({
         data: {
           eventId: mudacEvent.id,
           panelId: panelA.id,
           teamId: team.id,
         },
       });
+      presentationIds.push(pres.id);
     }
 
     const demoJudgeDefs: Array<{
@@ -422,6 +450,7 @@ async function main() {
     ];
 
     const judgeUrls: string[] = [];
+    const judgeIds: string[] = [];
     for (const def of demoJudgeDefs) {
       const judgeToken = generateToken();
       const judge = await prisma.mudacJudge.create({
@@ -433,6 +462,7 @@ async function main() {
           tokenHash: hashToken(judgeToken),
         },
       });
+      judgeIds.push(judge.id);
       await prisma.mudacPanelAssignment.create({
         data: {
           panelId: panelA.id,
@@ -443,6 +473,34 @@ async function main() {
       judgeUrls.push(
         `  ${def.name}: http://localhost:3000/mudac/judge/${judgeToken}`
       );
+    }
+
+    const demoScoresByTeam = [
+      [
+        [9, 8, 9, 8, 9],
+        [8, 8, 8, 7, 8],
+        [9, 9, 8, 8, 9],
+      ],
+      [
+        [7, 7, 8, 7, 7],
+        [7, 6, 7, 7, 6],
+        [8, 7, 7, 7, 7],
+      ],
+      [
+        [5, 6, 5, 6, 5],
+        [6, 5, 6, 5, 6],
+        [5, 5, 6, 5, 5],
+      ],
+    ];
+    for (let t = 0; t < presentationIds.length; t++) {
+      for (let j = 0; j < judgeIds.length; j++) {
+        await seedMudacScorecard(
+          presentationIds[t],
+          judgeIds[j],
+          criterionRows,
+          demoScoresByTeam[t][j]
+        );
+      }
     }
 
     console.log("\nDemo judges (Panel A — score teams 01–03):");
@@ -495,8 +553,8 @@ async function main() {
   console.log(`Director:      http://localhost:3000/mudac/director/${mudacDirectorToken}`);
   console.log(`Judge register: http://localhost:3000/mudac/minnemudac-2026/register`);
   console.log(`  (demo registration code: volunteer)`);
-  console.log("\nPhase 3: assign teams on Presentations tab; judges score at /mudac/judge/{token}");
-  console.log("Seed includes Panel A teams 01–03 and three demo judges.");
+  console.log("\nPhase 4: director Rankings + Scorecards tabs show seeded results (teams 01 > 02 > 03).");
+  console.log("Export CSV from the Rankings tab.");
   console.log("\n");
 }
 

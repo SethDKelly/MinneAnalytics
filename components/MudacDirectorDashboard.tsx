@@ -18,6 +18,9 @@ import {
 import { directorCapabilitySummary, directorDashboardTitle } from "@/lib/mudac/roles";
 import { MudacDirectorPanelsTab } from "@/components/MudacDirectorPanelsTab";
 import { MudacDirectorPresentationsTab } from "@/components/MudacDirectorPresentationsTab";
+import { MudacDirectorScorecardsTab } from "@/components/MudacDirectorScorecardsTab";
+import { MudacDirectorRankingsTab } from "@/components/MudacDirectorRankingsTab";
+import type { PresentationAggregate } from "@/lib/mudac/aggregation";
 import type { MudacJudgeType } from "@prisma/client";
 
 type CriterionRow = {
@@ -53,7 +56,7 @@ type EventSnapshot = {
   teamIdPadWidth: number;
 };
 
-type Tab = "setup" | "criteria" | "teams" | "panels" | "presentations";
+type Tab = "setup" | "criteria" | "teams" | "panels" | "presentations" | "scorecards" | "rankings";
 
 type PresentationRow = {
   id: string;
@@ -102,6 +105,8 @@ type Props = {
   panels: PanelRow[];
   judges: JudgeRow[];
   presentations: PresentationRow[];
+  aggregates: PresentationAggregate[];
+  scorecardPanels: Array<{ panelId: string; panelLabel: string; rows: PresentationAggregate[] }>;
 };
 
 export function MudacDirectorDashboard({
@@ -113,6 +118,8 @@ export function MudacDirectorDashboard({
   panels,
   judges,
   presentations,
+  aggregates,
+  scorecardPanels,
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("setup");
@@ -333,6 +340,8 @@ export function MudacDirectorDashboard({
             ["teams", "Teams"],
             ["panels", "Panels"],
             ["presentations", "Presentations"],
+            ["scorecards", "Scorecards"],
+            ["rankings", "Rankings"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -797,6 +806,16 @@ export function MudacDirectorDashboard({
           teams={teams}
           presentations={presentations}
           judgesPerPanel={event.judgesPerPanel}
+        />
+      )}
+
+      {tab === "scorecards" && <MudacDirectorScorecardsTab panels={scorecardPanels} />}
+
+      {tab === "rankings" && (
+        <MudacDirectorRankingsTab
+          token={token}
+          panelAggregateMode={event.panelAggregateMode}
+          aggregates={aggregates}
         />
       )}
     </div>

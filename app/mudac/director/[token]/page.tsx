@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { MudacDirectorDashboard } from "@/components/MudacDirectorDashboard";
+import { buildPresentationAggregate } from "@/lib/mudac/aggregation";
+import { getMudacAggregationBundle } from "@/lib/mudac/aggregation-data";
 import { getDirectorByToken } from "@/lib/mudac/auth";
 import {
   getMudacCriteria,
@@ -20,15 +22,32 @@ export default async function MudacDirectorPage({
     notFound();
   }
 
-  const [criteria, teams, panels, judges, presentations] = await Promise.all([
+  const [criteria, teams, panels, judges, presentations, bundle] = await Promise.all([
     getMudacCriteria(director.eventId),
     getMudacTeams(director.eventId),
     getMudacPanels(director.eventId),
     getMudacJudges(director.eventId),
     getMudacPresentations(director.eventId),
+    getMudacAggregationBundle(director.eventId),
   ]);
 
   const event = director.event;
+
+  const aggregates =
+    bundle?.presentations.map((p) =>
+      buildPresentationAggregate(
+        p,
+        bundle.criteriaForScoring,
+        bundle.event.panelAggregateMode,
+        bundle.event.judgesPerPanel
+      )
+    ) ?? [];
+
+  const scorecardPanels = panels.map((panel) => ({
+    panelId: panel.id,
+    panelLabel: panel.label,
+    rows: aggregates.filter((a) => a.panelId === panel.id),
+  }));
 
   return (
     <MudacDirectorDashboard
@@ -89,6 +108,8 @@ export default async function MudacDirectorPage({
           judge: sc.judge,
         })),
       }))}
+      aggregates={aggregates}
+      scorecardPanels={scorecardPanels}
     />
   );
 }
