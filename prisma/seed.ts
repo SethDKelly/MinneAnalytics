@@ -11,10 +11,15 @@ import {
   themeIdsFromJoin,
 } from "../lib/submission-revision";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
+import { DEFAULT_EMAIL_TEMPLATES } from "../lib/email-templates";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.emailSendRecord.deleteMany();
+  await prisma.conferenceEmailBatch.deleteMany();
+  await prisma.conferenceAttendee.deleteMany();
+  await prisma.emailTemplate.deleteMany();
   await prisma.schedulePlacement.deleteMany();
   await prisma.scheduleSlot.deleteMany();
   await prisma.scheduleRoom.deleteMany();
@@ -485,6 +490,77 @@ async function main() {
 
   await backfillScoredAbstractVersions();
 
+  for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
+    await prisma.emailTemplate.upsert({
+      where: { templateKey: tpl.templateKey },
+      create: tpl,
+      update: {
+        name: tpl.name,
+        description: tpl.description,
+        subjectTemplate: tpl.subjectTemplate,
+        bodyTemplate: tpl.bodyTemplate,
+      },
+    });
+  }
+
+  await prisma.conferenceAttendee.createMany({
+    data: [
+      {
+        conferenceId: conference.id,
+        email: "pat.lee@example.com",
+        firstName: "Pat",
+        lastName: "Lee",
+      },
+      {
+        conferenceId: conference.id,
+        email: "quinn.morgan@example.com",
+        firstName: "Quinn",
+        lastName: "Morgan",
+      },
+      {
+        conferenceId: conference.id,
+        email: "riley.chen@example.com",
+        firstName: "Riley",
+        lastName: "Chen",
+      },
+    ],
+  });
+
+  const danAccessForEmail = await prisma.reviewerAccess.findFirst({
+    where: { conferenceId: conference.id, label: "Dan Atkins" },
+  });
+  const declinedSubs = await prisma.submission.findMany({
+    where: { conferenceId: conference.id, programStatus: "DECLINED" },
+    select: { id: true, email: true },
+  });
+  if (danAccessForEmail && declinedSubs.length > 0) {
+    const declineBatch = await prisma.conferenceEmailBatch.create({
+      data: {
+        conferenceId: conference.id,
+        templateKey: "DECLINE",
+        round: 1,
+        sentByReviewerAccessId: danAccessForEmail.id,
+        recipientCount: declinedSubs.length,
+        customIntro:
+          "Thank you again for your interest in Data Tech 2027. This message confirms the committee's decision for round 1 notifications.",
+      },
+    });
+    const sentAt = new Date("2026-04-15T15:00:00Z");
+    for (const sub of declinedSubs) {
+      await prisma.emailSendRecord.create({
+        data: {
+          batchId: declineBatch.id,
+          conferenceId: conference.id,
+          templateKey: "DECLINE",
+          round: 1,
+          submissionId: sub.id,
+          email: sub.email,
+          sentAt,
+        },
+      });
+    }
+  }
+
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
@@ -501,6 +577,9 @@ async function main() {
   );
   console.log(
     "  Sponsor sessions: Avery Walsh is flagged; board can toggle others on the chair Program tab."
+  );
+  console.log(
+    "  Communications: board chair → Communications tab; DECLINE round 1 already sent to declined talks."
   );
   console.log("\n");
 }

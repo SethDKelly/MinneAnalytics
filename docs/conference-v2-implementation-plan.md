@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–6, 8 complete  
+**Status:** In progress — Phases 1–6, 8–9 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -846,12 +846,12 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 9 — Email templates & send tracking
 
-- [ ] Prisma: `EmailTemplate`, `ConferenceEmailBatch`, `EmailSendRecord`, `ConferenceAttendee`
-- [ ] `lib/email-templates.ts` merge renderer + extend `email-stub.ts`
-- [ ] Seed five standard templates + demo attendees + sample batch history
-- [ ] Chair **Communications** tab: template list, last sent, batch history
-- [ ] Send flow with preview, dedupe, decline rounds
-- [ ] Document stub output in exploring-the-demo
+- [x] Prisma: `EmailTemplate`, `ConferenceEmailBatch`, `EmailSendRecord`, `ConferenceAttendee`
+- [x] `lib/email-templates.ts` merge renderer + extend `email-stub.ts`
+- [x] Seed five standard templates + demo attendees + sample batch history
+- [x] Chair **Communications** tab: template list, last sent, batch history
+- [x] Send flow with preview, dedupe, decline rounds
+- [x] Document stub output in exploring-the-demo
 
 ### Phase 10 — Chair coverage heatmaps
 

@@ -51,6 +51,14 @@ enum PresenterFeedbackKind {
   GENERAL
 }
 
+enum EmailTemplateKey {
+  CALL_FOR_DECK
+  DECK_REMINDER
+  DECLINE
+  ATTENDEE_REMINDER
+  CALL_FOR_FEEDBACK
+}
+
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -79,6 +87,9 @@ model Conference {
   scheduleSlots  ScheduleSlot[]
   schedulePlacements SchedulePlacement[]
   themes         Theme[]
+  emailBatches   ConferenceEmailBatch[]
+  attendees      ConferenceAttendee[]
+  emailSendRecords EmailSendRecord[]
 }
 
 enum SlotType {
@@ -216,6 +227,7 @@ model Submission {
   themes     SubmissionTheme[]
   revisions  SubmissionRevision[]
   presenterFeedback PresenterFeedback[]
+  emailSendRecords EmailSendRecord[]
 }
 
 model PresenterFeedback {
@@ -261,6 +273,70 @@ model ReviewerAccess {
   conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
   scores     Score[]
   presenterFeedback PresenterFeedback[]
+  emailBatches ConferenceEmailBatch[]
+}
+
+model EmailTemplate {
+  id              String           @id @default(cuid())
+  templateKey     EmailTemplateKey @unique @map("template_key")
+  name            String
+  description     String
+  subjectTemplate String           @map("subject_template")
+  bodyTemplate    String           @map("body_template")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+}
+
+model ConferenceEmailBatch {
+  id                     String           @id @default(cuid())
+  conferenceId           String           @map("conference_id")
+  templateKey            EmailTemplateKey @map("template_key")
+  round                  Int              @default(1)
+  sentAt                 DateTime         @default(now()) @map("sent_at")
+  sentByReviewerAccessId String           @map("sent_by_reviewer_access_id")
+  recipientCount         Int              @map("recipient_count")
+  customIntro            String?          @map("custom_intro")
+
+  conference Conference     @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  sentBy     ReviewerAccess @relation(fields: [sentByReviewerAccessId], references: [id], onDelete: Cascade)
+  records    EmailSendRecord[]
+
+  @@index([conferenceId, templateKey])
+}
+
+model EmailSendRecord {
+  id           String           @id @default(cuid())
+  batchId      String           @map("batch_id")
+  conferenceId String           @map("conference_id")
+  templateKey  EmailTemplateKey @map("template_key")
+  round        Int
+  submissionId String?          @map("submission_id")
+  attendeeId   String?          @map("attendee_id")
+  email        String
+  sentAt       DateTime         @default(now()) @map("sent_at")
+
+  batch        ConferenceEmailBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  conference   Conference           @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  submission   Submission?          @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  attendee     ConferenceAttendee?  @relation(fields: [attendeeId], references: [id], onDelete: SetNull)
+
+  @@unique([conferenceId, templateKey, round, submissionId])
+  @@unique([conferenceId, templateKey, round, attendeeId])
+  @@index([conferenceId, templateKey, round])
+}
+
+model ConferenceAttendee {
+  id           String    @id @default(cuid())
+  conferenceId String    @map("conference_id")
+  email        String
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  registeredAt DateTime  @default(now()) @map("registered_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  emailSendRecords EmailSendRecord[]
+
+  @@unique([conferenceId, email])
 }
 
 model Score {

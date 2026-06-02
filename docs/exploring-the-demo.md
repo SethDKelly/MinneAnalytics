@@ -56,7 +56,19 @@ The new talk appears as **Pending** in committee views. Email content is stubbed
 
 Seed data already includes **approved** and **declined** talks with auto-generated committee scores (high for approved, low for declined).
 
-### 3. Chair dashboard (program + decks)
+### 3. Chair dashboard (program + decks + communications)
+
+**Communications tab (board only)**
+
+| Step | Action |
+|------|--------|
+| 1 | Open a **chair** URL as a board member → **Communications** tab. |
+| 2 | Review last-sent summary; expand a template to see batch history. |
+| 3 | **Preview sample** — merge fields filled for a sample recipient. |
+| 4 | **Send** — confirm count; watch the **dev server terminal** for `[MinneAnalytics email stub]` output. |
+| 5 | **Decline** template: choose **Round 2** to email declined presenters not yet notified in round 2 (round 1 is pre-seeded). Optional custom intro. |
+
+### 4. Chair dashboard (program + decks)
 
 Open a **chair** URL (board member recommended first).
 

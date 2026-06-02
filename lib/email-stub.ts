@@ -38,6 +38,21 @@ export function emailPresenterFeedback(params: {
   });
 }
 
+export function sendTemplateEmailStub(params: {
+  to: string;
+  subject: string;
+  body: string;
+  templateKey: string;
+  round?: number;
+}): void {
+  sendEmailStub({
+    to: params.to,
+    subject: params.subject,
+    body: params.body,
+    template: `${params.templateKey}${params.round != null ? ` (round ${params.round})` : ""}`,
+  });
+}
+
 export function emailAbstractApproved(params: {
   email: string;
   presenterName: string;

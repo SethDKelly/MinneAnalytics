@@ -24,17 +24,19 @@ import { TECHNICAL_LABELS } from "@/lib/constants";
 import type { ConferenceStatus, ReviewerRole } from "@prisma/client";
 import type { TechnicalityRow } from "@/lib/program-balance";
 import type { ThemeCountRow } from "@/lib/theme-stats";
+import { ChairCommunicationsTab } from "./ChairCommunicationsTab";
 import {
   canExportCsv,
   canPublishDeckArchive,
   canSetDeckShareable,
+  canSetProgramStatus,
   canSetVipRegistered,
   canViewHistoricalCommittee,
   isBoard,
   roleDisplayName,
 } from "@/lib/roles";
 
-type Tab = "program" | "decks" | "balance" | "history";
+type Tab = "program" | "decks" | "balance" | "communications" | "history";
 
 type Props = {
   token: string;
@@ -351,6 +353,19 @@ export function ChairDashboard({
         >
           Balance
         </button>
+        {canSetProgramStatus(role) && !readOnly && (
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-semibold ${
+              tab === "communications"
+                ? "border-b-2 border-minne-navy text-minne-navy"
+                : "text-gray-600"
+            }`}
+            onClick={() => setTab("communications")}
+          >
+            Communications
+          </button>
+        )}
         {canViewHistoricalCommittee(role) && archivedConferences.length > 0 && (
           <button
             type="button"
@@ -371,6 +386,14 @@ export function ChairDashboard({
           <ThemeGapPanel rows={themeStats} />
           <TechnicalityBalance rows={technicalityRows} approvedCount={approvedCount} />
         </section>
+      )}
+
+      {tab === "communications" && (
+        <ChairCommunicationsTab
+          token={token}
+          readOnly={readOnly}
+          conferenceName={conferenceName}
+        />
       )}
 
       {tab === "history" && (

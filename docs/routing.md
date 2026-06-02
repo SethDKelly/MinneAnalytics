@@ -43,6 +43,11 @@ Browser pages call these Route Handlers for mutations and downloads. They enforc
 | `PATCH` | `/api/chair/deck-shareable` | Board: archive sharing flag |
 | `PATCH` | `/api/chair/vip-registered` | Board/co-chair: VIP registration |
 | `PATCH` | `/api/chair/sponsor-session` | Board: sponsor session flag |
+| `GET` | `/api/chair/email-templates` | Board: template list + send history |
+| `GET` | `/api/chair/email-templates/{key}/preview` | Board: merge preview |
+| `GET` | `/api/chair/email-templates/{key}/recipients` | Board: eligible recipients |
+| `POST` | `/api/chair/email-templates/{key}/send` | Board: send batch (stub) |
+| `POST` | `/api/chair/abstract-review` | Board: acknowledge presenter revision |
 | `POST` | `/api/chair/publish-archive` | Board: publish/unpublish slide library |
 | `GET` | `/api/chair/export` | CSV export (`?token=`) |
 | `POST` | `/api/presenter/deck` | Deck upload (multipart) |
