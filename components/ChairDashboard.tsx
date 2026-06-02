@@ -10,7 +10,10 @@ import {
   SponsorSessionBadge,
 } from "./StatusBadge";
 import { TechnicalityBalance } from "./TechnicalityBalance";
+import { TechnicalityHeatmap } from "./TechnicalityHeatmap";
+import { ThemeCoverageHeatmap } from "./ThemeCoverageHeatmap";
 import { ThemeGapPanel } from "./ThemeGapPanel";
+import type { HeatmapMatrix } from "@/lib/chair-heatmaps";
 import type { CapacitySnapshot } from "@/lib/capacity";
 import type { DeckQueueItem } from "@/lib/decks";
 import type { ChairProgramItem } from "@/lib/review-blind";
@@ -55,6 +58,8 @@ type Props = {
   decksPublished: boolean;
   decksPublishedAt: string | null;
   themeStats: ThemeCountRow[];
+  themeStatusHeatmap: HeatmapMatrix;
+  technicalityThemeHeatmap: HeatmapMatrix;
   technicalityRows: TechnicalityRow[];
   approvedCount: number;
   readOnly: boolean;
@@ -80,6 +85,8 @@ export function ChairDashboard({
   decksPublished: initialDecksPublished,
   decksPublishedAt,
   themeStats,
+  themeStatusHeatmap,
+  technicalityThemeHeatmap,
   technicalityRows,
   approvedCount,
   readOnly,
@@ -384,7 +391,12 @@ export function ChairDashboard({
       {tab === "balance" && (
         <section className="mt-6 space-y-6">
           <ThemeGapPanel rows={themeStats} />
+          <ThemeCoverageHeatmap data={themeStatusHeatmap} />
           <TechnicalityBalance rows={technicalityRows} approvedCount={approvedCount} />
+          <TechnicalityHeatmap
+            data={technicalityThemeHeatmap}
+            approvedCount={approvedCount}
+          />
         </section>
       )}
 
@@ -469,8 +481,12 @@ export function ChairDashboard({
               </button>
             ))}
           </div>
-          <div className="mt-4">
+          <div className="mt-4 space-y-6">
             <ThemeGapPanel rows={themeStats} />
+            <ThemeCoverageHeatmap
+              data={themeStatusHeatmap}
+              themeFilterActive={!!themeFilter}
+            />
           </div>
           {blindReviewEnabled && (
             <p className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">

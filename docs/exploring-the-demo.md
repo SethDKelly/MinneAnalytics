@@ -79,7 +79,8 @@ Open a **chair** URL (board member recommended first).
 - Committee averages include only scores at the current abstract version.
 - **Board:** Filter **Sponsor** / **Community**; use **Mark sponsor session** on a row (Avery Walsh is pre-flagged). Watch the capacity widget sponsor count update.
 - With blind review off (admin toggle): all talks sorted by average score.
-- Filter by **theme**.
+- Filter by **theme** (heatmap still reflects the full conference).
+- **Theme coverage heatmap** under the theme list for backlog patterns by status.
 - **Theme coverage** panel shows approved vs target counts per theme.
 - **Board only:** Approve, Mark backup, Decline (saturation warning if a theme is over target—confirm to proceed).
 - Promote **backup** → approved.
@@ -88,7 +89,8 @@ Open a **chair** URL (board member recommended first).
 
 **Balance tab**
 
-- Theme gap summary and **technicality balance** histogram for approved talks (vs planning targets).
+- Theme gap summary and **theme coverage heatmap** (themes × pending/approved/declined/backup).
+- **Technicality balance** bar chart and **technicality heatmap** (levels 1–5 × themes, approved only).
 
 **History tab** (board)
 

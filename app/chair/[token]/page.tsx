@@ -20,6 +20,10 @@ import {
   getReviewerByToken,
   roleDisplayName,
 } from "@/lib/reviewer";
+import {
+  computeTechnicalityThemeHeatmap,
+  computeThemeStatusHeatmap,
+} from "@/lib/chair-heatmaps";
 import { computeThemeStats } from "@/lib/theme-stats";
 import { sortByAggregate, toListItem } from "@/lib/submissions";
 import {
@@ -125,6 +129,19 @@ export default async function ChairPage({
   const approved = subs.filter((s) => s.programStatus === "APPROVED");
   const technicalityRows = computeTechnicalityBalance(approved);
 
+  const heatmapSubmissions = subs
+    .filter((s) => s.programStatus !== "WITHDRAWN")
+    .map((s) => ({
+      programStatus: s.programStatus,
+      technicalLevel: s.technicalLevel,
+      themes: s.themes.map((t) => ({ themeId: t.themeId })),
+    }));
+  const themeStatusHeatmap = computeThemeStatusHeatmap(themes, heatmapSubmissions);
+  const technicalityThemeHeatmap = computeTechnicalityThemeHeatmap(
+    themes,
+    heatmapSubmissions.filter((s) => s.programStatus === "APPROVED")
+  );
+
   const labelById = Object.fromEntries(
     accessList.map((a) => [a.id, a.label ?? a.role])
   );
@@ -167,6 +184,8 @@ export default async function ChairPage({
       decksPublished={conf.decksPublished}
       decksPublishedAt={conf.decksPublishedAt?.toISOString() ?? null}
       themeStats={themeStats}
+      themeStatusHeatmap={themeStatusHeatmap}
+      technicalityThemeHeatmap={technicalityThemeHeatmap}
       technicalityRows={technicalityRows}
       approvedCount={approved.length}
       readOnly={readOnly}

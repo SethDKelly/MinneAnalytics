@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–6, 8–9 complete  
+**Status:** In progress — Phases 1–6, 8–10 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -855,12 +855,12 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 10 — Chair coverage heatmaps
 
-- [ ] `lib/chair-heatmaps.ts`: `computeThemeStatusHeatmap`, `computeTechnicalityThemeHeatmap`
-- [ ] `HeatmapGrid` shared component (color scale, labels, tooltips, responsive scroll)
-- [ ] `ThemeCoverageHeatmap` below `ThemeGapPanel` on program + balance tabs
-- [ ] `TechnicalityHeatmap` below `TechnicalityBalance` on balance tab
-- [ ] Chair page loader: pass heatmap props; empty states when no submissions / no approved
-- [ ] Seed data sufficient to show non-empty grids in demo walkthrough
+- [x] `lib/chair-heatmaps.ts`: `computeThemeStatusHeatmap`, `computeTechnicalityThemeHeatmap`
+- [x] `HeatmapGrid` shared component (color scale, labels, tooltips, responsive scroll)
+- [x] `ThemeCoverageHeatmap` below `ThemeGapPanel` on program + balance tabs
+- [x] `TechnicalityHeatmap` below `TechnicalityBalance` on balance tab
+- [x] Chair page loader: pass heatmap props; empty states when no submissions / no approved
+- [x] Seed data sufficient to show non-empty grids in demo walkthrough
 
 ### Phase 11 — Docs, polish, edge cases
 
