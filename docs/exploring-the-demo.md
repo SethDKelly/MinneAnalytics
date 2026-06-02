@@ -103,9 +103,9 @@ Open a **chair** URL (board member recommended first).
 - Mark deck Reviewed / Approved / Concern.
 - **Board:** non-shareable flag, publish/unpublish post-conference archive.
 
-Try **Export CSV** from the header.
+Try **Export CSV** from the header — includes abstract version, theme sources, feedback, email send history, and score version markers.
 
-### 4. Board vs co-chair
+### 5. Board vs co-chair
 
 | Capability | Board (`/chair/{board-token}`) | Co-chair (`/chair/{chair-token}`) |
 |------------|--------------------------------|-----------------------------------|
@@ -118,25 +118,25 @@ Try **Export CSV** from the header.
 
 Open a co-chair chair URL to confirm approval buttons are absent and messaging explains board-only approval.
 
-### 5. Presenter portal
+### 6. Presenter portal
 
 Use the presenter link from step 1 (or a seed sample link).
 
 | Program status | What to try |
 |----------------|-------------|
-| Pending | View status; optional withdraw. |
-| Approved (seed has examples) | Upload PDF/PPTX deck; withdraw still allowed with confirmation. |
+| Pending / backup | Edit abstract (revisions), read committee feedback when seeded. |
+| Approved | Upload PDF/PPTX deck; withdraw still allowed with confirmation. Editing locked in v2 demo. |
 
 After upload, return to **Deck queue** on chair and mark the deck through the workflow.
 
-### 6. Schedule builder (board)
+### 7. Schedule builder (board)
 
 Open the **schedule** URL from seed (board only).
 
 1. Click **Generate schedule** — assigns approved talks across rooms/time with variety balancing.
 2. Drag talks between cells and the unscheduled pool; drop on occupied cells swaps assignments.
 
-### 7. Post-conference archive
+### 8. Post-conference archive
 
 1. On chair **Deck queue**, ensure at least one approved talk has an uploaded deck marked **Approved** and **Shareable**.
 2. Click **Publish archive**.

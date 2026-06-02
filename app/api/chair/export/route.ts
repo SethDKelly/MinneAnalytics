@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { getConferenceSubmissions } from "@/lib/conference-data";
-import {
-  buildScoresSummary,
-  degreesDisplay,
-  submissionsToCsv,
-  type ExportRow,
-} from "@/lib/export-csv";
-import { aggregateScores } from "@/lib/scoring";
+import { buildExportRows } from "@/lib/export-build";
+import { submissionsToCsv } from "@/lib/export-csv";
 import { canExportCsv, getReviewerByToken } from "@/lib/reviewer";
 import { prisma } from "@/lib/db";
 
@@ -21,7 +15,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const subs = await getConferenceSubmissions(reviewer.conferenceId);
+  const subs = await prisma.submission.findMany({
+    where: { conferenceId: reviewer.conferenceId },
+    include: {
+      scores: true,
+      themes: {
+        select: {
+          theme: { select: { name: true, source: true, removedAt: true } },
+        },
+      },
+      presenterFeedback: {
+        select: {
+          kind: true,
+          body: true,
+          createdAt: true,
+          abstractVersion: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
+      emailSendRecords: {
+        select: { templateKey: true, round: true, sentAt: true },
+        orderBy: { sentAt: "asc" },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
   const accessList = await prisma.reviewerAccess.findMany({
     where: { conferenceId: reviewer.conferenceId },
     select: { id: true, label: true, role: true },
@@ -30,34 +49,7 @@ export async function GET(request: Request) {
     accessList.map((a) => [a.id, a.label ?? a.role])
   );
 
-  const rows: ExportRow[] = subs.map((s) => {
-    const agg = aggregateScores(s.scores.map((sc) => sc.value));
-    return {
-      id: s.id,
-      title: s.title,
-      firstName: s.firstName,
-      lastName: s.lastName,
-      email: s.email,
-      organization: s.organization,
-      programStatus: s.programStatus,
-      deckStatus: s.deckStatus,
-      deckShareable: s.deckShareable,
-      vipRegistered: s.vipRegistered,
-      technicalLevel: s.technicalLevel,
-      aggregateAverage: agg.average,
-      aggregateCount: agg.count,
-      degrees: degreesDisplay(s.degrees),
-      createdAt: s.createdAt.toISOString(),
-      scoresSummary: buildScoresSummary(
-        s.scores.map((sc) => ({
-          label: labelById[sc.reviewerAccessId] ?? "Reviewer",
-          value: sc.value,
-          notes: sc.notes,
-        }))
-      ),
-    };
-  });
-
+  const rows = buildExportRows(subs, labelById);
   const csv = submissionsToCsv(rows);
   const conference = await prisma.conference.findUnique({
     where: { id: reviewer.conferenceId },

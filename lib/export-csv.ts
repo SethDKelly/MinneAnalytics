@@ -12,10 +12,18 @@ export type ExportRow = {
   deckStatus: string | null;
   deckShareable: boolean;
   vipRegistered: boolean;
+  isSponsorSession: boolean;
   technicalLevel: number;
+  abstractVersion: number;
+  abstractReviewStatus: string;
   aggregateAverage: number;
   aggregateCount: number;
   degrees: string;
+  themeNames: string;
+  themeSources: string;
+  feedbackCount: number;
+  feedbackSummary: string;
+  emailSendsSummary: string;
   createdAt: string;
   scoresSummary: string;
 };
@@ -38,10 +46,18 @@ export function submissionsToCsv(rows: ExportRow[]): string {
     "deck_status",
     "deck_shareable",
     "vip_registered",
+    "is_sponsor_session",
     "technical_level",
-    "avg_score",
-    "scorer_count",
+    "abstract_version",
+    "abstract_review_status",
+    "avg_score_current_version",
+    "scorer_count_current_version",
     "degrees",
+    "theme_names",
+    "theme_sources",
+    "feedback_count",
+    "feedback_summary",
+    "email_sends",
     "submitted_at",
     "scores",
   ];
@@ -59,10 +75,18 @@ export function submissionsToCsv(rows: ExportRow[]): string {
         r.deckStatus ?? "",
         r.deckShareable,
         r.vipRegistered,
+        r.isSponsorSession,
         r.technicalLevel,
+        r.abstractVersion,
+        r.abstractReviewStatus,
         r.aggregateAverage.toFixed(2),
         r.aggregateCount,
         r.degrees,
+        r.themeNames,
+        r.themeSources,
+        r.feedbackCount,
+        r.feedbackSummary,
+        r.emailSendsSummary,
         r.createdAt,
         r.scoresSummary,
       ]
@@ -74,10 +98,22 @@ export function submissionsToCsv(rows: ExportRow[]): string {
 }
 
 export function buildScoresSummary(
-  scores: { label: string; value: number; notes: string | null }[]
+  scores: {
+    label: string;
+    value: number;
+    notes: string | null;
+    scoredAbstractVersion?: number | null;
+    abstractVersion?: number;
+  }[]
 ): string {
   return scores
-    .map((s) => `${s.label}:${formatScore(s.value)}${s.notes ? `(${s.notes})` : ""}`)
+    .map((s) => {
+      const ver =
+        s.scoredAbstractVersion != null && s.abstractVersion != null
+          ? `@v${s.scoredAbstractVersion}${s.scoredAbstractVersion < s.abstractVersion ? "!" : ""}`
+          : "";
+      return `${s.label}:${formatScore(s.value)}${ver}${s.notes ? `(${s.notes})` : ""}`;
+    })
     .join(" | ");
 }
 

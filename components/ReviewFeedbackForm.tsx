@@ -54,7 +54,7 @@ export function ReviewFeedbackForm({
         Visible on the presenter portal (not the same as private committee score notes).
         {kind === "ABSTRACT" && ` Tagged for abstract version v${abstractVersion}.`}
       </p>
-      <div className="mt-3 flex flex-wrap gap-3 text-sm">
+      <div className="mt-3 flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-3">
         <label className="flex items-center gap-1">
           <input
             type="radio"
@@ -77,7 +77,7 @@ export function ReviewFeedbackForm({
         </label>
       </div>
       <textarea
-        className="form-input mt-2"
+        className="form-input mt-2 w-full min-h-[5rem]"
         rows={3}
         placeholder="Suggestions for improving the abstract or other comments for the speaker…"
         value={body}
@@ -93,7 +93,7 @@ export function ReviewFeedbackForm({
       )}
       <button
         type="button"
-        className="btn-secondary mt-2"
+        className="btn-secondary mt-2 w-full sm:w-auto"
         disabled={disabled || saving}
         onClick={send}
       >

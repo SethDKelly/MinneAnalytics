@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–6, 8–10 complete  
+**Status:** Complete — Phases 1–6, 8–11 (conference demo v2)  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -864,10 +864,10 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 11 — Docs, polish, edge cases
 
-- [ ] Update `architecture.md`, `routing.md`, `exploring-the-demo.md` (all v2 features incl. heatmaps)
-- [ ] CSV export: version, feedback, theme `source`, sponsor flag, email send columns (optional)
-- [ ] Mobile-friendly review feedback (optional)
-- [ ] Approved-talk unlock (if in scope)
+- [x] Update `architecture.md`, `routing.md`, `exploring-the-demo.md` (all v2 features incl. heatmaps)
+- [x] CSV export: version, feedback, theme `source`, sponsor flag, email send columns
+- [x] Mobile-friendly review feedback (optional)
+- [ ] Approved-talk unlock (if in scope) — deferred; presenters cannot edit approved talks in v2 demo
 
 ---
 
