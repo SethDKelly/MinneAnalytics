@@ -1,4 +1,8 @@
 import type { Score, SubmissionRevision } from "@prisma/client";
+import {
+  countScoresAtCurrentVersion,
+  countStaleScoresByVersion,
+} from "./rescoring";
 
 export const REVISION_FIELD_LABELS: Record<string, string> = {
   title: "Title",
@@ -112,39 +116,38 @@ export type ScoreVersionSummary = {
   abstractVersion: number;
   abstractReviewStatus: string;
   scoreCount: number;
+  currentScoreCount: number;
   committeeSize: number;
   staleScoreCount: number;
   mayBeStale: boolean;
   latestChangedFields: string[];
 };
 
-export function countStaleScores(
-  scores: Pick<Score, "updatedAt">[],
-  lastPresenterEditAt: Date | null
-): number {
-  if (!lastPresenterEditAt || scores.length === 0) return 0;
-  const editMs = lastPresenterEditAt.getTime();
-  return scores.filter((s) => s.updatedAt.getTime() < editMs).length;
-}
-
 export function computeScoreVersionSummary(
   submission: {
     abstractVersion: number;
     abstractReviewStatus: string;
-    lastPresenterEditAt: Date | null;
   },
-  scores: Pick<Score, "updatedAt">[],
+  scores: Pick<Score, "scoredAbstractVersion">[],
   committeeSize: number,
   latestChangedFields: string[] = []
 ): ScoreVersionSummary {
-  const staleScoreCount = countStaleScores(scores, submission.lastPresenterEditAt);
+  const currentScoreCount = countScoresAtCurrentVersion(
+    scores,
+    submission.abstractVersion
+  );
+  const staleScoreCount = countStaleScoresByVersion(
+    scores,
+    submission.abstractVersion
+  );
   const mayBeStale =
     staleScoreCount > 0 ||
-    (submission.abstractReviewStatus === "REVISED" && scores.length > 0);
+    (submission.abstractReviewStatus === "REVISED" && currentScoreCount < scores.length);
   return {
     abstractVersion: submission.abstractVersion,
     abstractReviewStatus: submission.abstractReviewStatus,
     scoreCount: scores.length,
+    currentScoreCount,
     committeeSize,
     staleScoreCount,
     mayBeStale,
@@ -154,23 +157,21 @@ export function computeScoreVersionSummary(
 
 export function formatScoreVersionSummary(summary: ScoreVersionSummary): string {
   const parts: string[] = [];
-  if (summary.scoreCount > 0) {
+  if (summary.currentScoreCount > 0 || summary.scoreCount > 0) {
     parts.push(
-      `${summary.scoreCount} of ${summary.committeeSize} reviewer${
+      `${summary.currentScoreCount} of ${summary.committeeSize} reviewer${
         summary.committeeSize === 1 ? "" : "s"
-      } scored`
+      } scored v${summary.abstractVersion}`
     );
   }
-  if (summary.mayBeStale) {
-    if (summary.staleScoreCount > 0) {
-      parts.push(
-        `${summary.staleScoreCount} score${
-          summary.staleScoreCount === 1 ? "" : "s"
-        } may predate the latest edit`
-      );
-    } else if (summary.abstractReviewStatus === "REVISED") {
-      parts.push("committee scores may predate the latest revision");
-    }
+  if (summary.staleScoreCount > 0) {
+    parts.push(
+      `${summary.staleScoreCount} score${
+        summary.staleScoreCount === 1 ? "" : "s"
+      } on older version${summary.staleScoreCount === 1 ? "" : "s"}`
+    );
+  } else if (summary.mayBeStale && summary.abstractReviewStatus === "REVISED") {
+    parts.push("awaiting rescores on latest revision");
   }
   if (summary.latestChangedFields.length > 0) {
     const labels = summary.latestChangedFields.map(

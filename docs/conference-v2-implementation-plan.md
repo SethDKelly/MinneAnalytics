@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–5 complete  
+**Status:** In progress — Phases 1–6 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -832,10 +832,10 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 6 — Rescoring queue
 
-- [ ] `scoredAbstractVersion` on `Score`
-- [ ] Review queue logic (needs rescore)
-- [ ] Aggregate policy A (current-version scores only)
-- [ ] `ACKNOWLEDGED` / mark reviewed (board)
+- [x] `scoredAbstractVersion` on `Score`
+- [x] Review queue logic (needs rescore)
+- [x] Aggregate policy A (current-version scores only)
+- [x] `ACKNOWLEDGED` / mark reviewed (board)
 
 ### Phase 8 — Sponsor session flag
 

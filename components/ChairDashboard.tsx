@@ -11,7 +11,9 @@ import type { CapacitySnapshot } from "@/lib/capacity";
 import type { DeckQueueItem } from "@/lib/decks";
 import type { ChairProgramItem } from "@/lib/review-blind";
 import { ScoreVersionSummaryLine } from "./ScoreVersionSummary";
+import { RescoreIndicator } from "./RescoreIndicator";
 import { RevisionBadge } from "./RevisionBadge";
+import { AbstractReviewStatusBadge } from "./StatusBadge";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { formatScore } from "@/lib/scoring-scale";
 import { TECHNICAL_LABELS } from "@/lib/constants";
@@ -143,6 +145,21 @@ export function ChairDashboard({
     else {
       const data = await res.json();
       alert(data.error ?? "Could not update VIP registration");
+    }
+  }
+
+  async function acknowledgeRevision(submissionId: string) {
+    setLoading(submissionId + "ack");
+    const res = await fetch("/api/chair/abstract-review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, submissionId, action: "acknowledge" }),
+    });
+    setLoading(null);
+    if (res.ok) router.refresh();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Could not update revision status");
     }
   }
 
@@ -405,6 +422,7 @@ export function ChairDashboard({
                 loading={loading}
                 setStatus={setStatus}
                 setVipRegistered={setVipRegistered}
+                acknowledgeRevision={acknowledgeRevision}
                 role={role}
                 blindReviewEnabled
               />
@@ -419,6 +437,7 @@ export function ChairDashboard({
                 loading={loading}
                 setStatus={setStatus}
                 setVipRegistered={setVipRegistered}
+                acknowledgeRevision={acknowledgeRevision}
                 role={role}
                 blindReviewEnabled
                 className="mt-10 border-t border-gray-200 pt-8"
@@ -427,7 +446,7 @@ export function ChairDashboard({
           ) : (
             <ProgramListSection
               title="Program"
-              description="Sorted by committee average (highest first)"
+              description="Sorted by committee average at current abstract version (highest first)"
               items={scoredByMe}
               allScores={allScores}
               token={token}
@@ -436,6 +455,7 @@ export function ChairDashboard({
               loading={loading}
               setStatus={setStatus}
               setVipRegistered={setVipRegistered}
+              acknowledgeRevision={acknowledgeRevision}
               role={role}
               blindReviewEnabled={false}
             />
@@ -616,6 +636,7 @@ function ProgramListSection({
   loading,
   setStatus,
   setVipRegistered,
+  acknowledgeRevision,
   role,
   blindReviewEnabled,
   className = "mt-8",
@@ -630,6 +651,7 @@ function ProgramListSection({
   loading: string | null;
   setStatus: (submissionId: string, status: string, force?: boolean) => void;
   setVipRegistered: (submissionId: string, registered: boolean) => void;
+  acknowledgeRevision: (submissionId: string) => void;
   role: ReviewerRole;
   blindReviewEnabled: boolean;
   className?: string;
@@ -650,6 +672,9 @@ function ProgramListSection({
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-xl font-bold text-minne-navy">{item.title}</h3>
                     <RevisionBadge version={item.revisionSummary.abstractVersion} />
+                    {item.revisionSummary.staleScoreCount > 0 && (
+                      <RescoreIndicator version={item.revisionSummary.abstractVersion} />
+                    )}
                   </div>
                   <p className="text-sm text-gray-600">{item.presenterSubtitle}</p>
                   <ScoreVersionSummaryLine summary={item.revisionSummary} />
@@ -673,6 +698,7 @@ function ProgramListSection({
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <ProgramStatusBadge status={item.programStatus} />
+                  <AbstractReviewStatusBadge status={item.abstractReviewStatus} />
                   <DeckStatusBadge status={item.deckStatus} />
                   {board && item.programStatus === "APPROVED" && (
                     <span
@@ -694,8 +720,16 @@ function ProgramListSection({
                   )}
                   {item.committeeScoresVisible && (
                     <span className="text-sm font-semibold text-minne-navy">
-                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
-                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
+                      {agg.count > 0 ? (
+                        <>
+                          Avg {agg.average.toFixed(2)} at v{item.revisionSummary.abstractVersion}{" "}
+                          ({agg.count} reviewer{agg.count === 1 ? "" : "s"})
+                        </>
+                      ) : item.revisionSummary.staleScoreCount > 0 ? (
+                        <>No scores at v{item.revisionSummary.abstractVersion} yet</>
+                      ) : (
+                        <>No committee scores yet</>
+                      )}
                     </span>
                   )}
                 </div>
@@ -716,6 +750,16 @@ function ProgramListSection({
 
               {!readOnly && (
                 <div className="mt-4 flex flex-wrap gap-2">
+                  {board && item.abstractReviewStatus === "REVISED" && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs"
+                      disabled={!!loading}
+                      onClick={() => acknowledgeRevision(item.id)}
+                    >
+                      Mark revision reviewed
+                    </button>
+                  )}
                   {board && item.programStatus === "PENDING" && (
                     <>
                       <button

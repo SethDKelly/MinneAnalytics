@@ -26,6 +26,11 @@ export async function autoPopulateDemoScores(
   const range = demoScoreRange(programStatus);
   if (!range) return;
 
+  const submission = await prisma.submission.findUniqueOrThrow({
+    where: { id: submissionId },
+    select: { abstractVersion: true },
+  });
+
   const reviewers = await prisma.reviewerAccess.findMany({
     where: { conferenceId },
     select: { id: true },
@@ -37,8 +42,16 @@ export async function autoPopulateDemoScores(
       where: {
         submissionId_reviewerAccessId: { submissionId, reviewerAccessId },
       },
-      create: { submissionId, reviewerAccessId, value },
-      update: { value },
+      create: {
+        submissionId,
+        reviewerAccessId,
+        value,
+        scoredAbstractVersion: submission.abstractVersion,
+      },
+      update: {
+        value,
+        scoredAbstractVersion: submission.abstractVersion,
+      },
     });
   }
 }

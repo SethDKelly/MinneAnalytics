@@ -269,6 +269,7 @@ model Score {
   reviewerAccessId String   @map("reviewer_access_id")
   value            Float
   notes            String?
+  scoredAbstractVersion Int? @map("scored_abstract_version")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

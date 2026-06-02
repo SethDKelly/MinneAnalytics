@@ -51,6 +51,7 @@ The new talk appears as **Pending** in committee views. Email content is stubbed
 | 3 | Notice **needs score** vs **scored by you** sections. |
 | 4 | **Blind review (default):** presenter name/org/email are hidden; committee averages appear only after you save a score. Use **Reveal identity** only for conflict checks. |
 | 5 | Expand a scored talk → **View revision history** for version snapshots and field diffs. **Alex Rivera** is seeded at v2 with stale committee scores. |
+| 6 | Open **Needs rescore** for talks you scored before a presenter edit; save again to pin your score to the current version. Committee averages use only current-version scores. |
 
 Seed data already includes **approved** and **declined** talks with auto-generated committee scores (high for approved, low for declined).
 
@@ -61,7 +62,8 @@ Open a **chair** URL (board member recommended first).
 **Program tab**
 
 - With blind review on: **Awaiting your score** (no email or committee scores) then **Scored by you** (sorted by average). Link to the review page to unlock a row.
-- Each row shows **vN** and a lineage summary (e.g. stale scores after a presenter revision).
+- Each row shows **vN**, lineage summary (e.g. “2 of 5 scored v2”), and **Mark revision reviewed** (board) when status is Updated.
+- Committee averages include only scores at the current abstract version.
 - With blind review off (admin toggle): all talks sorted by average score.
 - Filter by **theme**.
 - **Theme coverage** panel shows approved vs target counts per theme.

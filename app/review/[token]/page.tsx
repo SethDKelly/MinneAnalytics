@@ -28,6 +28,9 @@ export default async function ReviewPage({
       needsScore={queue.needsScore.map((item) =>
         maskReviewSubmissionItem(item, blindReviewEnabled)
       )}
+      needsRescore={queue.needsRescore.map((item) =>
+        maskReviewSubmissionItem(item, blindReviewEnabled)
+      )}
       scored={queue.scored.map((item) =>
         maskReviewSubmissionItem(item, blindReviewEnabled)
       )}

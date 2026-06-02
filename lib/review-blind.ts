@@ -1,4 +1,5 @@
 import type { ScoreVersionSummary } from "./revision-history";
+import { viewerHasCurrentScore } from "./rescoring";
 import type { SubmissionListItem } from "./submissions";
 import { EMPTY_AGGREGATE } from "./scoring";
 
@@ -55,7 +56,7 @@ export function maskReviewSubmissionItem(
     lastName: "",
     organization: "",
     identity: null,
-    aggregate: item.myScore != null ? item.aggregate : null,
+    aggregate: viewerHasCurrentScore(item) ? item.aggregate : null,
   };
 }
 
@@ -66,7 +67,7 @@ export function partitionChairProgramByOwnScore(items: SubmissionListItem[]): {
   const needsMyScore: SubmissionListItem[] = [];
   const scoredByMe: SubmissionListItem[] = [];
   for (const item of items) {
-    if (item.myScore != null) scoredByMe.push(item);
+    if (viewerHasCurrentScore(item)) scoredByMe.push(item);
     else needsMyScore.push(item);
   }
   const byNewest = (a: SubmissionListItem, b: SubmissionListItem) =>
@@ -98,7 +99,7 @@ export function buildChairProgramItem(
   blindEnabled: boolean,
   revisionSummary: ScoreVersionSummary
 ): ChairProgramItem {
-  const committeeScoresVisible = !blindEnabled || item.myScore != null;
+  const committeeScoresVisible = !blindEnabled || viewerHasCurrentScore(item);
   let presenterSubtitle: string;
   if (committeeScoresVisible) {
     presenterSubtitle = `${full.firstName} ${full.lastName} · ${full.organization} · ${full.email}`;

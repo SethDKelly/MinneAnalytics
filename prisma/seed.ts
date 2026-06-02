@@ -4,6 +4,7 @@ import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
 import { backfillSubmissionRevisionsV1 } from "../lib/backfill-revisions";
+import { backfillScoredAbstractVersions } from "../lib/backfill-scored-versions";
 import {
   computeChangedFields,
   revisionSnapshotFromSubmission,
@@ -471,12 +472,15 @@ async function main() {
           reviewerAccessId: access.id,
           value: 0.72,
           notes: "Seed score before presenter v2 revision (demo stale scores).",
+          scoredAbstractVersion: 1,
           createdAt: staleAt,
           updatedAt: staleAt,
         },
       });
     }
   }
+
+  await backfillScoredAbstractVersions();
 
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
@@ -490,7 +494,7 @@ async function main() {
     );
   }
   console.log(
-    "  Lineage: Alex Rivera is at abstract v2 (REVISED) with sample committee scores predating the edit."
+    "  Rescoring: Alex Rivera is at v2 (REVISED); committee scores are pinned to v1 until reviewers rescore."
   );
   console.log("\n");
 }
