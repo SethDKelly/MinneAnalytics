@@ -95,6 +95,7 @@ export const presenterSubmissionEditSchema = z.object({
     .min(1, "Select at least one theme")
     .max(3, "Select at most three themes"),
   changeNote: z.string().max(2000).optional(),
+  proposedThemeName: z.string().max(80).optional(),
 });
 
 export const scoreSchema = z.object({

@@ -10,8 +10,11 @@ type ThemeRow = {
   id: string;
   name: string;
   slug: string;
+  source: "ADMIN" | "PRESENTER";
   targetMin: number;
   targetMax: number;
+  removedAt: string | null;
+  usageCount: number;
 };
 
 type ArchivedRow = {
@@ -105,15 +108,14 @@ export function AdminDashboard({
     }
   }
 
-  async function updateThemeTargets(
+  async function patchTheme(
     themeId: string,
-    targetMin: number,
-    targetMax: number
+    payload: Record<string, unknown>
   ) {
     const res = await fetch("/api/admin/themes", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, themeId, targetMin, targetMax }),
+      body: JSON.stringify({ token, themeId, ...payload }),
     });
     if (res.ok) router.refresh();
     else {
@@ -122,8 +124,45 @@ export function AdminDashboard({
     }
   }
 
+  async function updateThemeTargets(
+    themeId: string,
+    targetMin: number,
+    targetMax: number
+  ) {
+    await patchTheme(themeId, { targetMin, targetMax });
+  }
+
+  async function updateThemeName(themeId: string, name: string) {
+    if (!name.trim()) return;
+    await patchTheme(themeId, { name: name.trim() });
+  }
+
+  async function softRemoveTheme(themeId: string) {
+    if (!confirm("Remove this theme from the picker? Talks already tagged will keep the label."))
+      return;
+    setLoading(themeId);
+    await patchTheme(themeId, { removed: true });
+    setLoading(null);
+    router.refresh();
+  }
+
+  async function restoreTheme(themeId: string) {
+    setLoading(themeId);
+    await patchTheme(themeId, { removed: false });
+    setLoading(null);
+    router.refresh();
+  }
+
+  async function promoteTheme(themeId: string) {
+    setLoading(themeId);
+    await patchTheme(themeId, { source: "ADMIN" });
+    setLoading(null);
+    router.refresh();
+  }
+
   async function deleteTheme(themeId: string) {
-    if (!confirm("Remove this theme? Submissions using it will lose the link.")) return;
+    if (!confirm("Permanently delete this theme? Only possible when no submissions use it."))
+      return;
     setLoading(themeId);
     const res = await fetch(
       `/api/admin/themes?token=${encodeURIComponent(token)}&themeId=${encodeURIComponent(themeId)}`,
@@ -131,7 +170,6 @@ export function AdminDashboard({
     );
     setLoading(null);
     if (res.ok) {
-      setThemes((t) => t.filter((x) => x.id !== themeId));
       router.refresh();
     } else {
       const data = await res.json();
@@ -263,15 +301,29 @@ export function AdminDashboard({
       <section className="mt-6 card">
         <h2 className="text-lg font-bold text-minne-navy">Theme taxonomy</h2>
         <p className="mt-1 text-sm text-gray-600">
-          Presenters pick up to three themes; targets drive gap analysis on the chair dashboard.
+          Official themes and community proposals from presenters. Soft-remove hides a tag from
+          new submissions; existing talks keep the label on chair views.
         </p>
         <ul className="mt-4 space-y-3">
           {themes.map((t) => (
             <li
               key={t.id}
-              className="flex flex-wrap items-center gap-3 rounded border border-gray-200 p-3 text-sm"
+              className={`flex flex-wrap items-center gap-3 rounded border p-3 text-sm ${
+                t.removedAt
+                  ? "border-gray-300 bg-gray-100 opacity-80"
+                  : "border-gray-200 bg-white"
+              }`}
             >
-              <span className="font-semibold text-minne-navy">{t.name}</span>
+              <input
+                className="min-w-[10rem] flex-1 rounded border px-2 py-1 font-semibold text-minne-navy"
+                defaultValue={t.name}
+                disabled={!!t.removedAt}
+                onBlur={(e) => updateThemeName(t.id, e.target.value)}
+              />
+              <span className="text-xs text-gray-500">
+                {t.source === "ADMIN" ? "Official" : "Community"} · {t.usageCount} talk
+                {t.usageCount === 1 ? "" : "s"}
+              </span>
               <label className="flex items-center gap-1">
                 Min
                 <input
@@ -300,14 +352,45 @@ export function AdminDashboard({
                   }
                 />
               </label>
-              <button
-                type="button"
-                className="btn-danger text-xs"
-                disabled={loading === t.id}
-                onClick={() => deleteTheme(t.id)}
-              >
-                Remove
-              </button>
+              {t.source === "PRESENTER" && !t.removedAt && (
+                <button
+                  type="button"
+                  className="btn-secondary text-xs"
+                  disabled={loading === t.id}
+                  onClick={() => promoteTheme(t.id)}
+                >
+                  Promote to official
+                </button>
+              )}
+              {t.removedAt ? (
+                <button
+                  type="button"
+                  className="btn-secondary text-xs"
+                  disabled={loading === t.id}
+                  onClick={() => restoreTheme(t.id)}
+                >
+                  Restore
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-danger text-xs"
+                  disabled={loading === t.id}
+                  onClick={() => softRemoveTheme(t.id)}
+                >
+                  Remove from list
+                </button>
+              )}
+              {t.usageCount === 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-red-700 underline"
+                  disabled={loading === t.id}
+                  onClick={() => deleteTheme(t.id)}
+                >
+                  Delete
+                </button>
+              )}
             </li>
           ))}
         </ul>
