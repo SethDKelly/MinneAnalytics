@@ -34,6 +34,13 @@ enum ConferenceStatus {
   ARCHIVED
 }
 
+enum AbstractReviewStatus {
+  CURRENT
+  FEEDBACK_PENDING
+  REVISED
+  ACKNOWLEDGED
+}
+
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -150,6 +157,11 @@ model Submission {
   approvedAt    DateTime?     @map("approved_at")
   withdrawnAt   DateTime?     @map("withdrawn_at")
 
+  abstractReviewStatus AbstractReviewStatus @default(CURRENT) @map("abstract_review_status")
+  abstractVersion Int @default(1) @map("abstract_version")
+  abstractVersionAcknowledgedAt DateTime? @map("abstract_version_acknowledged_at")
+  lastPresenterEditAt DateTime? @map("last_presenter_edit_at")
+
   firstName     String  @map("first_name")
   lastName      String  @map("last_name")
   degrees       String  // JSON array
@@ -187,6 +199,25 @@ model Submission {
   deckFiles  DeckFile[]
   schedulePlacement SchedulePlacement?
   themes     SubmissionTheme[]
+  revisions  SubmissionRevision[]
+}
+
+model SubmissionRevision {
+  id           String   @id @default(cuid())
+  submissionId String   @map("submission_id")
+  version      Int
+  title        String
+  abstract     String
+  bio          String
+  technicalLevel Int    @map("technical_level")
+  themeIds     String   @map("theme_ids")
+  changedFields String  @map("changed_fields")
+  changeNote   String?  @map("change_note")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, version])
 }
 
 model ReviewerAccess {

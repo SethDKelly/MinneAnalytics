@@ -3,6 +3,7 @@ import { generateToken, hashToken } from "../lib/tokens";
 import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
+import { backfillSubmissionRevisionsV1 } from "../lib/backfill-revisions";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
 
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ async function main() {
   await prisma.score.deleteMany();
   await prisma.deckFile.deleteMany();
   await prisma.submissionTheme.deleteMany();
+  await prisma.submissionRevision.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.theme.deleteMany();
   await prisma.reviewerAccess.deleteMany();
@@ -345,10 +347,13 @@ async function main() {
   console.log("  4. Board builds schedule at /schedule/{token}");
   console.log("  5. Chair Balance tab: theme gaps + technicality distribution");
 
+  await backfillSubmissionRevisionsV1();
+
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
   });
+  console.log("  (Pending/backup talks: use presenter portal to edit abstract — Phase 1 revisions)");
   console.log("\n");
 }
 

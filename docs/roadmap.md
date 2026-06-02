@@ -14,15 +14,21 @@ Replace long-lived committee URL tokens with organizational sign-in (e.g. Entra,
 
 Optional per-conference blind scoring (hide identity until score is submitted). Track conflicts of interest per reviewer; block or flag scoring; surface exclusions on the chair dashboard.
 
+**v2 scope (planned):** [conference-v2-implementation-plan.md](conference-v2-implementation-plan.md) §4.6 — mask name/company/email on `/review` with explicit reveal; hide committee scores on `/chair` until the approver has scored the talk. Full COI registry remains roadmap-only.
+
 ## Presenter and communications
 
 ### Abstract revision workflow
 
 Let presenters edit abstracts while `PENDING` (or `BACKUP`), with revision history and optional chair notification. Lock after approval unless the board unlocks.
 
+**Implementation plan:** [conference-v2-implementation-plan.md](conference-v2-implementation-plan.md) on branch `feature/conference-demo-v2` (presenter edits, presenter-visible committee feedback, revision lineage, rescoring queue).
+
 ### Real email and calendar
 
 Replace `lib/email-stub.ts` console output with SendGrid, SES, or similar. Optional calendar invites for approvals and deck deadlines. Keep a stub mode for local dev (`EMAIL_MODE=stub`).
+
+**v2 scope (planned):** [conference-v2-implementation-plan.md](conference-v2-implementation-plan.md) §4.8 — global templates (deck call, deck reminder, decline rounds, attendee reminder, feedback), board send UI on chair, per-conference batch history and deduplicated decline waves. Production SMTP still deferred; stub + DB audit in v2.
 
 ### Presenter portal enhancements
 
@@ -33,6 +39,8 @@ Show selected themes and technical level on `/presenter/[token]`. Optional messa
 ### Registration system integration (VIP)
 
 Sync `vipRegistered` from Eventbrite, Cvent, or webhooks by presenter email instead of manual chair toggles.
+
+**Sched.com (broader):** Attendee roster, session choices, live attendance/waitlists, and room attendance map in `ScheduleBuilder` — see [conference-backlog.md](conference-backlog.md) (BL-2) and [Sched API](https://sched.com/api).
 
 ### Committee activity audit log
 
@@ -55,6 +63,10 @@ JSON reporting API beyond CSV export; pagination and scheduled exports for large
 ### Mobile-friendly committee review
 
 Responsive, touch-oriented review and chair flows for in-person committee meetings; simplified schedule view on small screens.
+
+### In-room talk feedback (QR per room)
+
+Attendees scan a room-specific QR code to rate and comment on the session in that room. Board views aggregates. Not in v2 — see [conference-backlog.md](conference-backlog.md) (BL-1).
 
 ## Suggested priority
 

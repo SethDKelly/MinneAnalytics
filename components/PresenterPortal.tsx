@@ -2,24 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DeckStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import {
+  AbstractReviewStatusBadge,
+  DeckStatusBadge,
+  ProgramStatusBadge,
+} from "./StatusBadge";
+import { PresenterSubmissionEditor } from "./PresenterSubmissionEditor";
 import { PROGRAM_STATUS_LABELS, DECK_STATUS_LABELS } from "@/lib/constants";
 import { formatDegrees } from "@/lib/degrees";
+
+type ThemeOption = { id: string; name: string };
 
 type Props = {
   token: string;
   submission: {
     title: string;
     programStatus: string;
+    abstractReviewStatus: string;
+    abstractVersion: number;
     deckStatus: string | null;
     degrees: string;
     conferenceName: string;
     deckFilename: string | null;
     deckVersion: number | null;
+    canEdit: boolean;
+    abstract: string;
+    bio: string;
+    technicalLevel: number;
+    themeIds: string[];
   };
+  themes: ThemeOption[];
 };
 
-export function PresenterPortal({ token, submission }: Props) {
+export function PresenterPortal({ token, submission, themes }: Props) {
   const router = useRouter();
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,11 +83,18 @@ export function PresenterPortal({ token, submission }: Props) {
       <div className="card mt-6 space-y-3">
         <h2 className="text-xl font-bold">{submission.title}</h2>
         <p className="text-sm text-gray-600">Degrees: {formatDegrees(submission.degrees)}</p>
+        <p className="text-xs text-gray-500">Submission version v{submission.abstractVersion}</p>
         <div className="flex flex-wrap gap-3">
           <div>
             <span className="text-xs text-gray-500">Program status</span>
             <div className="mt-1">
               <ProgramStatusBadge status={submission.programStatus} />
+            </div>
+          </div>
+          <div>
+            <span className="text-xs text-gray-500">Abstract review</span>
+            <div className="mt-1">
+              <AbstractReviewStatusBadge status={submission.abstractReviewStatus} />
             </div>
           </div>
           <div>
@@ -86,6 +108,21 @@ export function PresenterPortal({ token, submission }: Props) {
 
       {message && (
         <p className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm">{message}</p>
+      )}
+
+      {submission.canEdit && !isWithdrawn && (
+        <PresenterSubmissionEditor
+          token={token}
+          themes={themes}
+          initial={{
+            title: submission.title,
+            abstract: submission.abstract,
+            bio: submission.bio,
+            technicalLevel: submission.technicalLevel,
+            themeIds: submission.themeIds,
+            abstractVersion: submission.abstractVersion,
+          }}
+        />
       )}
 
       {!isWithdrawn && (
@@ -167,10 +204,10 @@ export function PresenterPortal({ token, submission }: Props) {
         </section>
       )}
 
-      {submission.programStatus === "PENDING" && (
+      {submission.programStatus === "PENDING" && submission.canEdit && (
         <p className="mt-6 text-sm text-gray-600">
-          Your abstract is pending committee review. You will be able to upload a deck after
-          core approval.
+          Your abstract is pending committee review. You may update your submission above until
+          a decision is made. Upload a deck after approval.
         </p>
       )}
     </div>

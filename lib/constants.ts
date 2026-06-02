@@ -30,6 +30,13 @@ export const PROGRAM_STATUS_LABELS: Record<string, string> = {
   WITHDRAWN: "Withdrawn",
 };
 
+export const ABSTRACT_REVIEW_STATUS_LABELS: Record<string, string> = {
+  CURRENT: "Current",
+  FEEDBACK_PENDING: "Feedback requested",
+  REVISED: "Updated — needs review",
+  ACKNOWLEDGED: "Revision acknowledged",
+};
+
 /** Maps technical level 1–5 to schedule variety bands (Data Tech style). */
 export const VARIETY_LABELS: Record<number, string> = {
   1: "Business",
