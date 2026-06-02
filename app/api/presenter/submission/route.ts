@@ -8,6 +8,7 @@ import {
   revisionSnapshotFromSubmission,
   themeIdsFromJoin,
 } from "@/lib/submission-revision";
+import { resolveThemeIdsForSubmit } from "@/lib/themes";
 import { presenterSubmissionEditSchema } from "@/lib/validation";
 
 export async function PATCH(request: Request) {
@@ -38,13 +39,29 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
   }
 
+  let resolvedThemeIds: string[];
+  try {
+    resolvedThemeIds = await resolveThemeIdsForSubmit(
+      submission.conferenceId,
+      parsed.data.themeIds,
+      parsed.data.proposedThemeName,
+      submission.id
+    );
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Invalid theme selection" },
+      { status: 400 }
+    );
+  }
+
   const validThemes = await prisma.theme.findMany({
     where: {
       conferenceId: submission.conferenceId,
-      id: { in: parsed.data.themeIds },
+      id: { in: resolvedThemeIds },
+      removedAt: null,
     },
   });
-  if (validThemes.length !== parsed.data.themeIds.length) {
+  if (validThemes.length !== resolvedThemeIds.length) {
     return NextResponse.json({ error: "Invalid theme selection" }, { status: 400 });
   }
 
@@ -60,7 +77,7 @@ export async function PATCH(request: Request) {
     abstract: parsed.data.abstract,
     bio: parsed.data.bio,
     technicalLevel: parsed.data.technicalLevel,
-    themeIds: [...parsed.data.themeIds].sort(),
+    themeIds: [...resolvedThemeIds].sort(),
   };
 
   const changedFields = computeChangedFields(before, after);
@@ -83,7 +100,7 @@ export async function PATCH(request: Request) {
         abstractReviewStatus: "REVISED",
         lastPresenterEditAt: new Date(),
         themes: {
-          create: after.themeIds.map((themeId) => ({ themeId })),
+          create: resolvedThemeIds.map((themeId) => ({ themeId })),
         },
       },
     });

@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canManageThemes, getReviewerByToken } from "@/lib/reviewer";
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48);
-}
+import { slugifyThemeName } from "@/lib/themes";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -24,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name required" }, { status: 400 });
   }
 
-  const slug = String(body.slug ?? "").trim() || slugify(name);
+  const slug = String(body.slug ?? "").trim() || slugifyThemeName(name);
   const targetMin = Math.max(0, Number(body.targetMin) || 0);
   const targetMax = Math.max(0, Number(body.targetMax) || 0);
 
@@ -38,6 +31,7 @@ export async function POST(request: Request) {
       conferenceId: reviewer.conferenceId,
       name,
       slug,
+      source: "ADMIN",
       targetMin,
       targetMax,
       sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
@@ -64,15 +58,24 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Theme not found" }, { status: 404 });
   }
 
+  const data: {
+    name?: string;
+    targetMin?: number;
+    targetMax?: number;
+    removedAt?: Date | null;
+    source?: "ADMIN" | "PRESENTER";
+  } = {};
+
+  if (body.name !== undefined) data.name = String(body.name).trim();
+  if (body.targetMin !== undefined) data.targetMin = Math.max(0, Number(body.targetMin) || 0);
+  if (body.targetMax !== undefined) data.targetMax = Math.max(0, Number(body.targetMax) || 0);
+  if (body.removed === true) data.removedAt = new Date();
+  if (body.removed === false) data.removedAt = null;
+  if (body.source === "ADMIN") data.source = "ADMIN";
+
   const theme = await prisma.theme.update({
     where: { id: themeId },
-    data: {
-      name: body.name !== undefined ? String(body.name).trim() : undefined,
-      targetMin:
-        body.targetMin !== undefined ? Math.max(0, Number(body.targetMin) || 0) : undefined,
-      targetMax:
-        body.targetMax !== undefined ? Math.max(0, Number(body.targetMax) || 0) : undefined,
-    },
+    data,
   });
 
   return NextResponse.json({ ok: true, theme });
@@ -94,11 +97,20 @@ export async function DELETE(request: Request) {
 
   const existing = await prisma.theme.findFirst({
     where: { id: themeId, conferenceId: reviewer.conferenceId },
+    include: { _count: { select: { submissions: true } } },
   });
   if (!existing) {
     return NextResponse.json({ error: "Theme not found" }, { status: 404 });
   }
 
+  if (existing._count.submissions > 0) {
+    await prisma.theme.update({
+      where: { id: themeId },
+      data: { removedAt: new Date() },
+    });
+    return NextResponse.json({ ok: true, softRemoved: true });
+  }
+
   await prisma.theme.delete({ where: { id: themeId } });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, softRemoved: false });
 }

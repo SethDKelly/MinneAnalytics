@@ -50,6 +50,31 @@ async function main() {
     themeBySlug[t.slug] = row.id;
   }
 
+  const communityTheme = await prisma.theme.create({
+    data: {
+      conferenceId: conference.id,
+      slug: "mlops-in-production",
+      name: "MLOps in production",
+      source: "PRESENTER",
+      proposedAt: new Date(),
+      sortOrder: 6,
+    },
+  });
+  themeBySlug["mlops-in-production"] = communityTheme.id;
+
+  const removedTheme = await prisma.theme.create({
+    data: {
+      conferenceId: conference.id,
+      slug: "legacy-etl",
+      name: "Legacy ETL",
+      source: "PRESENTER",
+      proposedAt: new Date(),
+      removedAt: new Date(),
+      sortOrder: 7,
+    },
+  });
+  themeBySlug["legacy-etl"] = removedTheme.id;
+
   const archivedConference = await prisma.conference.create({
     data: {
       slug: "data-tech-2026",
@@ -225,6 +250,7 @@ async function main() {
       technicalLevel: 4,
       programStatus: "PENDING",
       degrees: ["MS"],
+      themeSlugs: ["ml-ops", "mlops-in-production"],
     },
     {
       firstName: "Avery",
@@ -265,6 +291,7 @@ async function main() {
         "A cautionary walkthrough of pilots that never reached production — what went wrong and how committees spot weak proposals early.",
       technicalLevel: 2,
       programStatus: "DECLINED",
+      themeSlugs: ["legacy-etl"],
     },
   ];
 

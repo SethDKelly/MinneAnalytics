@@ -3,9 +3,9 @@ import { ChairDashboard } from "@/components/ChairDashboard";
 import { getCapacityForConference, getConferenceSubmissions } from "@/lib/conference-data";
 import {
   getArchivedConferences,
-  getConferenceThemes,
   themeNamesForSubmission,
 } from "@/lib/conference-queries";
+import { formatThemeDisplayName, getConferenceThemesForAdmin } from "@/lib/themes";
 import { getDeckQueue } from "@/lib/decks";
 import { computeTechnicalityBalance } from "@/lib/program-balance";
 import {
@@ -55,7 +55,7 @@ export default async function ChairPage({
     getConferenceSubmissions(viewConferenceId),
     getCapacityForConference(viewConferenceId),
     getDeckQueue(viewConferenceId),
-    getConferenceThemes(viewConferenceId),
+    getConferenceThemesForAdmin(viewConferenceId),
     canViewHistoricalCommittee(reviewer.role)
       ? getArchivedConferences()
       : Promise.resolve([]),
@@ -139,7 +139,7 @@ export default async function ChairPage({
         submissionCount: c._count.submissions,
       }))}
       viewingArchiveSlug={archiveSlug ?? null}
-      themes={themes.map((t) => ({ id: t.id, name: t.name }))}
+      themes={themes.map((t) => ({ id: t.id, name: formatThemeDisplayName(t) }))}
     />
   );
 }

@@ -41,6 +41,11 @@ enum AbstractReviewStatus {
   ACKNOWLEDGED
 }
 
+enum ThemeSource {
+  ADMIN
+  PRESENTER
+}
+
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -84,6 +89,10 @@ model Theme {
   conferenceId String   @map("conference_id")
   slug         String
   name         String
+  source       ThemeSource @default(ADMIN)
+  proposedBySubmissionId String? @map("proposed_by_submission_id")
+  proposedAt   DateTime? @map("proposed_at")
+  removedAt    DateTime? @map("removed_at")
   targetMin    Int      @default(0) @map("target_min")
   targetMax    Int      @default(0) @map("target_max")
   sortOrder    Int      @default(0) @map("sort_order")

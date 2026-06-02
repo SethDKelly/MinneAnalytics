@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ThemeMultiSelect } from "./ThemeMultiSelect";
+import { ThemePickerSection } from "./ThemePickerSection";
+import type { ThemePickOption } from "./ThemeMultiSelect";
 import { TECHNICAL_LABELS } from "@/lib/constants";
-
-type ThemeOption = { id: string; name: string };
 
 type Props = {
   token: string;
+  conferenceSlug: string;
   initial: {
     title: string;
     abstract: string;
@@ -17,10 +17,17 @@ type Props = {
     themeIds: string[];
     abstractVersion: number;
   };
-  themes: ThemeOption[];
+  themes: ThemePickOption[];
+  submissionId: string;
 };
 
-export function PresenterSubmissionEditor({ token, initial, themes }: Props) {
+export function PresenterSubmissionEditor({
+  token,
+  conferenceSlug,
+  initial,
+  themes,
+  submissionId,
+}: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
   const [abstract, setAbstract] = useState(initial.abstract);
@@ -133,7 +140,13 @@ export function PresenterSubmissionEditor({ token, initial, themes }: Props) {
           </select>
         </div>
         {themes.length > 0 && (
-          <ThemeMultiSelect themes={themes} selected={themeIds} onChange={setThemeIds} />
+          <ThemePickerSection
+            conferenceSlug={conferenceSlug}
+            initialThemes={themes}
+            selected={themeIds}
+            onChange={setThemeIds}
+            proposedBySubmissionId={submissionId}
+          />
         )}
         <div>
           <label className="form-label" htmlFor="edit-note">

@@ -6,6 +6,7 @@ import { sendEmailStub } from "@/lib/email-stub";
 import { generateToken, hashToken } from "@/lib/tokens";
 import { getSubmissionWindowState } from "@/lib/submission-window";
 import { revisionSnapshotFromSubmission } from "@/lib/submission-revision";
+import { resolveThemeIdsForSubmit, slugifyThemeName } from "@/lib/themes";
 import { submissionSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     }
     const degrees = JSON.parse(String(form.get("degrees") ?? "[]"));
     const themeIds = JSON.parse(String(form.get("themeIds") ?? "[]"));
+    const proposedThemeName = String(form.get("proposedThemeName") ?? "").trim() || undefined;
     const coDegreesRaw = form.get("coPresenterDegrees");
     const hasCoPresenter = form.get("hasCoPresenter") === "true";
 
@@ -90,13 +92,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: window.message }, { status: 403 });
     }
 
+    let resolvedThemeIds: string[];
+    try {
+      resolvedThemeIds = await resolveThemeIdsForSubmit(
+        conference.id,
+        parsed.data.themeIds,
+        proposedThemeName
+      );
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Invalid theme selection" },
+        { status: 400 }
+      );
+    }
+
     const validThemes = await prisma.theme.findMany({
       where: {
         conferenceId: conference.id,
-        id: { in: parsed.data.themeIds },
+        id: { in: resolvedThemeIds },
+        removedAt: null,
       },
     });
-    if (validThemes.length !== parsed.data.themeIds.length) {
+    if (validThemes.length !== resolvedThemeIds.length) {
       return NextResponse.json({ error: "Invalid theme selection" }, { status: 400 });
     }
 
@@ -141,15 +158,26 @@ export async function POST(request: Request) {
           travelReimbursementRequired: d.travelReimbursementRequired,
           additionalInfo: d.additionalInfo ?? null,
           themes: {
-            create: parsed.data.themeIds.map((themeId) => ({ themeId })),
+            create: resolvedThemeIds.map((themeId) => ({ themeId })),
           },
         },
       });
+
+      if (proposedThemeName) {
+        await tx.theme.updateMany({
+          where: {
+            conferenceId: conference.id,
+            slug: slugifyThemeName(proposedThemeName),
+          },
+          data: { proposedBySubmissionId: created.id },
+        });
+      }
+
       await tx.submissionRevision.create({
         data: {
           submissionId: created.id,
           version: 1,
-          ...revisionSnapshotFromSubmission(created, parsed.data.themeIds),
+          ...revisionSnapshotFromSubmission(created, resolvedThemeIds),
         },
       });
       return created;

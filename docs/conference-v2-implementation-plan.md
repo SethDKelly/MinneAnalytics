@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phase 1 complete  
+**Status:** In progress — Phases 1–2 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -789,7 +789,7 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 *Phase 7 is unused (reserved). Backlog items ([conference-backlog.md](conference-backlog.md)) are post–v11.*
 
-**Current branch status:** Phase **1** complete when presenter revisions and edit UI ship; Phases **2–11** open.
+**Current branch status:** Phases **1–2** complete; Phases **3–11** open.
 
 ### Phase 1 — Schema and presenter edit (MVP)
 
@@ -800,12 +800,12 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 2 — Community taxonomy (presenter-proposed themes)
 
-- [ ] Prisma: `Theme.source`, `proposedBySubmissionId`, `proposedAt`, `removedAt`
-- [ ] `GET /api/themes`, `POST /api/themes/propose` (dedupe by slug)
-- [ ] Extend `ThemeMultiSelect` + submit form: propose + pick community themes
-- [ ] Presenter editor: same theme UX as submit
-- [ ] Admin panel: list community vs official; edit name/targets; soft-remove; optional promote to `ADMIN`
-- [ ] Chair/review: “(removed)” label when applicable
+- [x] Prisma: `Theme.source`, `proposedBySubmissionId`, `proposedAt`, `removedAt`
+- [x] `GET /api/themes`, `POST /api/themes/propose` (dedupe by slug)
+- [x] Extend `ThemeMultiSelect` + submit form: propose + pick community themes
+- [x] Presenter editor: same theme UX as submit
+- [x] Admin panel: list community vs official; edit name/targets; soft-remove; optional promote to `ADMIN`
+- [x] Chair/review: “(removed)” label when applicable
 
 ### Phase 3 — Committee feedback
 

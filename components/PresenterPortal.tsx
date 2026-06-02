@@ -11,10 +11,11 @@ import { PresenterSubmissionEditor } from "./PresenterSubmissionEditor";
 import { PROGRAM_STATUS_LABELS, DECK_STATUS_LABELS } from "@/lib/constants";
 import { formatDegrees } from "@/lib/degrees";
 
-type ThemeOption = { id: string; name: string };
+import type { ThemePickOption } from "./ThemeMultiSelect";
 
 type Props = {
   token: string;
+  conferenceSlug: string;
   submission: {
     title: string;
     programStatus: string;
@@ -31,10 +32,11 @@ type Props = {
     technicalLevel: number;
     themeIds: string[];
   };
-  themes: ThemeOption[];
+  themes: ThemePickOption[];
+  submissionId: string;
 };
 
-export function PresenterPortal({ token, submission, themes }: Props) {
+export function PresenterPortal({ token, conferenceSlug, submission, themes, submissionId }: Props) {
   const router = useRouter();
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -113,6 +115,8 @@ export function PresenterPortal({ token, submission, themes }: Props) {
       {submission.canEdit && !isWithdrawn && (
         <PresenterSubmissionEditor
           token={token}
+          conferenceSlug={conferenceSlug}
+          submissionId={submissionId}
           themes={themes}
           initial={{
             title: submission.title,

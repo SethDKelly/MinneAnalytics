@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PresenterPortal } from "@/components/PresenterPortal";
-import { getConferenceThemes } from "@/lib/conference-queries";
+import { getSelectableThemes, themeOptionFromRow } from "@/lib/themes";
 import { getSubmissionByPresenterToken } from "@/lib/presenter-auth";
 import {
   canPresenterEditSubmission,
@@ -16,13 +16,15 @@ export default async function PresenterPage({
   const submission = await getSubmissionByPresenterToken(token);
   if (!submission) notFound();
 
-  const themes = await getConferenceThemes(submission.conferenceId);
+  const themes = await getSelectableThemes(submission.conferenceId);
   const latestDeck = submission.deckFiles[0];
 
   return (
     <PresenterPortal
       token={token}
-      themes={themes.map((t) => ({ id: t.id, name: t.name }))}
+      conferenceSlug={submission.conference.slug}
+      submissionId={submission.id}
+      themes={themes.map(themeOptionFromRow)}
       submission={{
         title: submission.title,
         abstract: submission.abstract,
