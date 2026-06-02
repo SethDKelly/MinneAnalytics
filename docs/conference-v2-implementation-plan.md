@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–2 complete  
+**Status:** In progress — Phases 1–3 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -789,7 +789,7 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 *Phase 7 is unused (reserved). Backlog items ([conference-backlog.md](conference-backlog.md)) are post–v11.*
 
-**Current branch status:** Phases **1–2** complete; Phases **3–11** open.
+**Current branch status:** Phases **1–3** complete; Phases **4–11** open.
 
 ### Phase 1 — Schema and presenter edit (MVP)
 
@@ -809,10 +809,10 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 3 — Committee feedback
 
-- [ ] `PresenterFeedback` model + `POST /api/review/feedback`
-- [ ] Review panel feedback form (abstract + general)
-- [ ] Presenter portal feedback list
-- [ ] Email stub templates
+- [x] `PresenterFeedback` model + `POST /api/review/feedback`
+- [x] Review panel feedback form (abstract + general)
+- [x] Presenter portal feedback list
+- [x] Email stub templates
 
 ### Phase 4 — Bias-reduced scoring
 

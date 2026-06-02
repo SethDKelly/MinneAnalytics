@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ProgramStatusBadge } from "./StatusBadge";
+import { AbstractReviewStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import { ReviewFeedbackForm } from "./ReviewFeedbackForm";
 import type { SubmissionListItem } from "@/lib/submissions";
 import type { ReviewerRole } from "@prisma/client";
 import { isBoard, roleDisplayName } from "@/lib/roles";
@@ -79,6 +80,7 @@ export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
         saving={saving}
         onSave={saveScore}
         showMyScore={false}
+        token={token}
       />
 
       <ReviewSection
@@ -91,6 +93,7 @@ export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
         saving={saving}
         onSave={saveScore}
         showMyScore
+        token={token}
         className="mt-10 border-t border-gray-200 pt-8"
       />
     </div>
@@ -107,6 +110,7 @@ function ReviewSection({
   saving,
   onSave,
   showMyScore,
+  token,
   className = "mt-8",
 }: {
   title: string;
@@ -118,6 +122,7 @@ function ReviewSection({
   saving: string | null;
   onSave: (id: string, value: number, notes: string) => void;
   showMyScore: boolean;
+  token: string;
   className?: string;
 }) {
   return (
@@ -131,6 +136,7 @@ function ReviewSection({
           {items.map((item) => (
             <TalkReviewCard
               key={item.id}
+              token={token}
               item={item}
               expanded={expanded === item.id}
               onToggle={() => setExpanded(expanded === item.id ? null : item.id)}
@@ -146,6 +152,7 @@ function ReviewSection({
 }
 
 function TalkReviewCard({
+  token,
   item,
   expanded,
   onToggle,
@@ -153,6 +160,7 @@ function TalkReviewCard({
   onSave,
   showMyScore,
 }: {
+  token: string;
   item: SubmissionListItem;
   expanded: boolean;
   onToggle: () => void;
@@ -186,6 +194,7 @@ function TalkReviewCard({
             </span>
           )}
           <ProgramStatusBadge status={item.programStatus} />
+          <AbstractReviewStatusBadge status={item.abstractReviewStatus} />
         </div>
       </div>
       <p className="mt-2 text-sm text-gray-700">
@@ -204,13 +213,20 @@ function TalkReviewCard({
         <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.abstract}</p>
       )}
       {expanded && (
-        <ScoreForm
-          submissionId={item.id}
-          initialValue={item.myScore?.value}
-          initialNotes={item.myScore?.notes ?? ""}
-          saving={saving}
-          onSave={onSave}
-        />
+        <>
+          <ScoreForm
+            submissionId={item.id}
+            initialValue={item.myScore?.value}
+            initialNotes={item.myScore?.notes ?? ""}
+            saving={saving}
+            onSave={onSave}
+          />
+          <ReviewFeedbackForm
+            token={token}
+            submissionId={item.id}
+            abstractVersion={item.abstractVersion}
+          />
+        </>
       )}
     </li>
   );
@@ -288,7 +304,7 @@ function ScoreForm({
       <textarea
         className="form-input mt-3"
         rows={2}
-        placeholder="Notes for the committee (optional)"
+        placeholder="Private notes for the committee only (optional)"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />

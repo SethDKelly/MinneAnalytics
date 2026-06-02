@@ -17,6 +17,8 @@ export type SubmissionListItem = {
   degrees: string[];
   aggregate: { count: number; sum: number; average: number };
   myScore: { value: number; notes: string | null } | null;
+  abstractVersion: number;
+  abstractReviewStatus: string;
   createdAt: string;
 };
 
@@ -40,6 +42,8 @@ export function toListItem(
     degrees: parseDegreesJson(sub.degrees),
     aggregate: aggregateScores((sub.scores ?? []).map((s) => s.value)),
     myScore: my ? { value: my.value, notes: my.notes } : null,
+    abstractVersion: sub.abstractVersion,
+    abstractReviewStatus: sub.abstractReviewStatus,
     createdAt: sub.createdAt.toISOString(),
   };
 }

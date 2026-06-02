@@ -7,6 +7,7 @@ import {
   DeckStatusBadge,
   ProgramStatusBadge,
 } from "./StatusBadge";
+import { PresenterFeedbackList } from "./PresenterFeedbackList";
 import { PresenterSubmissionEditor } from "./PresenterSubmissionEditor";
 import { PROGRAM_STATUS_LABELS, DECK_STATUS_LABELS } from "@/lib/constants";
 import { formatDegrees } from "@/lib/degrees";
@@ -34,9 +35,24 @@ type Props = {
   };
   themes: ThemePickOption[];
   submissionId: string;
+  feedback: {
+    id: string;
+    kind: "ABSTRACT" | "GENERAL";
+    body: string;
+    reviewerLabel: string;
+    abstractVersion: number | null;
+    createdAt: string;
+  }[];
 };
 
-export function PresenterPortal({ token, conferenceSlug, submission, themes, submissionId }: Props) {
+export function PresenterPortal({
+  token,
+  conferenceSlug,
+  submission,
+  themes,
+  submissionId,
+  feedback,
+}: Props) {
   const router = useRouter();
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -111,6 +127,8 @@ export function PresenterPortal({ token, conferenceSlug, submission, themes, sub
       {message && (
         <p className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm">{message}</p>
       )}
+
+      {feedback.length > 0 && !isWithdrawn && <PresenterFeedbackList feedback={feedback} />}
 
       {submission.canEdit && !isWithdrawn && (
         <PresenterSubmissionEditor

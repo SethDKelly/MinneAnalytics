@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { PresenterPortal } from "@/components/PresenterPortal";
-import { getSelectableThemes, themeOptionFromRow } from "@/lib/themes";
 import { getSubmissionByPresenterToken } from "@/lib/presenter-auth";
 import {
   canPresenterEditSubmission,
   themeIdsFromJoin,
 } from "@/lib/submission-revision";
+import { getSelectableThemes, themeOptionFromRow } from "@/lib/themes";
+import { prisma } from "@/lib/db";
 
 export default async function PresenterPage({
   params,
@@ -16,8 +17,28 @@ export default async function PresenterPage({
   const submission = await getSubmissionByPresenterToken(token);
   if (!submission) notFound();
 
-  const themes = await getSelectableThemes(submission.conferenceId);
+  const [themes, feedbackRows] = await Promise.all([
+    getSelectableThemes(submission.conferenceId),
+    prisma.presenterFeedback.findMany({
+      where: { submissionId: submission.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        reviewerAccess: { select: { label: true, role: true } },
+      },
+    }),
+  ]);
+
   const latestDeck = submission.deckFiles[0];
+
+  const feedback = feedbackRows.map((f) => ({
+    id: f.id,
+    kind: f.kind,
+    body: f.body,
+    reviewerLabel:
+      f.reviewerAccess.label ?? f.reviewerAccess.role.replace("_", " "),
+    abstractVersion: f.abstractVersion,
+    createdAt: f.createdAt.toISOString(),
+  }));
 
   return (
     <PresenterPortal
@@ -25,6 +46,7 @@ export default async function PresenterPage({
       conferenceSlug={submission.conference.slug}
       submissionId={submission.id}
       themes={themes.map(themeOptionFromRow)}
+      feedback={feedback}
       submission={{
         title: submission.title,
         abstract: submission.abstract,

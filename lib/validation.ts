@@ -98,6 +98,13 @@ export const presenterSubmissionEditSchema = z.object({
   proposedThemeName: z.string().max(80).optional(),
 });
 
+export const presenterFeedbackSchema = z.object({
+  token: z.string().min(1),
+  submissionId: z.string().min(1),
+  kind: z.enum(["ABSTRACT", "GENERAL"]),
+  body: z.string().min(1).max(5000),
+});
+
 export const scoreSchema = z.object({
   submissionId: z.string().min(1),
   value: z.coerce

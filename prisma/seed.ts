@@ -15,6 +15,7 @@ async function main() {
   await prisma.score.deleteMany();
   await prisma.deckFile.deleteMany();
   await prisma.submissionTheme.deleteMany();
+  await prisma.presenterFeedback.deleteMany();
   await prisma.submissionRevision.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.theme.deleteMany();
@@ -339,6 +340,28 @@ async function main() {
 
   await ensureScheduleGrid(conference.id);
 
+  const alexSubmission = await prisma.submission.findFirst({
+    where: { conferenceId: conference.id, firstName: "Alex", lastName: "Rivera" },
+  });
+  const danAccess = await prisma.reviewerAccess.findFirst({
+    where: { conferenceId: conference.id, label: "Dan Atkins" },
+  });
+  if (alexSubmission && danAccess) {
+    await prisma.presenterFeedback.create({
+      data: {
+        submissionId: alexSubmission.id,
+        reviewerAccessId: danAccess.id,
+        kind: "ABSTRACT",
+        body: "Please clarify how you measure model drift in production and add a sentence on expected audience prerequisites.",
+        abstractVersion: alexSubmission.abstractVersion,
+      },
+    });
+    await prisma.submission.update({
+      where: { id: alexSubmission.id },
+      data: { abstractReviewStatus: "FEEDBACK_PENDING" },
+    });
+  }
+
   const danToken = boardTokens["Dan Atkins"];
 
   console.log("\n=== MinneAnalytics Conference Demo — Seed Complete ===\n");
@@ -381,6 +404,12 @@ async function main() {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
   });
   console.log("  (Pending/backup talks: use presenter portal to edit abstract — Phase 1 revisions)");
+  const alexIdx = sampleTalks.findIndex((t) => t.firstName === "Alex");
+  if (alexIdx >= 0) {
+    console.log(
+      `  Alex Rivera (committee feedback demo): http://localhost:3000/presenter/${presenterTokens[alexIdx]}`
+    );
+  }
   console.log("\n");
 }
 

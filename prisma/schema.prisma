@@ -46,6 +46,11 @@ enum ThemeSource {
   PRESENTER
 }
 
+enum PresenterFeedbackKind {
+  ABSTRACT
+  GENERAL
+}
+
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -209,6 +214,20 @@ model Submission {
   schedulePlacement SchedulePlacement?
   themes     SubmissionTheme[]
   revisions  SubmissionRevision[]
+  presenterFeedback PresenterFeedback[]
+}
+
+model PresenterFeedback {
+  id               String   @id @default(cuid())
+  submissionId     String   @map("submission_id")
+  reviewerAccessId String   @map("reviewer_access_id")
+  kind             PresenterFeedbackKind
+  body             String
+  abstractVersion  Int?     @map("abstract_version")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  submission     Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Cascade)
 }
 
 model SubmissionRevision {
@@ -240,6 +259,7 @@ model ReviewerAccess {
 
   conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
   scores     Score[]
+  presenterFeedback PresenterFeedback[]
 }
 
 model Score {
