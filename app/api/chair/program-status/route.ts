@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
-import { getConferenceThemes } from "@/lib/conference-queries";
+import { getConferenceThemesForAdmin } from "@/lib/themes";
 import { getConferenceSubmissions } from "@/lib/conference-data";
 import {
   approvedThemeSaturationWarning,
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
   if (status === "APPROVED" && !force) {
     const [themes, subs] = await Promise.all([
-      getConferenceThemes(reviewer.conferenceId),
+      getConferenceThemesForAdmin(reviewer.conferenceId),
       getConferenceSubmissions(reviewer.conferenceId),
     ]);
     const stats = computeThemeStats(

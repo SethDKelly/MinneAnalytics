@@ -21,6 +21,38 @@ export function sendEmailStub(payload: EmailStubPayload): void {
   console.log(line);
 }
 
+export function emailPresenterFeedback(params: {
+  email: string;
+  presenterName: string;
+  title: string;
+  presenterPortalUrl: string;
+  kind: "ABSTRACT" | "GENERAL";
+}): void {
+  const kindLabel =
+    params.kind === "ABSTRACT" ? "abstract feedback" : "general feedback";
+  sendEmailStub({
+    to: params.email,
+    subject: `Committee feedback on your submission — ${params.title}`,
+    template: "presenter-feedback",
+    body: `Hi ${params.presenterName},\n\nThe program committee left ${kindLabel} on your presentation "${params.title}". Sign in to your presenter portal to read it and update your submission if needed:\n\n${params.presenterPortalUrl}\n\nThank you,\nMinneAnalytics`,
+  });
+}
+
+export function sendTemplateEmailStub(params: {
+  to: string;
+  subject: string;
+  body: string;
+  templateKey: string;
+  round?: number;
+}): void {
+  sendEmailStub({
+    to: params.to,
+    subject: params.subject,
+    body: params.body,
+    template: `${params.templateKey}${params.round != null ? ` (round ${params.round})` : ""}`,
+  });
+}
+
 export function emailAbstractApproved(params: {
   email: string;
   presenterName: string;

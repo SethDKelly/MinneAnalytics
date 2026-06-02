@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdminDashboard } from "@/components/AdminDashboard";
-import { getArchivedConferences, getConferenceThemes } from "@/lib/conference-queries";
+import { getArchivedConferences } from "@/lib/conference-queries";
+import { getConferenceThemesForAdmin } from "@/lib/themes";
 import { canAccessAdmin, getReviewerByToken } from "@/lib/reviewer";
 import { getSubmissionWindowState } from "@/lib/submission-window";
 
@@ -16,7 +17,7 @@ export default async function AdminPage({
   }
 
   const [themes, archivedConferences] = await Promise.all([
-    getConferenceThemes(reviewer.conferenceId),
+    getConferenceThemesForAdmin(reviewer.conferenceId),
     getArchivedConferences(),
   ]);
 
@@ -36,9 +37,19 @@ export default async function AdminPage({
         submissionsCloseAt: reviewer.conference.submissionsCloseAt?.toISOString() ?? null,
         timezone: reviewer.conference.timezone,
         archivedAt: reviewer.conference.archivedAt?.toISOString() ?? null,
+        blindReviewEnabled: reviewer.conference.blindReviewEnabled,
       }}
       submissionWindowMessage={window.open ? "" : window.message}
-      themes={themes}
+      themes={themes.map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        source: t.source,
+        targetMin: t.targetMin,
+        targetMax: t.targetMax,
+        removedAt: t.removedAt?.toISOString() ?? null,
+        usageCount: t._count.submissions,
+      }))}
       archivedConferences={archivedConferences.map((c) => ({
         id: c.id,
         slug: c.slug,

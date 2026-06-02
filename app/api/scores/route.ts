@@ -35,6 +35,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Submission not found" }, { status: 404 });
   }
 
+  const version = submission.abstractVersion;
+
   await prisma.score.upsert({
     where: {
       submissionId_reviewerAccessId: {
@@ -47,12 +49,14 @@ export async function POST(request: Request) {
       reviewerAccessId: reviewer.id,
       value: roundScore(parsed.data.value),
       notes: parsed.data.notes ?? null,
+      scoredAbstractVersion: version,
     },
     update: {
       value: roundScore(parsed.data.value),
       notes: parsed.data.notes ?? null,
+      scoredAbstractVersion: version,
     },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, scoredAbstractVersion: version });
 }

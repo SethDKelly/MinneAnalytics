@@ -1,4 +1,8 @@
-import { DECK_STATUS_LABELS, PROGRAM_STATUS_LABELS } from "@/lib/constants";
+import {
+  ABSTRACT_REVIEW_STATUS_LABELS,
+  DECK_STATUS_LABELS,
+  PROGRAM_STATUS_LABELS,
+} from "@/lib/constants";
 
 const programColors: Record<string, string> = {
   PENDING: "bg-gray-200 text-gray-800",
@@ -20,6 +24,30 @@ export function ProgramStatusBadge({ status }: { status: string }) {
     <span className={`status-badge ${programColors[status] ?? "bg-gray-100"}`}>
       {PROGRAM_STATUS_LABELS[status] ?? status}
     </span>
+  );
+}
+
+const abstractReviewColors: Record<string, string> = {
+  CURRENT: "bg-gray-100 text-gray-800",
+  FEEDBACK_PENDING: "bg-amber-100 text-amber-900",
+  REVISED: "bg-blue-100 text-blue-900",
+  ACKNOWLEDGED: "bg-indigo-100 text-indigo-900",
+};
+
+export function AbstractReviewStatusBadge({ status }: { status: string }) {
+  if (status === "CURRENT") return null;
+  return (
+    <span
+      className={`status-badge ${abstractReviewColors[status] ?? "bg-gray-100"}`}
+    >
+      {ABSTRACT_REVIEW_STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+export function SponsorSessionBadge() {
+  return (
+    <span className="status-badge bg-violet-100 text-violet-900">Sponsor session</span>
   );
 }
 

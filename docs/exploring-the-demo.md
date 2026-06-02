@@ -27,8 +27,9 @@ Seed output includes a **site administrator** URL at `/admin/{token}` (separate 
 |------|--------|
 | 1 | Open the **admin** URL from seed output. |
 | 2 | Review submission window dates and open/closed toggle. |
-| 3 | Adjust theme targets (min/max approved counts) on the taxonomy list. |
-| 4 | After testing, use **Archive conference** only on a throwaway seed—not the main Data Tech 2027 demo unless you re-seed. |
+| 3 | Toggle **Bias-reduced (blind) review** if you need legacy visible scoring for comparison. |
+| 4 | Adjust theme targets (min/max approved counts) on the taxonomy list. |
+| 5 | After testing, use **Archive conference** only on a throwaway seed—not the main Data Tech 2027 demo unless you re-seed. |
 
 ### 1. Public site and submission
 
@@ -48,16 +49,38 @@ The new talk appears as **Pending** in committee views. Email content is stubbed
 | 1 | Open a **review** URL from seed (board or co-chair). |
 | 2 | Score pending talks with the 0.0–1.0 slider (0.1 steps) and optional notes. |
 | 3 | Notice **needs score** vs **scored by you** sections. |
+| 4 | **Blind review (default):** presenter name/org/email are hidden; committee averages appear only after you save a score. Use **Reveal identity** only for conflict checks. |
+| 5 | Expand a scored talk → **View revision history** for version snapshots and field diffs. **Alex Rivera** is seeded at v2 with stale committee scores. |
+| 6 | Open **Needs rescore** for talks you scored before a presenter edit; save again to pin your score to the current version. Committee averages use only current-version scores. |
+| 7 | Sponsor-flagged talks show a **Sponsor session** badge on review cards. |
 
 Seed data already includes **approved** and **declined** talks with auto-generated committee scores (high for approved, low for declined).
 
-### 3. Chair dashboard (program + decks)
+### 3. Chair dashboard (program + decks + communications)
+
+**Communications tab (board only)**
+
+| Step | Action |
+|------|--------|
+| 1 | Open a **chair** URL as a board member → **Communications** tab. |
+| 2 | Review last-sent summary; expand a template to see batch history. |
+| 3 | **Preview sample** — merge fields filled for a sample recipient. |
+| 4 | **Send** — confirm count; watch the **dev server terminal** for `[MinneAnalytics email stub]` output. |
+| 5 | **Decline** template: choose **Round 2** to email declined presenters not yet notified in round 2 (round 1 is pre-seeded). Optional custom intro. |
+
+### 4. Chair dashboard (program + decks)
 
 Open a **chair** URL (board member recommended first).
 
 **Program tab**
 
-- Submissions sorted by average score; filter by **theme**.
+- With blind review on: **Awaiting your score** (no email or committee scores) then **Scored by you** (sorted by average). Link to the review page to unlock a row.
+- Each row shows **vN**, lineage summary (e.g. “2 of 5 scored v2”), and **Mark revision reviewed** (board) when status is Updated.
+- Committee averages include only scores at the current abstract version.
+- **Board:** Filter **Sponsor** / **Community**; use **Mark sponsor session** on a row (Avery Walsh is pre-flagged). Watch the capacity widget sponsor count update.
+- With blind review off (admin toggle): all talks sorted by average score.
+- Filter by **theme** (heatmap still reflects the full conference).
+- **Theme coverage heatmap** under the theme list for backlog patterns by status.
 - **Theme coverage** panel shows approved vs target counts per theme.
 - **Board only:** Approve, Mark backup, Decline (saturation warning if a theme is over target—confirm to proceed).
 - Promote **backup** → approved.
@@ -66,7 +89,8 @@ Open a **chair** URL (board member recommended first).
 
 **Balance tab**
 
-- Theme gap summary and **technicality balance** histogram for approved talks (vs planning targets).
+- Theme gap summary and **theme coverage heatmap** (themes × pending/approved/declined/backup).
+- **Technicality balance** bar chart and **technicality heatmap** (levels 1–5 × themes, approved only).
 
 **History tab** (board)
 
@@ -79,9 +103,9 @@ Open a **chair** URL (board member recommended first).
 - Mark deck Reviewed / Approved / Concern.
 - **Board:** non-shareable flag, publish/unpublish post-conference archive.
 
-Try **Export CSV** from the header.
+Try **Export CSV** from the header — includes abstract version, theme sources, feedback, email send history, and score version markers.
 
-### 4. Board vs co-chair
+### 5. Board vs co-chair
 
 | Capability | Board (`/chair/{board-token}`) | Co-chair (`/chair/{chair-token}`) |
 |------------|--------------------------------|-----------------------------------|
@@ -94,25 +118,25 @@ Try **Export CSV** from the header.
 
 Open a co-chair chair URL to confirm approval buttons are absent and messaging explains board-only approval.
 
-### 5. Presenter portal
+### 6. Presenter portal
 
 Use the presenter link from step 1 (or a seed sample link).
 
 | Program status | What to try |
 |----------------|-------------|
-| Pending | View status; optional withdraw. |
-| Approved (seed has examples) | Upload PDF/PPTX deck; withdraw still allowed with confirmation. |
+| Pending / backup | Edit abstract (revisions), read committee feedback when seeded. |
+| Approved | Upload PDF/PPTX deck; withdraw still allowed with confirmation. Editing locked in v2 demo. |
 
 After upload, return to **Deck queue** on chair and mark the deck through the workflow.
 
-### 6. Schedule builder (board)
+### 7. Schedule builder (board)
 
 Open the **schedule** URL from seed (board only).
 
 1. Click **Generate schedule** — assigns approved talks across rooms/time with variety balancing.
 2. Drag talks between cells and the unscheduled pool; drop on occupied cells swaps assignments.
 
-### 7. Post-conference archive
+### 8. Post-conference archive
 
 1. On chair **Deck queue**, ensure at least one approved talk has an uploaded deck marked **Approved** and **Shareable**.
 2. Click **Publish archive**.

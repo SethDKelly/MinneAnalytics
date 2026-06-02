@@ -3,17 +3,31 @@ import { generateToken, hashToken } from "../lib/tokens";
 import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
+import { backfillSubmissionRevisionsV1 } from "../lib/backfill-revisions";
+import { backfillScoredAbstractVersions } from "../lib/backfill-scored-versions";
+import {
+  computeChangedFields,
+  revisionSnapshotFromSubmission,
+  themeIdsFromJoin,
+} from "../lib/submission-revision";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
+import { DEFAULT_EMAIL_TEMPLATES } from "../lib/email-templates";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.emailSendRecord.deleteMany();
+  await prisma.conferenceEmailBatch.deleteMany();
+  await prisma.conferenceAttendee.deleteMany();
+  await prisma.emailTemplate.deleteMany();
   await prisma.schedulePlacement.deleteMany();
   await prisma.scheduleSlot.deleteMany();
   await prisma.scheduleRoom.deleteMany();
   await prisma.score.deleteMany();
   await prisma.deckFile.deleteMany();
   await prisma.submissionTheme.deleteMany();
+  await prisma.presenterFeedback.deleteMany();
+  await prisma.submissionRevision.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.theme.deleteMany();
   await prisma.reviewerAccess.deleteMany();
@@ -47,6 +61,31 @@ async function main() {
     });
     themeBySlug[t.slug] = row.id;
   }
+
+  const communityTheme = await prisma.theme.create({
+    data: {
+      conferenceId: conference.id,
+      slug: "mlops-in-production",
+      name: "MLOps in production",
+      source: "PRESENTER",
+      proposedAt: new Date(),
+      sortOrder: 6,
+    },
+  });
+  themeBySlug["mlops-in-production"] = communityTheme.id;
+
+  const removedTheme = await prisma.theme.create({
+    data: {
+      conferenceId: conference.id,
+      slug: "legacy-etl",
+      name: "Legacy ETL",
+      source: "PRESENTER",
+      proposedAt: new Date(),
+      removedAt: new Date(),
+      sortOrder: 7,
+    },
+  });
+  themeBySlug["legacy-etl"] = removedTheme.id;
 
   const archivedConference = await prisma.conference.create({
     data: {
@@ -127,6 +166,7 @@ async function main() {
     abstract: string;
     technicalLevel: number;
     isSoftSkill?: boolean;
+    isSponsorSession?: boolean;
     programStatus?: ProgramStatus;
     degrees?: string[];
     themeSlugs?: string[];
@@ -223,6 +263,7 @@ async function main() {
       technicalLevel: 4,
       programStatus: "PENDING",
       degrees: ["MS"],
+      themeSlugs: ["ml-ops", "mlops-in-production"],
     },
     {
       firstName: "Avery",
@@ -233,6 +274,7 @@ async function main() {
         "People analytics programs that respect privacy, build trust, and still deliver workforce insights to leadership.",
       technicalLevel: 2,
       programStatus: "APPROVED",
+      isSponsorSession: true,
     },
     {
       firstName: "Drew",
@@ -263,6 +305,7 @@ async function main() {
         "A cautionary walkthrough of pilots that never reached production — what went wrong and how committees spot weak proposals early.",
       technicalLevel: 2,
       programStatus: "DECLINED",
+      themeSlugs: ["legacy-etl"],
     },
   ];
 
@@ -295,6 +338,7 @@ async function main() {
         hasCoPresenter: false,
         travelReimbursementRequired: false,
         isSoftSkill: talk.isSoftSkill ?? false,
+        isSponsorSession: talk.isSponsorSession ?? false,
         themes: {
           create: (talk.themeSlugs ?? ["analytics"]).map((slug) => ({
             themeId: themeBySlug[slug],
@@ -309,6 +353,28 @@ async function main() {
   }
 
   await ensureScheduleGrid(conference.id);
+
+  const alexSubmission = await prisma.submission.findFirst({
+    where: { conferenceId: conference.id, firstName: "Alex", lastName: "Rivera" },
+  });
+  const danAccess = await prisma.reviewerAccess.findFirst({
+    where: { conferenceId: conference.id, label: "Dan Atkins" },
+  });
+  if (alexSubmission && danAccess) {
+    await prisma.presenterFeedback.create({
+      data: {
+        submissionId: alexSubmission.id,
+        reviewerAccessId: danAccess.id,
+        kind: "ABSTRACT",
+        body: "Please clarify how you measure model drift in production and add a sentence on expected audience prerequisites.",
+        abstractVersion: alexSubmission.abstractVersion,
+      },
+    });
+    await prisma.submission.update({
+      where: { id: alexSubmission.id },
+      data: { abstractReviewStatus: "FEEDBACK_PENDING" },
+    });
+  }
 
   const danToken = boardTokens["Dan Atkins"];
 
@@ -345,10 +411,176 @@ async function main() {
   console.log("  4. Board builds schedule at /schedule/{token}");
   console.log("  5. Chair Balance tab: theme gaps + technicality distribution");
 
+  await backfillSubmissionRevisionsV1();
+
+  if (alexSubmission) {
+    const alexWithThemes = await prisma.submission.findUniqueOrThrow({
+      where: { id: alexSubmission.id },
+      include: { themes: true, scores: true },
+    });
+    const themeIds = themeIdsFromJoin(alexWithThemes.themes);
+    const before = {
+      title: alexWithThemes.title,
+      abstract: alexWithThemes.abstract,
+      bio: alexWithThemes.bio,
+      technicalLevel: alexWithThemes.technicalLevel,
+      themeIds,
+    };
+    const revisedAbstract =
+      `${alexWithThemes.abstract}\n\n` +
+      "Update (v2): We monitor drift with weekly PSI checks on key features and retrain thresholds documented in our MLOps runbook. Audience should be comfortable with Python and basic ML concepts.";
+    const after = { ...before, abstract: revisedAbstract };
+    const changedFields = computeChangedFields(before, after);
+    const editAt = new Date();
+    await prisma.$transaction(async (tx) => {
+      await tx.submission.update({
+        where: { id: alexSubmission.id },
+        data: {
+          abstract: after.abstract,
+          abstractVersion: 2,
+          abstractReviewStatus: "REVISED",
+          lastPresenterEditAt: editAt,
+        },
+      });
+      await tx.submissionRevision.create({
+        data: {
+          submissionId: alexSubmission.id,
+          version: 2,
+          ...revisionSnapshotFromSubmission(
+            {
+              title: after.title,
+              abstract: after.abstract,
+              bio: after.bio,
+              technicalLevel: after.technicalLevel,
+            },
+            themeIds
+          ),
+          changedFields: JSON.stringify(changedFields),
+          changeNote: "Added drift monitoring and audience prerequisites per committee feedback.",
+        },
+      });
+    });
+
+    const staleAt = new Date(editAt.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const scorerAccess = await prisma.reviewerAccess.findMany({
+      where: {
+        conferenceId: conference.id,
+        role: { in: ["BOARD", "CHAIR"] },
+      },
+      take: 3,
+    });
+    for (const access of scorerAccess) {
+      const existing = alexWithThemes.scores.find(
+        (s) => s.reviewerAccessId === access.id
+      );
+      if (existing) continue;
+      await prisma.score.create({
+        data: {
+          submissionId: alexSubmission.id,
+          reviewerAccessId: access.id,
+          value: 0.72,
+          notes: "Seed score before presenter v2 revision (demo stale scores).",
+          scoredAbstractVersion: 1,
+          createdAt: staleAt,
+          updatedAt: staleAt,
+        },
+      });
+    }
+  }
+
+  await backfillScoredAbstractVersions();
+
+  for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
+    await prisma.emailTemplate.upsert({
+      where: { templateKey: tpl.templateKey },
+      create: tpl,
+      update: {
+        name: tpl.name,
+        description: tpl.description,
+        subjectTemplate: tpl.subjectTemplate,
+        bodyTemplate: tpl.bodyTemplate,
+      },
+    });
+  }
+
+  await prisma.conferenceAttendee.createMany({
+    data: [
+      {
+        conferenceId: conference.id,
+        email: "pat.lee@example.com",
+        firstName: "Pat",
+        lastName: "Lee",
+      },
+      {
+        conferenceId: conference.id,
+        email: "quinn.morgan@example.com",
+        firstName: "Quinn",
+        lastName: "Morgan",
+      },
+      {
+        conferenceId: conference.id,
+        email: "riley.chen@example.com",
+        firstName: "Riley",
+        lastName: "Chen",
+      },
+    ],
+  });
+
+  const danAccessForEmail = await prisma.reviewerAccess.findFirst({
+    where: { conferenceId: conference.id, label: "Dan Atkins" },
+  });
+  const declinedSubs = await prisma.submission.findMany({
+    where: { conferenceId: conference.id, programStatus: "DECLINED" },
+    select: { id: true, email: true },
+  });
+  if (danAccessForEmail && declinedSubs.length > 0) {
+    const declineBatch = await prisma.conferenceEmailBatch.create({
+      data: {
+        conferenceId: conference.id,
+        templateKey: "DECLINE",
+        round: 1,
+        sentByReviewerAccessId: danAccessForEmail.id,
+        recipientCount: declinedSubs.length,
+        customIntro:
+          "Thank you again for your interest in Data Tech 2027. This message confirms the committee's decision for round 1 notifications.",
+      },
+    });
+    const sentAt = new Date("2026-04-15T15:00:00Z");
+    for (const sub of declinedSubs) {
+      await prisma.emailSendRecord.create({
+        data: {
+          batchId: declineBatch.id,
+          conferenceId: conference.id,
+          templateKey: "DECLINE",
+          round: 1,
+          submissionId: sub.id,
+          email: sub.email,
+          sentAt,
+        },
+      });
+    }
+  }
+
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
   });
+  console.log("  (Pending/backup talks: use presenter portal to edit abstract — Phase 1 revisions)");
+  const alexIdx = sampleTalks.findIndex((t) => t.firstName === "Alex");
+  if (alexIdx >= 0) {
+    console.log(
+      `  Alex Rivera (feedback + v2 revision / stale scores demo): http://localhost:3000/presenter/${presenterTokens[alexIdx]}`
+    );
+  }
+  console.log(
+    "  Rescoring: Alex Rivera is at v2 (REVISED); committee scores are pinned to v1 until reviewers rescore."
+  );
+  console.log(
+    "  Sponsor sessions: Avery Walsh is flagged; board can toggle others on the chair Program tab."
+  );
+  console.log(
+    "  Communications: board chair → Communications tab; DECLINE round 1 already sent to declined talks."
+  );
   console.log("\n");
 }
 

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DegreeMultiSelect } from "./DegreeMultiSelect";
-import { ThemeMultiSelect } from "./ThemeMultiSelect";
+import { ThemePickerSection } from "./ThemePickerSection";
+import type { ThemePickOption } from "./ThemeMultiSelect";
 import { TECHNICAL_LABELS } from "@/lib/constants";
 
 type Props = {
   conferenceSlug: string;
   conferenceName: string;
-  themes: { id: string; name: string }[];
+  themes: ThemePickOption[];
 };
 
 export function SubmissionForm({ conferenceSlug, conferenceName, themes }: Props) {
@@ -150,8 +151,9 @@ export function SubmissionForm({ conferenceSlug, conferenceName, themes }: Props
         {themes.length > 0 && (
           <div>
             <span className="form-label">Themes *</span>
-            <ThemeMultiSelect
-              themes={themes}
+            <ThemePickerSection
+              conferenceSlug={conferenceSlug}
+              initialThemes={themes}
               selected={themeIds}
               onChange={setThemeIds}
             />

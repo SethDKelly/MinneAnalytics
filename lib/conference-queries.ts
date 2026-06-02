@@ -1,10 +1,12 @@
+import { formatThemeDisplayName } from "./themes";
 import { prisma } from "./db";
+import { getSelectableThemes, getConferenceThemesForAdmin } from "./themes";
 
+export { getSelectableThemes, getConferenceThemesForAdmin };
+
+/** @deprecated Use getSelectableThemes or getConferenceThemesForAdmin */
 export async function getConferenceThemes(conferenceId: string) {
-  return prisma.theme.findMany({
-    where: { conferenceId },
-    orderBy: { sortOrder: "asc" },
-  });
+  return getSelectableThemes(conferenceId);
 }
 
 export async function getSubmissionsWithThemes(conferenceId: string) {
@@ -12,7 +14,12 @@ export async function getSubmissionsWithThemes(conferenceId: string) {
     where: { conferenceId },
     include: {
       scores: true,
-      themes: { select: { themeId: true, theme: { select: { id: true, name: true, slug: true } } } },
+      themes: {
+        select: {
+          themeId: true,
+          theme: { select: { id: true, name: true, slug: true, removedAt: true } },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -46,7 +53,7 @@ export async function getPublicConferences() {
 }
 
 export function themeNamesForSubmission(
-  themes: { theme: { name: string } }[]
+  themes: { theme: { name: string; removedAt: Date | null } }[]
 ): string[] {
-  return themes.map((t) => t.theme.name);
+  return themes.map((t) => formatThemeDisplayName(t.theme));
 }

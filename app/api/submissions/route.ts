@@ -5,6 +5,8 @@ import { clientIp, checkRateLimit } from "@/lib/rate-limit";
 import { sendEmailStub } from "@/lib/email-stub";
 import { generateToken, hashToken } from "@/lib/tokens";
 import { getSubmissionWindowState } from "@/lib/submission-window";
+import { revisionSnapshotFromSubmission } from "@/lib/submission-revision";
+import { resolveThemeIdsForSubmit, slugifyThemeName } from "@/lib/themes";
 import { submissionSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -25,6 +27,7 @@ export async function POST(request: Request) {
     }
     const degrees = JSON.parse(String(form.get("degrees") ?? "[]"));
     const themeIds = JSON.parse(String(form.get("themeIds") ?? "[]"));
+    const proposedThemeName = String(form.get("proposedThemeName") ?? "").trim() || undefined;
     const coDegreesRaw = form.get("coPresenterDegrees");
     const hasCoPresenter = form.get("hasCoPresenter") === "true";
 
@@ -89,57 +92,95 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: window.message }, { status: 403 });
     }
 
+    let resolvedThemeIds: string[];
+    try {
+      resolvedThemeIds = await resolveThemeIdsForSubmit(
+        conference.id,
+        parsed.data.themeIds,
+        proposedThemeName
+      );
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Invalid theme selection" },
+        { status: 400 }
+      );
+    }
+
     const validThemes = await prisma.theme.findMany({
       where: {
         conferenceId: conference.id,
-        id: { in: parsed.data.themeIds },
+        id: { in: resolvedThemeIds },
+        removedAt: null,
       },
     });
-    if (validThemes.length !== parsed.data.themeIds.length) {
+    if (validThemes.length !== resolvedThemeIds.length) {
       return NextResponse.json({ error: "Invalid theme selection" }, { status: 400 });
     }
 
     const presenterToken = generateToken();
     const d = parsed.data;
 
-    const submission = await prisma.submission.create({
-      data: {
-        conferenceId: conference.id,
-        presenterTokenHash: hashToken(presenterToken),
-        firstName: d.firstName,
-        lastName: d.lastName,
-        degrees: serializeDegrees(d.degrees),
-        jobTitle: d.jobTitle,
-        organization: d.organization,
-        title: d.title,
-        abstract: d.abstract,
-        technicalLevel: d.technicalLevel,
-        bio: d.bio,
-        email: d.email,
-        zipCode: d.zipCode,
-        phone: d.phone,
-        linkedinUrl: d.linkedinUrl,
-        linkedinHasPhoto: d.linkedinHasPhoto,
-        hasCoPresenter: d.hasCoPresenter,
-        coPresenterName: d.hasCoPresenter ? d.coPresenterName : null,
-        coPresenterEmail: d.hasCoPresenter ? d.coPresenterEmail : null,
-        coPresenterDegrees: d.hasCoPresenter
-          ? serializeDegrees(d.coPresenterDegrees ?? ["None"])
-          : null,
-        coPresenterJobTitle: d.hasCoPresenter ? d.coPresenterJobTitle : null,
-        coPresenterOrganization: d.hasCoPresenter ? d.coPresenterOrganization : null,
-        coPresenterBio: d.hasCoPresenter ? d.coPresenterBio : null,
-        coPresenterLinkedinUrl: d.hasCoPresenter ? d.coPresenterLinkedinUrl : null,
-        coPresenterLinkedinHasPhoto: d.hasCoPresenter
-          ? (d.coPresenterLinkedinHasPhoto ?? false)
-          : null,
-        travelRestriction: d.travelRestriction ?? null,
-        travelReimbursementRequired: d.travelReimbursementRequired,
-        additionalInfo: d.additionalInfo ?? null,
-        themes: {
-          create: parsed.data.themeIds.map((themeId) => ({ themeId })),
+    const submission = await prisma.$transaction(async (tx) => {
+      const created = await tx.submission.create({
+        data: {
+          conferenceId: conference.id,
+          presenterTokenHash: hashToken(presenterToken),
+          abstractVersion: 1,
+          abstractReviewStatus: "CURRENT",
+          firstName: d.firstName,
+          lastName: d.lastName,
+          degrees: serializeDegrees(d.degrees),
+          jobTitle: d.jobTitle,
+          organization: d.organization,
+          title: d.title,
+          abstract: d.abstract,
+          technicalLevel: d.technicalLevel,
+          bio: d.bio,
+          email: d.email,
+          zipCode: d.zipCode,
+          phone: d.phone,
+          linkedinUrl: d.linkedinUrl,
+          linkedinHasPhoto: d.linkedinHasPhoto,
+          hasCoPresenter: d.hasCoPresenter,
+          coPresenterName: d.hasCoPresenter ? d.coPresenterName : null,
+          coPresenterEmail: d.hasCoPresenter ? d.coPresenterEmail : null,
+          coPresenterDegrees: d.hasCoPresenter
+            ? serializeDegrees(d.coPresenterDegrees ?? ["None"])
+            : null,
+          coPresenterJobTitle: d.hasCoPresenter ? d.coPresenterJobTitle : null,
+          coPresenterOrganization: d.hasCoPresenter ? d.coPresenterOrganization : null,
+          coPresenterBio: d.hasCoPresenter ? d.coPresenterBio : null,
+          coPresenterLinkedinUrl: d.hasCoPresenter ? d.coPresenterLinkedinUrl : null,
+          coPresenterLinkedinHasPhoto: d.hasCoPresenter
+            ? (d.coPresenterLinkedinHasPhoto ?? false)
+            : null,
+          travelRestriction: d.travelRestriction ?? null,
+          travelReimbursementRequired: d.travelReimbursementRequired,
+          additionalInfo: d.additionalInfo ?? null,
+          themes: {
+            create: resolvedThemeIds.map((themeId) => ({ themeId })),
+          },
         },
-      },
+      });
+
+      if (proposedThemeName) {
+        await tx.theme.updateMany({
+          where: {
+            conferenceId: conference.id,
+            slug: slugifyThemeName(proposedThemeName),
+          },
+          data: { proposedBySubmissionId: created.id },
+        });
+      }
+
+      await tx.submissionRevision.create({
+        data: {
+          submissionId: created.id,
+          version: 1,
+          ...revisionSnapshotFromSubmission(created, resolvedThemeIds),
+        },
+      });
+      return created;
     });
 
     const base =

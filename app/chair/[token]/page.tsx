@@ -3,20 +3,34 @@ import { ChairDashboard } from "@/components/ChairDashboard";
 import { getCapacityForConference, getConferenceSubmissions } from "@/lib/conference-data";
 import {
   getArchivedConferences,
-  getConferenceThemes,
   themeNamesForSubmission,
 } from "@/lib/conference-queries";
+import { formatThemeDisplayName, getConferenceThemesForAdmin } from "@/lib/themes";
 import { getDeckQueue } from "@/lib/decks";
 import { computeTechnicalityBalance } from "@/lib/program-balance";
 import {
+  computeScoreVersionSummary,
+  parseChangedFields,
+} from "@/lib/revision-history";
+import {
   canAccessCommitteeDashboard,
+  canScore,
   canViewHistoricalCommittee,
   committeeDashboardTitle,
   getReviewerByToken,
   roleDisplayName,
 } from "@/lib/reviewer";
+import {
+  computeTechnicalityThemeHeatmap,
+  computeThemeStatusHeatmap,
+} from "@/lib/chair-heatmaps";
 import { computeThemeStats } from "@/lib/theme-stats";
 import { sortByAggregate, toListItem } from "@/lib/submissions";
+import {
+  buildChairProgramItem,
+  isBlindReviewEnabled,
+  partitionChairProgramByOwnScore,
+} from "@/lib/review-blind";
 import { prisma } from "@/lib/db";
 
 export default async function ChairPage({
@@ -55,25 +69,54 @@ export default async function ChairPage({
     getConferenceSubmissions(viewConferenceId),
     getCapacityForConference(viewConferenceId),
     getDeckQueue(viewConferenceId),
-    getConferenceThemes(viewConferenceId),
+    getConferenceThemesForAdmin(viewConferenceId),
     canViewHistoricalCommittee(reviewer.role)
       ? getArchivedConferences()
       : Promise.resolve([]),
   ]);
 
-  const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
-  const items = sortByAggregate(active.map((s) => toListItem(s))).map((item) => {
-    const full = subs.find((s) => s.id === item.id)!;
-    return {
-      ...item,
-      abstract: full.abstract,
-      email: full.email,
-      deckShareable: full.deckShareable,
-      vipRegistered: full.vipRegistered,
-      themeNames: themeNamesForSubmission(full.themes),
-      themeIds: full.themes.map((t) => t.themeId),
-    };
+  const viewConf = await prisma.conference.findUniqueOrThrow({
+    where: { id: viewConferenceId },
   });
+  const blindReviewEnabled = isBlindReviewEnabled(viewConf);
+
+  const accessList = await prisma.reviewerAccess.findMany({
+    where: { conferenceId: viewConferenceId },
+    select: { id: true, label: true, role: true },
+  });
+  const committeeSize = accessList.filter((a) => canScore(a.role)).length;
+
+  const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
+  const listItems = active.map((s) => toListItem(s, reviewer.id));
+
+  const buildItem = (item: (typeof listItems)[0]) => {
+    const full = subs.find((s) => s.id === item.id)!;
+    const latestRev = full.revisions[0];
+    const revisionSummary = computeScoreVersionSummary(
+      full,
+      full.scores,
+      committeeSize,
+      latestRev ? parseChangedFields(latestRev.changedFields) : []
+    );
+    return buildChairProgramItem(
+      item,
+      full,
+      themeNamesForSubmission(full.themes),
+      full.themes.map((t) => t.themeId),
+      blindReviewEnabled,
+      revisionSummary
+    );
+  };
+
+  let programNeedsScore: ReturnType<typeof buildItem>[] = [];
+  let programScoredByMe: ReturnType<typeof buildItem>[] = [];
+  if (blindReviewEnabled) {
+    const { needsMyScore, scoredByMe } = partitionChairProgramByOwnScore(listItems);
+    programNeedsScore = needsMyScore.map(buildItem);
+    programScoredByMe = scoredByMe.map(buildItem);
+  } else {
+    programScoredByMe = sortByAggregate(listItems).map(buildItem);
+  }
 
   const themeStats = computeThemeStats(
     themes,
@@ -86,10 +129,19 @@ export default async function ChairPage({
   const approved = subs.filter((s) => s.programStatus === "APPROVED");
   const technicalityRows = computeTechnicalityBalance(approved);
 
-  const accessList = await prisma.reviewerAccess.findMany({
-    where: { conferenceId: viewConferenceId },
-    select: { id: true, label: true, role: true },
-  });
+  const heatmapSubmissions = subs
+    .filter((s) => s.programStatus !== "WITHDRAWN")
+    .map((s) => ({
+      programStatus: s.programStatus,
+      technicalLevel: s.technicalLevel,
+      themes: s.themes.map((t) => ({ themeId: t.themeId })),
+    }));
+  const themeStatusHeatmap = computeThemeStatusHeatmap(themes, heatmapSubmissions);
+  const technicalityThemeHeatmap = computeTechnicalityThemeHeatmap(
+    themes,
+    heatmapSubmissions.filter((s) => s.programStatus === "APPROVED")
+  );
+
   const labelById = Object.fromEntries(
     accessList.map((a) => [a.id, a.label ?? a.role])
   );
@@ -120,7 +172,9 @@ export default async function ChairPage({
           ? `Historical review — ${viewConferenceName}`
           : committeeDashboardTitle(reviewer.role)
       }
-      items={items}
+      programNeedsScore={programNeedsScore}
+      programScoredByMe={programScoredByMe}
+      blindReviewEnabled={blindReviewEnabled}
       capacity={capacity}
       allScores={allScores}
       deckQueue={deckQueue}
@@ -130,6 +184,8 @@ export default async function ChairPage({
       decksPublished={conf.decksPublished}
       decksPublishedAt={conf.decksPublishedAt?.toISOString() ?? null}
       themeStats={themeStats}
+      themeStatusHeatmap={themeStatusHeatmap}
+      technicalityThemeHeatmap={technicalityThemeHeatmap}
       technicalityRows={technicalityRows}
       approvedCount={approved.length}
       readOnly={readOnly}
@@ -139,7 +195,7 @@ export default async function ChairPage({
         submissionCount: c._count.submissions,
       }))}
       viewingArchiveSlug={archiveSlug ?? null}
-      themes={themes.map((t) => ({ id: t.id, name: t.name }))}
+      themes={themes.map((t) => ({ id: t.id, name: formatThemeDisplayName(t) }))}
     />
   );
 }

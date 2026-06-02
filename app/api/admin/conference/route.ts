@@ -36,6 +36,9 @@ export async function PATCH(request: Request) {
   if (body.timezone !== undefined) {
     data.timezone = String(body.timezone).slice(0, 64);
   }
+  if (body.blindReviewEnabled !== undefined) {
+    data.blindReviewEnabled = Boolean(body.blindReviewEnabled);
+  }
 
   if (body.status !== undefined) {
     if (!canArchiveConference(reviewer.role)) {

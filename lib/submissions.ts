@@ -1,6 +1,14 @@
 import type { DeckStatus, ProgramStatus, Score, Submission } from "@prisma/client";
-import { aggregateScores, EMPTY_AGGREGATE } from "./scoring";
+import {
+  aggregateCurrentVersion,
+  partitionReviewerQueue as partitionReviewerQueueRescoring,
+  type MyScore,
+} from "./rescoring";
+import { EMPTY_AGGREGATE } from "./scoring";
 import { parseDegreesJson } from "./degrees";
+
+export type { MyScore };
+export { partitionReviewerQueueRescoring as partitionReviewerQueue };
 
 export type SubmissionWithScores = Submission & { scores: Score[] };
 
@@ -16,7 +24,10 @@ export type SubmissionListItem = {
   deckStatus: DeckStatus | null;
   degrees: string[];
   aggregate: { count: number; sum: number; average: number };
-  myScore: { value: number; notes: string | null } | null;
+  myScore: MyScore | null;
+  abstractVersion: number;
+  abstractReviewStatus: string;
+  isSponsorSession: boolean;
   createdAt: string;
 };
 
@@ -38,30 +49,19 @@ export function toListItem(
     programStatus: sub.programStatus,
     deckStatus: sub.deckStatus,
     degrees: parseDegreesJson(sub.degrees),
-    aggregate: aggregateScores((sub.scores ?? []).map((s) => s.value)),
-    myScore: my ? { value: my.value, notes: my.notes } : null,
+    aggregate: aggregateCurrentVersion(sub.scores ?? [], sub.abstractVersion),
+    myScore: my
+      ? {
+          value: my.value,
+          notes: my.notes,
+          scoredAbstractVersion: my.scoredAbstractVersion,
+        }
+      : null,
+    abstractVersion: sub.abstractVersion,
+    abstractReviewStatus: sub.abstractReviewStatus,
+    isSponsorSession: sub.isSponsorSession,
     createdAt: sub.createdAt.toISOString(),
   };
-}
-
-function bySubmittedNewestFirst(a: SubmissionListItem, b: SubmissionListItem): number {
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-}
-
-/** Review queue: unscored first (newest submissions on top), then your scored talks. */
-export function partitionReviewerQueue(items: SubmissionListItem[]): {
-  needsScore: SubmissionListItem[];
-  scored: SubmissionListItem[];
-} {
-  const needsScore: SubmissionListItem[] = [];
-  const scored: SubmissionListItem[] = [];
-  for (const item of items) {
-    if (item.myScore != null) scored.push(item);
-    else needsScore.push(item);
-  }
-  needsScore.sort(bySubmittedNewestFirst);
-  scored.sort(bySubmittedNewestFirst);
-  return { needsScore, scored };
 }
 
 export function sortByAggregate(

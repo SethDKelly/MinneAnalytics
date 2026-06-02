@@ -35,13 +35,25 @@ Browser pages call these Route Handlers for mutations and downloads. They enforc
 | Method | Path | Purpose |
 |--------|------|---------|
 | `POST` | `/api/submissions` | Public abstract submission (rate limit + honeypot + submission window) |
-| `PATCH` | `/api/admin/conference` | Admin: lifecycle, submission window |
+| `GET` | `/api/themes` | Selectable theme list for submit/edit (`?slug=`) |
+| `POST` | `/api/themes/propose` | Propose community theme (rate limit) |
+| `PATCH` | `/api/presenter/submission` | Presenter abstract edit + revision snapshot |
+| `PATCH` | `/api/admin/conference` | Admin: lifecycle, submission window, blind review toggle |
 | `POST` / `PATCH` / `DELETE` | `/api/admin/themes` | Admin: theme taxonomy |
-| `POST` | `/api/scores` | Reviewer saves a score |
+| `POST` | `/api/scores` | Reviewer saves a score (sets `scoredAbstractVersion`) |
+| `POST` | `/api/review/feedback` | Committee feedback to presenter |
+| `GET` | `/api/review/submissions/{id}/identity` | Reveal presenter identity (blind review) |
+| `GET` | `/api/review/submissions/{id}/revisions` | Revision history + diffs |
 | `POST` | `/api/chair/program-status` | Board: approve / decline / backup |
 | `POST` | `/api/chair/deck-status` | Committee deck workflow |
 | `PATCH` | `/api/chair/deck-shareable` | Board: archive sharing flag |
 | `PATCH` | `/api/chair/vip-registered` | Board/co-chair: VIP registration |
+| `PATCH` | `/api/chair/sponsor-session` | Board: sponsor session flag |
+| `GET` | `/api/chair/email-templates` | Board: template list + send history |
+| `GET` | `/api/chair/email-templates/{key}/preview` | Board: merge preview |
+| `GET` | `/api/chair/email-templates/{key}/recipients` | Board: eligible recipients |
+| `POST` | `/api/chair/email-templates/{key}/send` | Board: send batch (stub) |
+| `POST` | `/api/chair/abstract-review` | Board: acknowledge presenter revision |
 | `POST` | `/api/chair/publish-archive` | Board: publish/unpublish slide library |
 | `GET` | `/api/chair/export` | CSV export (`?token=`) |
 | `POST` | `/api/presenter/deck` | Deck upload (multipart) |

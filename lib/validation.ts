@@ -84,6 +84,27 @@ export const submissionSchema = z
     }
   });
 
+export const presenterSubmissionEditSchema = z.object({
+  token: z.string().min(1),
+  title: z.string().min(1).max(300),
+  abstract: z.string().min(50).max(8000),
+  bio: z.string().min(20).max(4000),
+  technicalLevel: z.coerce.number().int().min(1).max(5),
+  themeIds: z
+    .array(z.string().min(1))
+    .min(1, "Select at least one theme")
+    .max(3, "Select at most three themes"),
+  changeNote: z.string().max(2000).optional(),
+  proposedThemeName: z.string().max(80).optional(),
+});
+
+export const presenterFeedbackSchema = z.object({
+  token: z.string().min(1),
+  submissionId: z.string().min(1),
+  kind: z.enum(["ABSTRACT", "GENERAL"]),
+  body: z.string().min(1).max(5000),
+});
+
 export const scoreSchema = z.object({
   submissionId: z.string().min(1),
   value: z.coerce

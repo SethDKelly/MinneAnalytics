@@ -81,10 +81,13 @@ Per conference: `submissionsOpen`, `submissionsOpenAt`, `submissionsCloseAt`, an
 
 `Theme` rows per conference (slug, name, `targetMin` / `targetMax` approved counts). Presenters select up to three at submit (`SubmissionTheme` join). Admins manage taxonomy at `/admin/{token}` (`app/api/admin/themes`).
 
+**Community proposals (v2):** `Theme.source` is `ADMIN` or `PRESENTER`. Presenters may propose a new tag on submit or edit (`POST /api/themes/propose`, deduped by slug). Soft-remove via `removedAt` hides a tag from pickers but keeps historical labels on chair views.
+
 Chair dashboard:
 
 - Theme filter on the Program tab
 - **Theme coverage** panel (`lib/theme-stats.ts`, `components/ThemeGapPanel.tsx`)
+- **Theme coverage heatmap** and **technicality heatmap** (`lib/chair-heatmaps.ts`, `components/ThemeCoverageHeatmap.tsx`, `components/TechnicalityHeatmap.tsx`)
 - Approve saturation warning (`409` + confirm) when approving past theme targets (`app/api/chair/program-status`)
 
 ## Technicality balance
@@ -95,9 +98,21 @@ Chair dashboard:
 
 - Committee scores are **0.0–1.0** in **0.1** steps (`lib/scoring-scale.ts`).
 - One score per submission per reviewer (`Score` unique constraint).
-- Aggregates (sum, average, count) are computed in `lib/scoring.ts` and used to sort the chair dashboard.
+- Each score stores `scoredAbstractVersion` (v2) — the abstract version when the reviewer last scored.
+- Aggregates for ranking use **current-version scores only** (`lib/rescoring.ts` `aggregateCurrentVersion`): scores where `scoredAbstractVersion === submission.abstractVersion`.
+- Review queue partitions into **needs score**, **needs rescore** (stale version), and **scored at current version** (`partitionReviewerQueue`).
+
+**Blind review (v2):** `Conference.blindReviewEnabled` (default `true`). Review and chair UIs hide presenter identity and committee aggregates until the viewer has a current-version score. Optional **Reveal identity** calls `GET /api/review/submissions/{id}/identity` (logged in demo).
 
 **Demo behavior:** When the board sets a talk to `APPROVED` or `DECLINED` (or seed creates one), `lib/demo-scores.ts` auto-fills scores for all reviewers: **0.8–1.0** for approved, **0.0–0.3** for declined. This keeps ranking demos consistent without manual scoring every row.
+
+## Abstract revisions and committee feedback (v2)
+
+- `Submission.abstractVersion` increments on each presenter save that changes tracked fields; immutable rows in `SubmissionRevision`.
+- `AbstractReviewStatus`: `CURRENT`, `FEEDBACK_PENDING`, `REVISED`, `ACKNOWLEDGED` — drives presenter edit policy and chair badges.
+- Presenter edits via `PATCH /api/presenter/submission` (`lib/submission-revision.ts`, `components/PresenterSubmissionEditor.tsx`).
+- Committee → presenter messages in `PresenterFeedback` (distinct from private `Score.notes`); `POST /api/review/feedback` with stub email (`lib/email-stub.ts`).
+- Revision history for committee: `GET /api/review/submissions/{id}/revisions`; board may **Mark revision reviewed** via `POST /api/chair/abstract-review`.
 
 ## Capacity planning
 
@@ -109,7 +124,17 @@ after_trim         = raw_slots - eod_trim - graeme_slots   (default 54)
 community_target   ≈ after_trim - sponsor_slots    (sponsors default 7–11 → ~44)
 ```
 
-Sponsor sessions are tracked with `isSponsorSession` on `Submission`.
+Sponsor sessions are tracked with `isSponsorSession` on `Submission`. Board toggles the flag from the chair Program tab (`PATCH /api/chair/sponsor-session`); capacity widget counts flagged sessions against `sponsorMin` / `sponsorMax`.
+
+## Board communications (v2)
+
+Global `EmailTemplate` rows (deck call, decline, attendee reminder, etc.). Per-conference send audit:
+
+- `ConferenceEmailBatch` — one row per Send action (decline supports multiple **rounds**).
+- `EmailSendRecord` — one row per recipient; unique per `(conference, template, round, submission|attendee)` for deduplication.
+- `ConferenceAttendee` — stub attendee list for reminder template previews.
+
+Board UI: chair **Communications** tab (`components/ChairCommunicationsTab.tsx`). Delivery is `lib/email-stub.ts` (console only in demo).
 
 ## Schedule builder
 
@@ -162,8 +187,12 @@ Distinct from the **public** slide archive at `/archive/[slug]`:
 
 ## Email and abuse controls (demo)
 
-- **Email:** `lib/email-stub.ts` logs intended messages to the server console (submission confirmation, abstract approval).
+- **Email:** `lib/email-stub.ts` logs intended messages to the server console (submission confirmation, abstract approval, presenter feedback, template batch sends).
 - **Submissions:** In-memory rate limit per IP (`lib/rate-limit.ts`) and honeypot field `website` on the public form.
+
+## CSV export
+
+`GET /api/chair/export` (board/co-chairs) builds rows via `lib/export-build.ts`: program/deck flags, abstract version and review status, theme names/sources, presenter feedback summary, email send history, and per-reviewer scores with version markers (`!` when stale).
 
 ## Production and roadmap
 
