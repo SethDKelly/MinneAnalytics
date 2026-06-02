@@ -7,6 +7,7 @@ export async function getConferenceSubmissions(conferenceId: string) {
     where: { conferenceId },
     include: {
       scores: true,
+      revisions: { orderBy: { version: "desc" }, take: 1 },
       themes: {
         select: { themeId: true, theme: { select: { name: true, removedAt: true } } },
       },

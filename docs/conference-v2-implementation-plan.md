@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–4 complete  
+**Status:** In progress — Phases 1–5 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -826,9 +826,9 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 5 — Lineage and chair visibility
 
-- [ ] Revision history API + UI on review/chair
-- [ ] Version badges on submission cards
-- [ ] Chair: stale score / version summary
+- [x] Revision history API + UI on review/chair
+- [x] Version badges on submission cards
+- [x] Chair: stale score / version summary
 
 ### Phase 6 — Rescoring queue
 

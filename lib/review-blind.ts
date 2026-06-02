@@ -1,3 +1,4 @@
+import type { ScoreVersionSummary } from "./revision-history";
 import type { SubmissionListItem } from "./submissions";
 import { EMPTY_AGGREGATE } from "./scoring";
 
@@ -22,6 +23,7 @@ export type ChairProgramItem = SubmissionListItem & {
   themeIds: string[];
   committeeScoresVisible: boolean;
   presenterSubtitle: string;
+  revisionSummary: ScoreVersionSummary;
 };
 
 export function isBlindReviewEnabled(
@@ -93,7 +95,8 @@ export function buildChairProgramItem(
   },
   themeNames: string[],
   themeIds: string[],
-  blindEnabled: boolean
+  blindEnabled: boolean,
+  revisionSummary: ScoreVersionSummary
 ): ChairProgramItem {
   const committeeScoresVisible = !blindEnabled || item.myScore != null;
   let presenterSubtitle: string;
@@ -116,6 +119,7 @@ export function buildChairProgramItem(
     themeIds,
     committeeScoresVisible,
     presenterSubtitle,
+    revisionSummary,
   };
 }
 

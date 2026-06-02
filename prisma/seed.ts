@@ -4,6 +4,11 @@ import { serializeDegrees } from "../lib/degrees";
 import { autoPopulateDemoScores } from "../lib/demo-scores";
 import { ensureScheduleGrid } from "../lib/schedule/grid";
 import { backfillSubmissionRevisionsV1 } from "../lib/backfill-revisions";
+import {
+  computeChangedFields,
+  revisionSnapshotFromSubmission,
+  themeIdsFromJoin,
+} from "../lib/submission-revision";
 import { BOARD_MEMBER_NAMES } from "../lib/roles";
 
 const prisma = new PrismaClient();
@@ -399,6 +404,80 @@ async function main() {
 
   await backfillSubmissionRevisionsV1();
 
+  if (alexSubmission) {
+    const alexWithThemes = await prisma.submission.findUniqueOrThrow({
+      where: { id: alexSubmission.id },
+      include: { themes: true, scores: true },
+    });
+    const themeIds = themeIdsFromJoin(alexWithThemes.themes);
+    const before = {
+      title: alexWithThemes.title,
+      abstract: alexWithThemes.abstract,
+      bio: alexWithThemes.bio,
+      technicalLevel: alexWithThemes.technicalLevel,
+      themeIds,
+    };
+    const revisedAbstract =
+      `${alexWithThemes.abstract}\n\n` +
+      "Update (v2): We monitor drift with weekly PSI checks on key features and retrain thresholds documented in our MLOps runbook. Audience should be comfortable with Python and basic ML concepts.";
+    const after = { ...before, abstract: revisedAbstract };
+    const changedFields = computeChangedFields(before, after);
+    const editAt = new Date();
+    await prisma.$transaction(async (tx) => {
+      await tx.submission.update({
+        where: { id: alexSubmission.id },
+        data: {
+          abstract: after.abstract,
+          abstractVersion: 2,
+          abstractReviewStatus: "REVISED",
+          lastPresenterEditAt: editAt,
+        },
+      });
+      await tx.submissionRevision.create({
+        data: {
+          submissionId: alexSubmission.id,
+          version: 2,
+          ...revisionSnapshotFromSubmission(
+            {
+              title: after.title,
+              abstract: after.abstract,
+              bio: after.bio,
+              technicalLevel: after.technicalLevel,
+            },
+            themeIds
+          ),
+          changedFields: JSON.stringify(changedFields),
+          changeNote: "Added drift monitoring and audience prerequisites per committee feedback.",
+        },
+      });
+    });
+
+    const staleAt = new Date(editAt.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const scorerAccess = await prisma.reviewerAccess.findMany({
+      where: {
+        conferenceId: conference.id,
+        role: { in: ["BOARD", "CHAIR"] },
+      },
+      take: 3,
+    });
+    for (const access of scorerAccess) {
+      const existing = alexWithThemes.scores.find(
+        (s) => s.reviewerAccessId === access.id
+      );
+      if (existing) continue;
+      await prisma.score.create({
+        data: {
+          submissionId: alexSubmission.id,
+          reviewerAccessId: access.id,
+          value: 0.72,
+          notes: "Seed score before presenter v2 revision (demo stale scores).",
+          createdAt: staleAt,
+          updatedAt: staleAt,
+        },
+      });
+    }
+  }
+
   console.log("\nPresenter portal URLs (sample):");
   presenterTokens.slice(0, 3).forEach((t, i) => {
     console.log(`  Talk ${i + 1}: http://localhost:3000/presenter/${t}`);
@@ -407,9 +486,12 @@ async function main() {
   const alexIdx = sampleTalks.findIndex((t) => t.firstName === "Alex");
   if (alexIdx >= 0) {
     console.log(
-      `  Alex Rivera (committee feedback demo): http://localhost:3000/presenter/${presenterTokens[alexIdx]}`
+      `  Alex Rivera (feedback + v2 revision / stale scores demo): http://localhost:3000/presenter/${presenterTokens[alexIdx]}`
     );
   }
+  console.log(
+    "  Lineage: Alex Rivera is at abstract v2 (REVISED) with sample committee scores predating the edit."
+  );
   console.log("\n");
 }
 

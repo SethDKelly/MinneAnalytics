@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AbstractReviewStatusBadge, ProgramStatusBadge } from "./StatusBadge";
 import { BlindIdentityBlock } from "./BlindIdentityBlock";
+import { RevisionBadge } from "./RevisionBadge";
+import { SubmissionRevisionHistory } from "./SubmissionRevisionHistory";
 import { ReviewFeedbackForm } from "./ReviewFeedbackForm";
 import type { ReviewSubmissionItem } from "@/lib/review-blind";
 import type { ReviewerRole } from "@prisma/client";
@@ -201,7 +203,10 @@ function TalkReviewCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-lg font-bold text-minne-navy">{item.title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-bold text-minne-navy">{item.title}</h3>
+            <RevisionBadge version={item.abstractVersion} />
+          </div>
           {blindReviewEnabled && !item.identity ? (
             <BlindIdentityBlock
               token={token}
@@ -270,6 +275,11 @@ function TalkReviewCard({
             token={token}
             submissionId={item.id}
             abstractVersion={item.abstractVersion}
+          />
+          <SubmissionRevisionHistory
+            token={token}
+            submissionId={item.id}
+            currentVersion={item.abstractVersion}
           />
         </>
       )}

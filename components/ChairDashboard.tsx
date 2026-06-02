@@ -10,6 +10,8 @@ import { ThemeGapPanel } from "./ThemeGapPanel";
 import type { CapacitySnapshot } from "@/lib/capacity";
 import type { DeckQueueItem } from "@/lib/decks";
 import type { ChairProgramItem } from "@/lib/review-blind";
+import { ScoreVersionSummaryLine } from "./ScoreVersionSummary";
+import { RevisionBadge } from "./RevisionBadge";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { formatScore } from "@/lib/scoring-scale";
 import { TECHNICAL_LABELS } from "@/lib/constants";
@@ -645,8 +647,12 @@ function ProgramListSection({
             <li key={item.id} className="card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xl font-bold text-minne-navy">{item.title}</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-xl font-bold text-minne-navy">{item.title}</h3>
+                    <RevisionBadge version={item.revisionSummary.abstractVersion} />
+                  </div>
                   <p className="text-sm text-gray-600">{item.presenterSubtitle}</p>
+                  <ScoreVersionSummaryLine summary={item.revisionSummary} />
                   {item.themeNames.length > 0 && (
                     <p className="mt-1 text-sm text-gray-600">
                       Themes: {item.themeNames.join(", ")}
