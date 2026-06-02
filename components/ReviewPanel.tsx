@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AbstractReviewStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import { BlindIdentityBlock } from "./BlindIdentityBlock";
 import { ReviewFeedbackForm } from "./ReviewFeedbackForm";
-import type { SubmissionListItem } from "@/lib/submissions";
+import type { ReviewSubmissionItem } from "@/lib/review-blind";
 import type { ReviewerRole } from "@prisma/client";
 import { isBoard, roleDisplayName } from "@/lib/roles";
-import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { TECHNICAL_LABELS } from "@/lib/constants";
 import {
   SCORE_MAX,
@@ -22,11 +22,19 @@ type Props = {
   token: string;
   label: string;
   role: ReviewerRole;
-  needsScore: SubmissionListItem[];
-  scored: SubmissionListItem[];
+  blindReviewEnabled: boolean;
+  needsScore: ReviewSubmissionItem[];
+  scored: ReviewSubmissionItem[];
 };
 
-export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
+export function ReviewPanel({
+  token,
+  label,
+  role,
+  blindReviewEnabled,
+  needsScore,
+  scored,
+}: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -69,8 +77,16 @@ export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
         {needsScore.length} awaiting your score · {scored.length} scored by you · {total}{" "}
         total
       </p>
+      {blindReviewEnabled && (
+        <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+          Blind review is on: presenter name, organization, and email are hidden by default.
+          Committee averages stay hidden until you save your own score. Use{" "}
+          <strong>Reveal identity</strong> only when you need to check conflicts of interest.
+        </p>
+      )}
 
       <ReviewSection
+        blindReviewEnabled={blindReviewEnabled}
         title="Needs your score"
         description="Sorted by submission date (newest first)"
         items={needsScore}
@@ -94,6 +110,7 @@ export function ReviewPanel({ token, label, role, needsScore, scored }: Props) {
         onSave={saveScore}
         showMyScore
         token={token}
+        blindReviewEnabled={blindReviewEnabled}
         className="mt-10 border-t border-gray-200 pt-8"
       />
     </div>
@@ -111,11 +128,12 @@ function ReviewSection({
   onSave,
   showMyScore,
   token,
+  blindReviewEnabled,
   className = "mt-8",
 }: {
   title: string;
   description: string;
-  items: SubmissionListItem[];
+  items: ReviewSubmissionItem[];
   emptyMessage: string;
   expanded: string | null;
   setExpanded: (id: string | null) => void;
@@ -123,6 +141,7 @@ function ReviewSection({
   onSave: (id: string, value: number, notes: string) => void;
   showMyScore: boolean;
   token: string;
+  blindReviewEnabled: boolean;
   className?: string;
 }) {
   return (
@@ -137,6 +156,7 @@ function ReviewSection({
             <TalkReviewCard
               key={item.id}
               token={token}
+              blindReviewEnabled={blindReviewEnabled}
               item={item}
               expanded={expanded === item.id}
               onToggle={() => setExpanded(expanded === item.id ? null : item.id)}
@@ -153,6 +173,7 @@ function ReviewSection({
 
 function TalkReviewCard({
   token,
+  blindReviewEnabled,
   item,
   expanded,
   onToggle,
@@ -161,14 +182,14 @@ function TalkReviewCard({
   showMyScore,
 }: {
   token: string;
-  item: SubmissionListItem;
+  blindReviewEnabled: boolean;
+  item: ReviewSubmissionItem;
   expanded: boolean;
   onToggle: () => void;
   saving: boolean;
   onSave: (id: string, value: number, notes: string) => void;
   showMyScore: boolean;
 }) {
-  const agg = item.aggregate ?? EMPTY_AGGREGATE;
   const submitted = new Date(item.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -181,10 +202,27 @@ function TalkReviewCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-bold text-minne-navy">{item.title}</h3>
-          <p className="text-sm text-gray-600">
-            {item.firstName} {item.lastName} · {item.organization} · Technical:{" "}
-            {item.technicalLevel} ({TECHNICAL_LABELS[item.technicalLevel]})
-          </p>
+          {blindReviewEnabled && !item.identity ? (
+            <BlindIdentityBlock
+              token={token}
+              submissionId={item.id}
+              blindReviewEnabled
+            />
+          ) : (
+            <p className="text-sm text-gray-600">
+              {item.identity
+                ? `${item.identity.firstName} ${item.identity.lastName} · ${item.identity.organization}`
+                : `${item.firstName} ${item.lastName} · ${item.organization}`}{" "}
+              · Technical: {item.technicalLevel} (
+              {TECHNICAL_LABELS[item.technicalLevel]})
+            </p>
+          )}
+          {blindReviewEnabled && !item.identity && (
+            <p className="text-sm text-gray-600">
+              Technical: {item.technicalLevel} (
+              {TECHNICAL_LABELS[item.technicalLevel]})
+            </p>
+          )}
           <p className="mt-1 text-xs text-gray-500">Submitted {submitted}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -197,11 +235,18 @@ function TalkReviewCard({
           <AbstractReviewStatusBadge status={item.abstractReviewStatus} />
         </div>
       </div>
-      <p className="mt-2 text-sm text-gray-700">
-        Committee aggregate:{" "}
-        <strong>avg {agg.average.toFixed(2)}</strong> ({agg.count} scorer
-        {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
-      </p>
+      {item.aggregate ? (
+        <p className="mt-2 text-sm text-gray-700">
+          Committee aggregate:{" "}
+          <strong>avg {item.aggregate.average.toFixed(2)}</strong> ({item.aggregate.count}{" "}
+          scorer
+          {item.aggregate.count === 1 ? "" : "s"}, sum {item.aggregate.sum.toFixed(1)})
+        </p>
+      ) : (
+        <p className="mt-2 text-sm italic text-gray-600">
+          Committee aggregate hidden until you save your score for this talk.
+        </p>
+      )}
       <button
         type="button"
         className="mt-2 text-sm text-minne-navy underline"

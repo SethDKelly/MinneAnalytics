@@ -17,6 +17,11 @@ import {
 } from "@/lib/reviewer";
 import { computeThemeStats } from "@/lib/theme-stats";
 import { sortByAggregate, toListItem } from "@/lib/submissions";
+import {
+  buildChairProgramItem,
+  isBlindReviewEnabled,
+  partitionChairProgramByOwnScore,
+} from "@/lib/review-blind";
 import { prisma } from "@/lib/db";
 
 export default async function ChairPage({
@@ -61,19 +66,34 @@ export default async function ChairPage({
       : Promise.resolve([]),
   ]);
 
-  const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
-  const items = sortByAggregate(active.map((s) => toListItem(s))).map((item) => {
-    const full = subs.find((s) => s.id === item.id)!;
-    return {
-      ...item,
-      abstract: full.abstract,
-      email: full.email,
-      deckShareable: full.deckShareable,
-      vipRegistered: full.vipRegistered,
-      themeNames: themeNamesForSubmission(full.themes),
-      themeIds: full.themes.map((t) => t.themeId),
-    };
+  const viewConf = await prisma.conference.findUniqueOrThrow({
+    where: { id: viewConferenceId },
   });
+  const blindReviewEnabled = isBlindReviewEnabled(viewConf);
+
+  const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
+  const listItems = active.map((s) => toListItem(s, reviewer.id));
+
+  const buildItem = (item: (typeof listItems)[0]) => {
+    const full = subs.find((s) => s.id === item.id)!;
+    return buildChairProgramItem(
+      item,
+      full,
+      themeNamesForSubmission(full.themes),
+      full.themes.map((t) => t.themeId),
+      blindReviewEnabled
+    );
+  };
+
+  let programNeedsScore: ReturnType<typeof buildItem>[] = [];
+  let programScoredByMe: ReturnType<typeof buildItem>[] = [];
+  if (blindReviewEnabled) {
+    const { needsMyScore, scoredByMe } = partitionChairProgramByOwnScore(listItems);
+    programNeedsScore = needsMyScore.map(buildItem);
+    programScoredByMe = scoredByMe.map(buildItem);
+  } else {
+    programScoredByMe = sortByAggregate(listItems).map(buildItem);
+  }
 
   const themeStats = computeThemeStats(
     themes,
@@ -120,7 +140,9 @@ export default async function ChairPage({
           ? `Historical review — ${viewConferenceName}`
           : committeeDashboardTitle(reviewer.role)
       }
-      items={items}
+      programNeedsScore={programNeedsScore}
+      programScoredByMe={programScoredByMe}
+      blindReviewEnabled={blindReviewEnabled}
       capacity={capacity}
       allScores={allScores}
       deckQueue={deckQueue}

@@ -9,7 +9,7 @@ import { TechnicalityBalance } from "./TechnicalityBalance";
 import { ThemeGapPanel } from "./ThemeGapPanel";
 import type { CapacitySnapshot } from "@/lib/capacity";
 import type { DeckQueueItem } from "@/lib/decks";
-import type { SubmissionListItem } from "@/lib/submissions";
+import type { ChairProgramItem } from "@/lib/review-blind";
 import { EMPTY_AGGREGATE } from "@/lib/scoring";
 import { formatScore } from "@/lib/scoring-scale";
 import { TECHNICAL_LABELS } from "@/lib/constants";
@@ -26,15 +26,6 @@ import {
   roleDisplayName,
 } from "@/lib/roles";
 
-type SubmissionDetail = SubmissionListItem & {
-  abstract: string;
-  email: string;
-  deckShareable: boolean;
-  vipRegistered: boolean;
-  themeNames: string[];
-  themeIds: string[];
-};
-
 type Tab = "program" | "decks" | "balance" | "history";
 
 type Props = {
@@ -42,7 +33,9 @@ type Props = {
   role: ReviewerRole;
   label: string;
   dashboardTitle: string;
-  items: SubmissionDetail[];
+  programNeedsScore: ChairProgramItem[];
+  programScoredByMe: ChairProgramItem[];
+  blindReviewEnabled: boolean;
   capacity: CapacitySnapshot;
   allScores: Record<string, { reviewer: string; value: number; notes: string | null }[]>;
   deckQueue: DeckQueueItem[];
@@ -65,7 +58,9 @@ export function ChairDashboard({
   role,
   label,
   dashboardTitle,
-  items: initialItems,
+  programNeedsScore: initialNeedsScore,
+  programScoredByMe: initialScoredByMe,
+  blindReviewEnabled,
   capacity: initialCapacity,
   allScores,
   deckQueue: initialDeckQueue,
@@ -91,9 +86,11 @@ export function ChairDashboard({
   const [decksPublished, setDecksPublished] = useState(initialDecksPublished);
   const board = isBoard(role);
 
-  const items = themeFilter
-    ? initialItems.filter((i) => i.themeIds.includes(themeFilter))
-    : initialItems;
+  const filterByTheme = (list: ChairProgramItem[]) =>
+    themeFilter ? list.filter((i) => i.themeIds.includes(themeFilter)) : list;
+  const needsScore = filterByTheme(initialNeedsScore);
+  const scoredByMe = filterByTheme(initialScoredByMe);
+  const programItems = [...needsScore, ...scoredByMe];
 
   async function setStatus(submissionId: string, status: string, force = false) {
     setLoading(submissionId + status);
@@ -194,7 +191,7 @@ export function ChairDashboard({
   const decksPendingReview = deckQueue.filter(
     (d) => d.deckFileId && (d.deckStatus === "SUBMITTED" || d.deckStatus === "REVIEWED")
   );
-  const approvedItems = items.filter((i) => i.programStatus === "APPROVED");
+  const approvedItems = programItems.filter((i) => i.programStatus === "APPROVED");
   const vipRegisteredCount = approvedItems.filter((i) => i.vipRegistered).length;
 
   return (
@@ -275,7 +272,7 @@ export function ChairDashboard({
           }`}
           onClick={() => setTab("program")}
         >
-          Program ({items.length})
+          Program ({programItems.length})
         </button>
         {!readOnly && (
           <button
@@ -383,126 +380,64 @@ export function ChairDashboard({
           <div className="mt-4">
             <ThemeGapPanel rows={themeStats} />
           </div>
-          <ul className="mt-8 space-y-6">
-          {items.map((item) => {
-            const agg = item.aggregate ?? EMPTY_AGGREGATE;
-            return (
-              <li key={item.id} className="card">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-bold text-minne-navy">{item.title}</h2>
-                    <p className="text-sm text-gray-600">
-                      {item.firstName} {item.lastName} · {item.organization} · {item.email}
-                    </p>
-                    {item.themeNames.length > 0 && (
-                      <p className="mt-1 text-sm text-gray-600">
-                        Themes: {item.themeNames.join(", ")}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm">
-                      Technical {item.technicalLevel}:{" "}
-                      {TECHNICAL_LABELS[item.technicalLevel]}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <ProgramStatusBadge status={item.programStatus} />
-                    <DeckStatusBadge status={item.deckStatus} />
-                    {board && item.programStatus === "APPROVED" && (
-                      <span
-                        className={`text-xs ${
-                          item.deckShareable ? "text-green-800" : "text-red-800"
-                        }`}
-                      >
-                        Archive: {item.deckShareable ? "shareable" : "non-shareable"}
-                      </span>
-                    )}
-                    {item.programStatus === "APPROVED" && (
-                      <span
-                        className={`text-xs font-semibold ${
-                          item.vipRegistered ? "text-purple-800" : "text-gray-500"
-                        }`}
-                      >
-                        VIP: {item.vipRegistered ? "Registered" : "Not registered"}
-                      </span>
-                    )}
-                    <span className="text-sm font-semibold text-minne-navy">
-                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
-                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
-                    </span>
-                  </div>
-                </div>
-
-                <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
-
-                {allScores[item.id]?.length > 0 && (
-                  <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
-                    {allScores[item.id].map((s, i) => (
-                      <li key={i}>
-                        <strong>{s.reviewer}:</strong> {formatScore(s.value)}
-                        {s.notes ? ` — ${s.notes}` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {!readOnly && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {board && item.programStatus === "PENDING" && (
-                    <>
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "APPROVED")}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "BACKUP")}
-                      >
-                        Mark backup
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-danger"
-                        disabled={!!loading}
-                        onClick={() => setStatus(item.id, "DECLINED")}
-                      >
-                        Decline
-                      </button>
-                    </>
-                  )}
-                  {board && item.programStatus === "BACKUP" && (
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      disabled={!!loading}
-                      onClick={() => setStatus(item.id, "APPROVED")}
-                    >
-                      Promote to approved
-                    </button>
-                  )}
-                  {canSetVipRegistered(role) && item.programStatus === "APPROVED" && (
-                    <button
-                      type="button"
-                      className="btn-secondary text-xs"
-                      disabled={!!loading}
-                      onClick={() => setVipRegistered(item.id, !item.vipRegistered)}
-                    >
-                      {item.vipRegistered
-                        ? "Clear VIP registration"
-                        : "Mark VIP registered"}
-                    </button>
-                  )}
-                </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+          {blindReviewEnabled && (
+            <p className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+              Blind review: talks you have not scored yet appear first without presenter email
+              or committee scores. Score on the{" "}
+              <Link href={`/review/${token}`} className="font-semibold underline">
+                review page
+              </Link>{" "}
+              to unlock aggregates here.
+            </p>
+          )}
+          {blindReviewEnabled ? (
+            <>
+              <ProgramListSection
+                title="Awaiting your score"
+                description="Newest submissions first — score on the review page to see committee data"
+                items={needsScore}
+                allScores={allScores}
+                token={token}
+                board={board}
+                readOnly={readOnly}
+                loading={loading}
+                setStatus={setStatus}
+                setVipRegistered={setVipRegistered}
+                role={role}
+                blindReviewEnabled
+              />
+              <ProgramListSection
+                title="Scored by you"
+                description="Ranked by committee average among talks you have scored"
+                items={scoredByMe}
+                allScores={allScores}
+                token={token}
+                board={board}
+                readOnly={readOnly}
+                loading={loading}
+                setStatus={setStatus}
+                setVipRegistered={setVipRegistered}
+                role={role}
+                blindReviewEnabled
+                className="mt-10 border-t border-gray-200 pt-8"
+              />
+            </>
+          ) : (
+            <ProgramListSection
+              title="Program"
+              description="Sorted by committee average (highest first)"
+              items={scoredByMe}
+              allScores={allScores}
+              token={token}
+              board={board}
+              readOnly={readOnly}
+              loading={loading}
+              setStatus={setStatus}
+              setVipRegistered={setVipRegistered}
+              role={role}
+              blindReviewEnabled={false}
+            />
+          )}
         </>
       )}
 
@@ -665,5 +600,172 @@ export function ChairDashboard({
       )}
 
     </div>
+  );
+}
+
+function ProgramListSection({
+  title,
+  description,
+  items,
+  allScores,
+  token,
+  board,
+  readOnly,
+  loading,
+  setStatus,
+  setVipRegistered,
+  role,
+  blindReviewEnabled,
+  className = "mt-8",
+}: {
+  title: string;
+  description: string;
+  items: ChairProgramItem[];
+  allScores: Record<string, { reviewer: string; value: number; notes: string | null }[]>;
+  token: string;
+  board: boolean;
+  readOnly: boolean;
+  loading: string | null;
+  setStatus: (submissionId: string, status: string, force?: boolean) => void;
+  setVipRegistered: (submissionId: string, registered: boolean) => void;
+  role: ReviewerRole;
+  blindReviewEnabled: boolean;
+  className?: string;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <section className={className}>
+      <h2 className="text-xl font-bold text-minne-navy">{title}</h2>
+      <p className="text-sm text-gray-600">{description}</p>
+      <ul className="mt-4 space-y-6">
+        {items.map((item) => {
+          const agg = item.aggregate ?? EMPTY_AGGREGATE;
+          return (
+            <li key={item.id} className="card">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xl font-bold text-minne-navy">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.presenterSubtitle}</p>
+                  {item.themeNames.length > 0 && (
+                    <p className="mt-1 text-sm text-gray-600">
+                      Themes: {item.themeNames.join(", ")}
+                    </p>
+                  )}
+                  <p className="mt-1 text-sm">
+                    Technical {item.technicalLevel}:{" "}
+                    {TECHNICAL_LABELS[item.technicalLevel]}
+                  </p>
+                  {!item.committeeScoresVisible && blindReviewEnabled && (
+                    <p className="mt-2 text-sm">
+                      <Link href={`/review/${token}`} className="text-minne-navy underline">
+                        Score on review page
+                      </Link>{" "}
+                      to unlock committee scores and presenter email.
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <ProgramStatusBadge status={item.programStatus} />
+                  <DeckStatusBadge status={item.deckStatus} />
+                  {board && item.programStatus === "APPROVED" && (
+                    <span
+                      className={`text-xs ${
+                        item.deckShareable ? "text-green-800" : "text-red-800"
+                      }`}
+                    >
+                      Archive: {item.deckShareable ? "shareable" : "non-shareable"}
+                    </span>
+                  )}
+                  {item.programStatus === "APPROVED" && (
+                    <span
+                      className={`text-xs font-semibold ${
+                        item.vipRegistered ? "text-purple-800" : "text-gray-500"
+                      }`}
+                    >
+                      VIP: {item.vipRegistered ? "Registered" : "Not registered"}
+                    </span>
+                  )}
+                  {item.committeeScoresVisible && (
+                    <span className="text-sm font-semibold text-minne-navy">
+                      Score: avg {agg.average.toFixed(2)} ({agg.count} reviewer
+                      {agg.count === 1 ? "" : "s"}, sum {agg.sum.toFixed(1)})
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <p className="mt-3 line-clamp-3 text-sm text-gray-800">{item.abstract}</p>
+
+              {item.committeeScoresVisible && allScores[item.id]?.length > 0 && (
+                <ul className="mt-3 space-y-1 rounded bg-gray-50 p-3 text-xs">
+                  {allScores[item.id].map((s, i) => (
+                    <li key={i}>
+                      <strong>{s.reviewer}:</strong> {formatScore(s.value)}
+                      {s.notes ? ` — ${s.notes}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {!readOnly && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {board && item.programStatus === "PENDING" && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "APPROVED")}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "BACKUP")}
+                      >
+                        Mark backup
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        disabled={!!loading}
+                        onClick={() => setStatus(item.id, "DECLINED")}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  {board && item.programStatus === "BACKUP" && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={!!loading}
+                      onClick={() => setStatus(item.id, "APPROVED")}
+                    >
+                      Promote to approved
+                    </button>
+                  )}
+                  {canSetVipRegistered(role) && item.programStatus === "APPROVED" && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs"
+                      disabled={!!loading}
+                      onClick={() => setVipRegistered(item.id, !item.vipRegistered)}
+                    >
+                      {item.vipRegistered
+                        ? "Clear VIP registration"
+                        : "Mark VIP registered"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

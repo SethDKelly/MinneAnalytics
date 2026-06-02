@@ -38,6 +38,7 @@ type Props = {
     submissionsCloseAt: string | null;
     timezone: string;
     archivedAt: string | null;
+    blindReviewEnabled: boolean;
   };
   submissionWindowMessage: string;
   themes: ThemeRow[];
@@ -56,6 +57,9 @@ export function AdminDashboard({
   const [themes, setThemes] = useState(initialThemes);
   const [loading, setLoading] = useState<string | null>(null);
   const [submissionsOpen, setSubmissionsOpen] = useState(conference.submissionsOpen);
+  const [blindReviewEnabled, setBlindReviewEnabled] = useState(
+    conference.blindReviewEnabled
+  );
   const [openAt, setOpenAt] = useState(
     conference.submissionsOpenAt?.slice(0, 16) ?? ""
   );
@@ -276,6 +280,15 @@ export function AdminDashboard({
           </div>
         </div>
         <p className="mt-2 text-xs text-gray-500">Timezone: {conference.timezone}</p>
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={blindReviewEnabled}
+            onChange={(e) => setBlindReviewEnabled(e.target.checked)}
+          />
+          Bias-reduced (blind) review — hide presenter identity and committee scores until
+          each reviewer scores a talk
+        </label>
         <button
           type="button"
           className="btn-primary mt-4"
@@ -285,6 +298,7 @@ export function AdminDashboard({
               submissionsOpen,
               submissionsOpenAt: openAt ? new Date(openAt).toISOString() : null,
               submissionsCloseAt: closeAt ? new Date(closeAt).toISOString() : null,
+              blindReviewEnabled,
             })
           }
         >

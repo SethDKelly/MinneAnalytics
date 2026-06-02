@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–3 complete  
+**Status:** In progress — Phases 1–4 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -816,13 +816,13 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 4 — Bias-reduced scoring
 
-- [ ] `Conference.blindReviewEnabled` (optional admin toggle)
-- [ ] `lib/review-blind.ts`: mask identity + review aggregate until scored
-- [ ] Review UI: hidden name/company/email, Reveal identity control, hide review aggregate until `myScore`
-- [ ] `GET /api/review/submissions/{id}/identity`
-- [ ] Chair loader: mask avg + `allScores` + email until viewer’s score exists; partition/sort program list
-- [ ] `ChairDashboard` masked row copy + link to score on review
-- [ ] Seed/docs: walkthrough step for blind review then approve
+- [x] `Conference.blindReviewEnabled` (optional admin toggle)
+- [x] `lib/review-blind.ts`: mask identity + review aggregate until scored
+- [x] Review UI: hidden name/company/email, Reveal identity control, hide review aggregate until `myScore`
+- [x] `GET /api/review/submissions/{id}/identity`
+- [x] Chair loader: mask avg + `allScores` + email until viewer’s score exists; partition/sort program list
+- [x] `ChairDashboard` masked row copy + link to score on review
+- [x] Seed/docs: walkthrough step for blind review then approve
 
 ### Phase 5 — Lineage and chair visibility
 

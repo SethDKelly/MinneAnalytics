@@ -37,6 +37,7 @@ export default async function AdminPage({
         submissionsCloseAt: reviewer.conference.submissionsCloseAt?.toISOString() ?? null,
         timezone: reviewer.conference.timezone,
         archivedAt: reviewer.conference.archivedAt?.toISOString() ?? null,
+        blindReviewEnabled: reviewer.conference.blindReviewEnabled,
       }}
       submissionWindowMessage={window.open ? "" : window.message}
       themes={themes.map((t) => ({

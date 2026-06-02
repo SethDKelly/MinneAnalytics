@@ -69,6 +69,7 @@ model Conference {
   sponsorMax Int     @default(11) @map("sponsor_max")
   decksPublished Boolean @default(false) @map("decks_published")
   decksPublishedAt DateTime? @map("decks_published_at")
+  blindReviewEnabled Boolean @default(true) @map("blind_review_enabled")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

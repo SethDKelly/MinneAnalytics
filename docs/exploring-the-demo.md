@@ -27,8 +27,9 @@ Seed output includes a **site administrator** URL at `/admin/{token}` (separate 
 |------|--------|
 | 1 | Open the **admin** URL from seed output. |
 | 2 | Review submission window dates and open/closed toggle. |
-| 3 | Adjust theme targets (min/max approved counts) on the taxonomy list. |
-| 4 | After testing, use **Archive conference** only on a throwaway seed—not the main Data Tech 2027 demo unless you re-seed. |
+| 3 | Toggle **Bias-reduced (blind) review** if you need legacy visible scoring for comparison. |
+| 4 | Adjust theme targets (min/max approved counts) on the taxonomy list. |
+| 5 | After testing, use **Archive conference** only on a throwaway seed—not the main Data Tech 2027 demo unless you re-seed. |
 
 ### 1. Public site and submission
 
@@ -48,6 +49,7 @@ The new talk appears as **Pending** in committee views. Email content is stubbed
 | 1 | Open a **review** URL from seed (board or co-chair). |
 | 2 | Score pending talks with the 0.0–1.0 slider (0.1 steps) and optional notes. |
 | 3 | Notice **needs score** vs **scored by you** sections. |
+| 4 | **Blind review (default):** presenter name/org/email are hidden; committee averages appear only after you save a score. Use **Reveal identity** only for conflict checks. |
 
 Seed data already includes **approved** and **declined** talks with auto-generated committee scores (high for approved, low for declined).
 
@@ -57,7 +59,9 @@ Open a **chair** URL (board member recommended first).
 
 **Program tab**
 
-- Submissions sorted by average score; filter by **theme**.
+- With blind review on: **Awaiting your score** (no email or committee scores) then **Scored by you** (sorted by average). Link to the review page to unlock a row.
+- With blind review off (admin toggle): all talks sorted by average score.
+- Filter by **theme**.
 - **Theme coverage** panel shows approved vs target counts per theme.
 - **Board only:** Approve, Mark backup, Decline (saturation warning if a theme is over target—confirm to proceed).
 - Promote **backup** → approved.
