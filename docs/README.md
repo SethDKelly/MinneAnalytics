@@ -10,7 +10,5 @@ Documentation for the MinneAnalytics Conference Planning Demo.
 | [Development](development.md) | Contributors | Setup, database, scripts, debugging |
 | [Contributing](contributing.md) | Contributors | Code conventions and pull requests |
 | [Roadmap](roadmap.md) | Contributors, PMs | Planned enhancements not yet built |
-| [Conference v2 plan](conference-v2-implementation-plan.md) | Contributors, PMs | In-scope work on `feature/conference-demo-v2` |
-| [Conference backlog](conference-backlog.md) | Contributors, PMs | Post–v2 ideas (e.g. room QR session feedback) |
 
 The project [README](../README.md) is the main entry for installing and running the app locally.

@@ -19,13 +19,20 @@ Thank you for improving the MinneAnalytics conference planning demo. This projec
 | Role permissions | `lib/roles.ts` (ADMIN / BOARD / CHAIR are separate) |
 | Admin panel | `app/admin/[token]/page.tsx`, `components/AdminDashboard.tsx`, `app/api/admin/*` |
 | Submission window | `lib/submission-window.ts` |
-| Theme stats | `lib/theme-stats.ts` |
+| Themes (taxonomy + propose) | `lib/themes.ts`, `app/api/themes/*`, `app/api/admin/themes` |
+| Theme stats / heatmaps | `lib/theme-stats.ts`, `lib/chair-heatmaps.ts` |
 | Technicality balance | `lib/program-balance.ts` |
+| Blind review | `lib/review-blind.ts`, `app/api/review/submissions/[id]/identity` |
+| Revisions / rescoring | `lib/submission-revision.ts`, `lib/revision-history.ts`, `lib/rescoring.ts` |
+| Committee feedback | `app/api/review/feedback`, `components/ReviewFeedbackForm.tsx` |
+| Email templates / send | `lib/email-templates.ts`, `lib/email-send.ts`, `components/ChairCommunicationsTab.tsx` |
+| CSV export | `lib/export-build.ts`, `lib/export-csv.ts`, `app/api/chair/export` |
 | Submission validation | `lib/validation.ts`, `app/api/submissions/route.ts` |
 | Scoring rules | `lib/scoring-scale.ts`, `lib/scoring.ts`, `app/api/scores/route.ts` |
 | Chair / deck / VIP / archive APIs | `app/api/chair/*`, `lib/decks.ts` |
 | Chair UI | `components/ChairDashboard.tsx`, `app/chair/[token]/page.tsx` |
 | Review UI | `components/ReviewPanel.tsx`, `app/review/[token]/page.tsx` |
+| Presenter edits | `app/api/presenter/submission`, `components/PresenterSubmissionEditor.tsx` |
 | Schedule | `lib/schedule/*`, `components/schedule/*`, `app/api/schedule/*` |
 | Public shell | `components/SiteHeader.tsx`, `app/page.tsx`, static pages under `app/` |
 | Styling / tokens | `app/globals.css`, `tailwind.config.ts` |

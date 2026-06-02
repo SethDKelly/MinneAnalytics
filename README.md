@@ -202,14 +202,16 @@ How URLs map to code: **[docs/routing.md](docs/routing.md)**.
 
 ## Features
 
-- Full submission form with multi-select degrees and 1–5 technical scale
-- Optional co-presenter (1–2 presenters)
+- Full submission form with multi-select degrees, 1–5 technical scale, and up to three themes (including community-proposed tags)
+- Optional co-presenter (1–2 presenters); presenter portal for deck upload, withdraw, and abstract edits (pending/backup)
 - Program status: Pending, Approved, Declined, Backup, Withdrawn (withdraw allowed after approval)
-- **Site administrator** (`ADMIN`): submission windows, theme taxonomy, conference archive lifecycle (no scoring or approval)
-- **Board** (Dan Atkins, Sean Larson, Graeme Thickins, John Hogue): score, approve/decline/backup, deck review, schedule, publish archive, historical view
-- **Co-chairs**: score and deck review only
-- **Themes** on submission; chair **Balance** tab (gap analysis + technicality); approve saturation warning
-- Scoring: 0.0–1.0 (0.1 steps) + notes; demo auto-scores on approve/decline
+- **Blind review** (default): hide presenter identity and committee averages until scored; optional reveal; admin toggle
+- **Abstract revisions**: versioned edits, revision history, rescoring queue, committee feedback to presenters
+- **Site administrator** (`ADMIN`): submission windows, theme taxonomy, blind review toggle, conference archive lifecycle
+- **Board**: score, approve/decline/backup, deck review, sponsor sessions, communications (email templates), heatmaps, schedule, publish archive, historical view
+- **Co-chairs**: score and deck review only (no approve, communications, or schedule)
+- Chair **Balance** tab: theme gaps, theme coverage heatmap, technicality balance + heatmap; CSV export with versioned scores
+- Scoring: 0.0–1.0 (0.1 steps) + notes; aggregates use current abstract version only; demo auto-scores on approve/decline
 - Capacity widget: 8×8 − EOD − Graeme − sponsors → ~44 community target
 - Deck workflow and post-conference archive with per-session non-shareable flag
 - VIP event registration flag on approved talks

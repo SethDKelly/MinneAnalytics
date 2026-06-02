@@ -125,7 +125,7 @@ Use the presenter link from step 1 (or a seed sample link).
 | Program status | What to try |
 |----------------|-------------|
 | Pending / backup | Edit abstract (revisions), read committee feedback when seeded. |
-| Approved | Upload PDF/PPTX deck; withdraw still allowed with confirmation. Editing locked in v2 demo. |
+| Approved | Upload PDF/PPTX deck; withdraw still allowed with confirmation. Abstract editing locked after approval in the demo. |
 
 After upload, return to **Deck queue** on chair and mark the deck through the workflow.
 
@@ -147,10 +147,13 @@ Mark a session **non-shareable** and confirm it disappears from the public list 
 
 ## What seed preloads
 
-- **Conferences:** Data Tech 2027 (`ACTIVE`, open CFP) and Data Tech 2026 (`ARCHIVED`, for History tab)
-- **Theme taxonomy** on 2027 with target min/max counts
-- **~12 sample abstracts** on 2027 (mix of pending, approved, declined with demo scores; themes on talks)
-- **Site admin** token at `/admin/...` (submission window + themes + archive action)
+- **Conferences:** Data Tech 2027 (`ACTIVE`, open CFP, blind review on) and Data Tech 2026 (`ARCHIVED`, for History tab)
+- **Theme taxonomy** on 2027 with target min/max counts; some presenter-proposed tags
+- **~12 sample abstracts** (pending, approved, declined, backup; themes; demo scores on decided talks)
+- **Alex Rivera** — abstract v2, `REVISED` status, committee scores pinned to v1 (rescoring demo)
+- **Avery Walsh** — sponsor session flagged
+- **Email** — five global templates; decline round 1 already sent to declined talks
+- **Site admin** token at `/admin/...` (submission window, blind review, themes, archive)
 - **Four board members** + **two co-chairs** with fresh tokens each seed
 - **Empty schedule grid** ready for generate/drag
 

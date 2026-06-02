@@ -2,6 +2,21 @@
 
 Prototype conference-planning extension built on Next.js. It is **not** affiliated with production [minneanalytics.org](https://minneanalytics.org/).
 
+## Capability overview
+
+| Area | Behavior |
+|------|----------|
+| Public CFP | Submit with themes, optional community theme proposal, rate limit + honeypot |
+| Blind review | Hide presenter identity and committee averages until the reviewer has a current-version score; optional reveal |
+| Scoring | 0.0–1.0 in 0.1 steps; versioned scores; rescoring queue after presenter edits |
+| Revisions | Presenter edits on pending/backup; immutable revision history; board acknowledges updates |
+| Committee feedback | Messages from reviewers to presenters (separate from private score notes) |
+| Chair program | Approve/decline/backup, theme gaps, coverage + technicality heatmaps, sponsor sessions, CSV export |
+| Communications | Global email templates, batch send audit, deduplicated decline rounds (stub delivery) |
+| Decks & archive | Upload workflow, shareable flag, public slide library |
+| Schedule | 8-room grid, auto-generate, drag-and-drop |
+| Admin | Submission window, theme taxonomy, blind review toggle, conference lifecycle |
+
 ## Stack
 
 | Layer | Technology |
@@ -58,6 +73,7 @@ Additional submission flags:
 
 - `deckShareable` — board can exclude a session from the public post-conference archive
 - `vipRegistered` — board/co-chairs track VIP event registration for approved talks
+- `isSponsorSession` — board flags sponsor sessions; counted in capacity widget
 
 ## Conference lifecycle
 
@@ -67,7 +83,7 @@ Additional submission flags:
 - **ARCHIVED** — read-only committee view; submissions closed. Board (and admin) can open historical data at `/chair/{token}?archive={slug}`.
 - **DRAFT** — not open for public submission (enforced with submission window logic).
 
-Site administrators set lifecycle and submission windows at `/admin/{token}` (`app/api/admin/conference`).
+Site administrators set lifecycle, submission windows, and **blind review** at `/admin/{token}` (`app/api/admin/conference`).
 
 ## Submission windows
 
@@ -81,7 +97,7 @@ Per conference: `submissionsOpen`, `submissionsOpenAt`, `submissionsCloseAt`, an
 
 `Theme` rows per conference (slug, name, `targetMin` / `targetMax` approved counts). Presenters select up to three at submit (`SubmissionTheme` join). Admins manage taxonomy at `/admin/{token}` (`app/api/admin/themes`).
 
-**Community proposals (v2):** `Theme.source` is `ADMIN` or `PRESENTER`. Presenters may propose a new tag on submit or edit (`POST /api/themes/propose`, deduped by slug). Soft-remove via `removedAt` hides a tag from pickers but keeps historical labels on chair views.
+**Community proposals:** `Theme.source` is `ADMIN` or `PRESENTER`. Presenters may propose a new tag on submit or edit (`POST /api/themes/propose`, deduped by slug). Soft-remove via `removedAt` hides a tag from pickers but keeps historical labels on chair views.
 
 Chair dashboard:
 
@@ -98,21 +114,21 @@ Chair dashboard:
 
 - Committee scores are **0.0–1.0** in **0.1** steps (`lib/scoring-scale.ts`).
 - One score per submission per reviewer (`Score` unique constraint).
-- Each score stores `scoredAbstractVersion` (v2) — the abstract version when the reviewer last scored.
+- Each score stores `scoredAbstractVersion` — the abstract version when the reviewer last scored.
 - Aggregates for ranking use **current-version scores only** (`lib/rescoring.ts` `aggregateCurrentVersion`): scores where `scoredAbstractVersion === submission.abstractVersion`.
 - Review queue partitions into **needs score**, **needs rescore** (stale version), and **scored at current version** (`partitionReviewerQueue`).
 
-**Blind review (v2):** `Conference.blindReviewEnabled` (default `true`). Review and chair UIs hide presenter identity and committee aggregates until the viewer has a current-version score. Optional **Reveal identity** calls `GET /api/review/submissions/{id}/identity` (logged in demo).
+**Blind review:** `Conference.blindReviewEnabled` (default `true`). Review and chair UIs hide presenter identity and committee aggregates until the viewer has a current-version score. Optional **Reveal identity** calls `GET /api/review/submissions/{id}/identity` (logged in demo). Implementation: `lib/review-blind.ts`.
 
 **Demo behavior:** When the board sets a talk to `APPROVED` or `DECLINED` (or seed creates one), `lib/demo-scores.ts` auto-fills scores for all reviewers: **0.8–1.0** for approved, **0.0–0.3** for declined. This keeps ranking demos consistent without manual scoring every row.
 
-## Abstract revisions and committee feedback (v2)
+## Abstract revisions and committee feedback
 
 - `Submission.abstractVersion` increments on each presenter save that changes tracked fields; immutable rows in `SubmissionRevision`.
 - `AbstractReviewStatus`: `CURRENT`, `FEEDBACK_PENDING`, `REVISED`, `ACKNOWLEDGED` — drives presenter edit policy and chair badges.
-- Presenter edits via `PATCH /api/presenter/submission` (`lib/submission-revision.ts`, `components/PresenterSubmissionEditor.tsx`).
+- Presenter edits via `PATCH /api/presenter/submission` (`lib/submission-revision.ts`, `components/PresenterSubmissionEditor.tsx`). Approved talks are locked in the demo.
 - Committee → presenter messages in `PresenterFeedback` (distinct from private `Score.notes`); `POST /api/review/feedback` with stub email (`lib/email-stub.ts`).
-- Revision history for committee: `GET /api/review/submissions/{id}/revisions`; board may **Mark revision reviewed** via `POST /api/chair/abstract-review`.
+- Revision history for committee: `GET /api/review/submissions/{id}/revisions` (`lib/revision-history.ts`); board may **Mark revision reviewed** via `POST /api/chair/abstract-review`.
 
 ## Capacity planning
 
@@ -126,7 +142,7 @@ community_target   ≈ after_trim - sponsor_slots    (sponsors default 7–11 �
 
 Sponsor sessions are tracked with `isSponsorSession` on `Submission`. Board toggles the flag from the chair Program tab (`PATCH /api/chair/sponsor-session`); capacity widget counts flagged sessions against `sponsorMin` / `sponsorMax`.
 
-## Board communications (v2)
+## Board communications
 
 Global `EmailTemplate` rows (deck call, decline, attendee reminder, etc.). Per-conference send audit:
 
@@ -134,7 +150,7 @@ Global `EmailTemplate` rows (deck call, decline, attendee reminder, etc.). Per-c
 - `EmailSendRecord` — one row per recipient; unique per `(conference, template, round, submission|attendee)` for deduplication.
 - `ConferenceAttendee` — stub attendee list for reminder template previews.
 
-Board UI: chair **Communications** tab (`components/ChairCommunicationsTab.tsx`). Delivery is `lib/email-stub.ts` (console only in demo).
+Board UI: chair **Communications** tab (`components/ChairCommunicationsTab.tsx`). Send logic: `lib/email-send.ts`, `lib/email-templates.ts`. Delivery is `lib/email-stub.ts` (console only in demo).
 
 ## Schedule builder
 
@@ -170,7 +186,7 @@ Summary:
 | `/submit/[slug]` | Public submission form |
 | `/archive/[slug]` | Public when archive published |
 | `/review/[token]` | Board + co-chairs (scoring) |
-| `/chair/[token]` | Board + co-chairs (program + decks) |
+| `/chair/[token]` | Board + co-chairs (program + decks + communications for board) |
 | `/schedule/[token]` | Board only |
 | `/presenter/[token]` | Presenter (per submission) |
 | `/admin/[token]` | Site administrator |

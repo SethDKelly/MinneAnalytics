@@ -164,14 +164,15 @@ URL and file mapping: **[routing.md](routing.md)**.
 
 ## Demo workflow (manual QA checklist)
 
-1. **Submit** — `/submit/data-tech-2027`; confirm thanks page and presenter link.
-2. **Score** — `/review/{token}` (board or co-chair).
-3. **Chair** — `/chair/{token}`: approve/decline (board), deck queue, VIP flag, CSV export, publish archive (board).
-4. **Presenter** — `/presenter/{token}`: upload deck after approval, test withdraw.
-5. **Schedule** — `/schedule/{token}` (board): generate grid, drag-and-drop.
-6. **Archive** — After board publishes, visit `/archive/data-tech-2027`.
+1. **Admin** (optional) — `/admin/{token}`: submission window, blind review toggle, themes.
+2. **Submit** — `/submit/data-tech-2027`; themes + optional propose tag; confirm thanks page and presenter link.
+3. **Score** — `/review/{token}`: blind identity, needs score / needs rescore / scored; revision history; committee feedback.
+4. **Chair** — `/chair/{token}`: program (heatmaps, sponsor filter, revision badges), Balance tab, Communications (board), deck queue, CSV export, publish archive (board).
+5. **Presenter** — `/presenter/{token}`: edit abstract on pending/backup; upload deck when approved; withdraw.
+6. **Schedule** — `/schedule/{token}` (board): generate grid, drag-and-drop.
+7. **Archive** — After board publishes, visit `/archive/data-tech-2027`.
 
-Approving or declining from the chair UI triggers demo auto-scoring (see [Architecture](architecture.md#scoring)).
+Seed highlights: **Alex Rivera** at abstract v2 with stale scores (rescoring demo); **Avery Walsh** sponsor session; decline email round 1 pre-sent. Approving or declining from the chair UI triggers demo auto-scoring (see [Architecture](architecture.md#scoring)).
 
 ## Adding a conference
 

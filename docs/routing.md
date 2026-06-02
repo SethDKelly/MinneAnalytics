@@ -79,7 +79,7 @@ Private pages (`review`, `chair`, `schedule`, `presenter`) call `notFound()` whe
 ## Navigation in the UI
 
 - **Site header** (`components/SiteHeader.tsx`): public links to About, Events, archive, Submit.
-- **Chair dashboard** links to Review, Schedule (board), CSV export, and public archive when published.
+- **Chair dashboard** links to Review, Schedule (board), CSV export, Communications tab (board), and public archive when published.
 - **Review panel** links back to Chair.
 
 Tokens are **not** listed in the app; copy them from the terminal after `npm run db:seed` (see [Exploring the demo](exploring-the-demo.md)).
