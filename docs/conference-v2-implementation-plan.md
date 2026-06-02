@@ -1,7 +1,7 @@
 # Conference demo v2 — implementation plan
 
 **Branch:** `feature/conference-demo-v2` (from `main`)  
-**Status:** In progress — Phases 1–6 complete  
+**Status:** In progress — Phases 1–6, 8 complete  
 **Primary goals:**
 
 1. Let speaking participants revise abstracts with full lineage, and let board/co-chair members give structured feedback during scoring—surfacing revised content for re-review and optional rescoring.
@@ -839,10 +839,10 @@ Execute phases in order; later phases assume earlier schema and routes exist.
 
 ### Phase 8 — Sponsor session flag
 
-- [ ] `PATCH /api/chair/sponsor-session` (board only)
-- [ ] Chair program toggle + sponsor badge + filter
-- [ ] Review card sponsor indicator (optional)
-- [ ] Seed sponsor-flagged talks
+- [x] `PATCH /api/chair/sponsor-session` (board only)
+- [x] Chair program toggle + sponsor badge + filter
+- [x] Review card sponsor indicator (optional)
+- [x] Seed sponsor-flagged talks
 
 ### Phase 9 — Email templates & send tracking
 

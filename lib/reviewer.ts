@@ -18,6 +18,7 @@ export {
   canSetDeckShareable,
   canSetVipRegistered,
   canSetProgramStatus,
+  canSetSponsorSession,
   canViewHistoricalCommittee,
   committeeDashboardTitle,
   isAdmin,

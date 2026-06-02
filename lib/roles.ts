@@ -51,6 +51,11 @@ export function canSetProgramStatus(role: ReviewerRole): boolean {
   return role === "BOARD";
 }
 
+/** Classify talks as sponsor sessions for capacity planning (board only). */
+export function canSetSponsorSession(role: ReviewerRole): boolean {
+  return role === "BOARD";
+}
+
 /** Slide deck workflow after abstract approval. */
 export function canManageDeck(role: ReviewerRole): boolean {
   return role === "BOARD" || role === "CHAIR";

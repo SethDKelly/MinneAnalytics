@@ -27,6 +27,7 @@ export type SubmissionListItem = {
   myScore: MyScore | null;
   abstractVersion: number;
   abstractReviewStatus: string;
+  isSponsorSession: boolean;
   createdAt: string;
 };
 
@@ -58,6 +59,7 @@ export function toListItem(
       : null,
     abstractVersion: sub.abstractVersion,
     abstractReviewStatus: sub.abstractReviewStatus,
+    isSponsorSession: sub.isSponsorSession,
     createdAt: sub.createdAt.toISOString(),
   };
 }

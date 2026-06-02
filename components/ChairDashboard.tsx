@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapacityWidget } from "./CapacityWidget";
-import { DeckStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import {
+  DeckStatusBadge,
+  ProgramStatusBadge,
+  SponsorSessionBadge,
+} from "./StatusBadge";
 import { TechnicalityBalance } from "./TechnicalityBalance";
 import { ThemeGapPanel } from "./ThemeGapPanel";
 import type { CapacitySnapshot } from "@/lib/capacity";
@@ -86,14 +90,24 @@ export function ChairDashboard({
   const deckQueue = initialDeckQueue;
   const [tab, setTab] = useState<Tab>("program");
   const [themeFilter, setThemeFilter] = useState<string | null>(null);
+  const [sponsorFilter, setSponsorFilter] = useState<"all" | "sponsor" | "community">(
+    "all"
+  );
   const [loading, setLoading] = useState<string | null>(null);
   const [decksPublished, setDecksPublished] = useState(initialDecksPublished);
   const board = isBoard(role);
 
   const filterByTheme = (list: ChairProgramItem[]) =>
     themeFilter ? list.filter((i) => i.themeIds.includes(themeFilter)) : list;
-  const needsScore = filterByTheme(initialNeedsScore);
-  const scoredByMe = filterByTheme(initialScoredByMe);
+  const filterBySponsor = (list: ChairProgramItem[]) => {
+    if (sponsorFilter === "sponsor") return list.filter((i) => i.isSponsorSession);
+    if (sponsorFilter === "community") return list.filter((i) => !i.isSponsorSession);
+    return list;
+  };
+  const applyFilters = (list: ChairProgramItem[]) =>
+    filterBySponsor(filterByTheme(list));
+  const needsScore = applyFilters(initialNeedsScore);
+  const scoredByMe = applyFilters(initialScoredByMe);
   const programItems = [...needsScore, ...scoredByMe];
 
   async function setStatus(submissionId: string, status: string, force = false) {
@@ -145,6 +159,21 @@ export function ChairDashboard({
     else {
       const data = await res.json();
       alert(data.error ?? "Could not update VIP registration");
+    }
+  }
+
+  async function setSponsorSession(submissionId: string, isSponsorSession: boolean) {
+    setLoading(submissionId + (isSponsorSession ? "sponsor" : "community"));
+    const res = await fetch("/api/chair/sponsor-session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, submissionId, isSponsorSession }),
+    });
+    setLoading(null);
+    if (res.ok) router.refresh();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Could not update sponsor flag");
     }
   }
 
@@ -373,6 +402,27 @@ export function ChairDashboard({
       {tab === "program" && (
         <>
           <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-600">Session type:</span>
+            {(
+              [
+                ["all", "All"],
+                ["sponsor", "Sponsor"],
+                ["community", "Community"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className={`rounded px-2 py-1 text-xs ${
+                  sponsorFilter === key ? "bg-violet-700 text-white" : "bg-gray-100"
+                }`}
+                onClick={() => setSponsorFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-sm text-gray-600">Filter by theme:</span>
             <button
               type="button"
@@ -423,6 +473,7 @@ export function ChairDashboard({
                 setStatus={setStatus}
                 setVipRegistered={setVipRegistered}
                 acknowledgeRevision={acknowledgeRevision}
+                setSponsorSession={setSponsorSession}
                 role={role}
                 blindReviewEnabled
               />
@@ -438,6 +489,7 @@ export function ChairDashboard({
                 setStatus={setStatus}
                 setVipRegistered={setVipRegistered}
                 acknowledgeRevision={acknowledgeRevision}
+                setSponsorSession={setSponsorSession}
                 role={role}
                 blindReviewEnabled
                 className="mt-10 border-t border-gray-200 pt-8"
@@ -456,6 +508,7 @@ export function ChairDashboard({
               setStatus={setStatus}
               setVipRegistered={setVipRegistered}
               acknowledgeRevision={acknowledgeRevision}
+              setSponsorSession={setSponsorSession}
               role={role}
               blindReviewEnabled={false}
             />
@@ -637,6 +690,7 @@ function ProgramListSection({
   setStatus,
   setVipRegistered,
   acknowledgeRevision,
+  setSponsorSession,
   role,
   blindReviewEnabled,
   className = "mt-8",
@@ -652,6 +706,7 @@ function ProgramListSection({
   setStatus: (submissionId: string, status: string, force?: boolean) => void;
   setVipRegistered: (submissionId: string, registered: boolean) => void;
   acknowledgeRevision: (submissionId: string) => void;
+  setSponsorSession: (submissionId: string, isSponsorSession: boolean) => void;
   role: ReviewerRole;
   blindReviewEnabled: boolean;
   className?: string;
@@ -672,6 +727,7 @@ function ProgramListSection({
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-xl font-bold text-minne-navy">{item.title}</h3>
                     <RevisionBadge version={item.revisionSummary.abstractVersion} />
+                    {item.isSponsorSession && <SponsorSessionBadge />}
                     {item.revisionSummary.staleScoreCount > 0 && (
                       <RescoreIndicator version={item.revisionSummary.abstractVersion} />
                     )}
@@ -758,6 +814,20 @@ function ProgramListSection({
                       onClick={() => acknowledgeRevision(item.id)}
                     >
                       Mark revision reviewed
+                    </button>
+                  )}
+                  {board && item.programStatus !== "WITHDRAWN" && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-xs"
+                      disabled={!!loading}
+                      onClick={() =>
+                        setSponsorSession(item.id, !item.isSponsorSession)
+                      }
+                    >
+                      {item.isSponsorSession
+                        ? "Clear sponsor session"
+                        : "Mark sponsor session"}
                     </button>
                   )}
                   {board && item.programStatus === "PENDING" && (

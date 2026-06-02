@@ -45,6 +45,12 @@ export function AbstractReviewStatusBadge({ status }: { status: string }) {
   );
 }
 
+export function SponsorSessionBadge() {
+  return (
+    <span className="status-badge bg-violet-100 text-violet-900">Sponsor session</span>
+  );
+}
+
 export function DeckStatusBadge({ status }: { status: string | null }) {
   if (!status) return <span className="text-xs text-gray-500">No deck</span>;
   return (

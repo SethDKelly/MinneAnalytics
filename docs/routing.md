@@ -42,6 +42,7 @@ Browser pages call these Route Handlers for mutations and downloads. They enforc
 | `POST` | `/api/chair/deck-status` | Committee deck workflow |
 | `PATCH` | `/api/chair/deck-shareable` | Board: archive sharing flag |
 | `PATCH` | `/api/chair/vip-registered` | Board/co-chair: VIP registration |
+| `PATCH` | `/api/chair/sponsor-session` | Board: sponsor session flag |
 | `POST` | `/api/chair/publish-archive` | Board: publish/unpublish slide library |
 | `GET` | `/api/chair/export` | CSV export (`?token=`) |
 | `POST` | `/api/presenter/deck` | Deck upload (multipart) |

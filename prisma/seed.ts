@@ -161,6 +161,7 @@ async function main() {
     abstract: string;
     technicalLevel: number;
     isSoftSkill?: boolean;
+    isSponsorSession?: boolean;
     programStatus?: ProgramStatus;
     degrees?: string[];
     themeSlugs?: string[];
@@ -268,6 +269,7 @@ async function main() {
         "People analytics programs that respect privacy, build trust, and still deliver workforce insights to leadership.",
       technicalLevel: 2,
       programStatus: "APPROVED",
+      isSponsorSession: true,
     },
     {
       firstName: "Drew",
@@ -331,6 +333,7 @@ async function main() {
         hasCoPresenter: false,
         travelReimbursementRequired: false,
         isSoftSkill: talk.isSoftSkill ?? false,
+        isSponsorSession: talk.isSponsorSession ?? false,
         themes: {
           create: (talk.themeSlugs ?? ["analytics"]).map((slug) => ({
             themeId: themeBySlug[slug],
@@ -495,6 +498,9 @@ async function main() {
   }
   console.log(
     "  Rescoring: Alex Rivera is at v2 (REVISED); committee scores are pinned to v1 until reviewers rescore."
+  );
+  console.log(
+    "  Sponsor sessions: Avery Walsh is flagged; board can toggle others on the chair Program tab."
   );
   console.log("\n");
 }

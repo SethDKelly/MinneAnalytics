@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AbstractReviewStatusBadge, ProgramStatusBadge } from "./StatusBadge";
+import {
+  AbstractReviewStatusBadge,
+  ProgramStatusBadge,
+  SponsorSessionBadge,
+} from "./StatusBadge";
 import { BlindIdentityBlock } from "./BlindIdentityBlock";
 import { RescoreIndicator } from "./RescoreIndicator";
 import { RevisionBadge } from "./RevisionBadge";
@@ -243,6 +247,7 @@ function TalkReviewCard({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-bold text-minne-navy">{item.title}</h3>
             <RevisionBadge version={item.abstractVersion} />
+            {item.isSponsorSession && <SponsorSessionBadge />}
             {outdated && <RescoreIndicator version={item.abstractVersion} />}
           </div>
           {blindReviewEnabled && !item.identity ? (
