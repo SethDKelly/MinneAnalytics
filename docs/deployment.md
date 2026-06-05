@@ -38,7 +38,7 @@ push to dev
 
 | Item | Location |
 |------|----------|
-| OIDC trust for this repo | aws-backbone `github_repositories` includes `SethDKelly/Minneanalytics` |
+| OIDC trust for this repo | aws-backbone `github_repositories` includes `SethDKelly/MinneAnalytics` |
 | Remote state bucket | `aws-backbone-terraform-state-521018312783` (shared) |
 | `dev` branch pushed | This repository |
 
@@ -90,7 +90,7 @@ Set in `infra/dev/main.tf` task definition:
 
 | Issue | Fix |
 |-------|-----|
-| OIDC assume role fails | Confirm repo name `SethDKelly/Minneanalytics` in aws-backbone; merge backbone PR |
+| OIDC assume role fails | Confirm repo name `SethDKelly/MinneAnalytics` in aws-backbone; merge backbone PR |
 | `iam:PassRole` denied | aws-backbone `dev-github-deploy` needs `minneanalytics-dev-*` PassRole allow |
 | Health check failing | Check CloudWatch log group `/ecs/minneanalytics-dev` |
 | Empty site after first deploy | Re-run workflow with `seed_on_start: true` |
