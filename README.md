@@ -9,6 +9,7 @@ Prototype conference planning extension: public abstract submission, private com
 | Goal | Start here |
 |------|------------|
 | Run the app and explore the PoC | [Quick start](#quick-start) → [Explore the demo](docs/exploring-the-demo.md) |
+| Deploy to AWS dev | [Deployment](docs/deployment.md) — push to **`dev`** branch |
 | Understand URLs and API routes | [Routing](docs/routing.md) |
 | Contribute code | [Developer docs](docs/README.md) · [Roadmap](docs/roadmap.md) |
 

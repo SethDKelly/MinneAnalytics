@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { readFile } from "fs/promises";
 import path from "path";
+import { getDataDir } from "./config";
 
 export type DeckQueueItem = {
   submissionId: string;
@@ -139,8 +140,9 @@ export async function loadDeckFileForPublic(publicId: string) {
 }
 
 export async function readDeckBytes(storagePath: string): Promise<Buffer> {
+  const base = getDataDir();
   const resolved = path.isAbsolute(storagePath)
     ? storagePath
-    : path.join(process.cwd(), storagePath);
+    : path.join(base, storagePath);
   return readFile(resolved);
 }

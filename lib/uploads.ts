@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { getUploadDir } from "./config";
 
 const ALLOWED_MIME = new Set([
   "application/pdf",
@@ -9,9 +10,7 @@ const ALLOWED_MIME = new Set([
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
-export function getUploadDir(): string {
-  return process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
-}
+export { getUploadDir } from "./config";
 
 export function validateDeckFile(file: File): string | null {
   if (!ALLOWED_MIME.has(file.type)) {

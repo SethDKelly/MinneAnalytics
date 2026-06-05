@@ -1,0 +1,21 @@
+# Optional containerized local demo (production-like paths without AWS).
+# Laptop demo without Docker: use scripts/setup.ps1 and npm run dev instead.
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DEPLOYMENT_MODE: aws
+      DATA_DIR: /data
+      DATABASE_URL: file:/data/prisma/dev.db
+      UPLOAD_DIR: /data/uploads
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SEED_ON_START: "true"
+    volumes:
+      - app-data:/data
+
+volumes:
+  app-data:
