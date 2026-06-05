@@ -53,6 +53,8 @@ git remote set-url origin https://github.com/SethDKelly/MinneAnalytics.git
 | Item | Location |
 |------|----------|
 | OIDC trust for this repo | aws-backbone `github_repositories` includes **`SethDKelly/MinneAnalytics`** |
+| `dev-github-deploy` app IAM | `AllowAppDeployIamRoles` for `minneanalytics-dev-*` (create + PassRole) |
+| ECS service-linked role | One-time per account: `aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com` |
 | Remote state bucket | `aws-backbone-terraform-state-521018312783` (shared) |
 | `dev` branch pushed | This repository |
 
@@ -105,7 +107,7 @@ Set in `infra/dev/main.tf` task definition:
 | Issue | Fix |
 |-------|-----|
 | OIDC assume role fails | Confirm repo name `SethDKelly/MinneAnalytics` in aws-backbone; merge backbone PR |
-| `iam:PassRole` denied | aws-backbone `dev-github-deploy` needs `minneanalytics-dev-*` PassRole allow |
+| `iam:CreateRole` or `iam:PassRole` denied | aws-backbone `dev-github-deploy` needs `AllowAppDeployIamRoles` for `minneanalytics-dev-*` |
 | Health check failing | Check CloudWatch log group `/ecs/minneanalytics-dev` |
 | Empty site after first deploy | Re-run workflow with `seed_on_start: true` |
 
