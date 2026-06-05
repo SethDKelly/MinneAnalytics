@@ -9,6 +9,7 @@ Prototype conference planning extension: public abstract submission, private com
 | Goal | Start here |
 |------|------------|
 | Run the app and explore the PoC | [Quick start](#quick-start) → [Explore the demo](docs/exploring-the-demo.md) |
+| Deploy to AWS dev | [Deployment](docs/deployment.md) — push to **`dev`** branch |
 | Understand URLs and API routes | [Routing](docs/routing.md) |
 | Contribute code | [Developer docs](docs/README.md) · [Roadmap](docs/roadmap.md) |
 
@@ -112,7 +113,7 @@ Setup scripts copy `.env.example` → `.env`, install dependencies, apply the sc
 **Automated (recommended)**
 
 ```powershell
-cd Minneanalytics
+cd MinneAnalytics
 .\scripts\setup.ps1
 npm run dev
 ```
@@ -120,7 +121,7 @@ npm run dev
 **Manual**
 
 ```powershell
-cd Minneanalytics
+cd MinneAnalytics
 copy .env.example .env
 npm install
 npm run db:push
@@ -136,7 +137,7 @@ npm run dev
 **Automated (recommended)**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 chmod +x scripts/setup.sh   # first time only
 ./scripts/setup.sh
 npm run dev
@@ -145,7 +146,7 @@ npm run dev
 **Manual**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 cp .env.example .env
 npm install
 npm run db:push
@@ -161,7 +162,7 @@ npm run dev
 **Automated (recommended)**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 chmod +x scripts/setup.sh   # first time only
 ./scripts/setup.sh
 npm run dev
@@ -170,7 +171,7 @@ npm run dev
 **Manual**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 cp .env.example .env
 npm install
 npm run db:push

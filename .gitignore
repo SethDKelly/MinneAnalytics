@@ -39,3 +39,9 @@ next-env.d.ts
 # ide
 .idea
 .vscode
+
+# terraform
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/*.tfplan

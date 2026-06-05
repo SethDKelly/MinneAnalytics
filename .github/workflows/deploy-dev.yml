@@ -1,0 +1,94 @@
+name: Deploy to dev
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      seed_on_start:
+        description: Run prisma seed on container start (first deploy only)
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-2
+  AWS_ACCOUNT_ID: "521018312783"
+  ECR_REPOSITORY: minneanalytics-dev
+  TF_DIR: infra/dev
+
+jobs:
+  deploy:
+    name: Deploy to AWS dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::521018312783:role/dev-github-deploy
+          aws-region: us-east-2
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init
+
+      - name: Terraform apply (bootstrap infra + ECR)
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve -var="container_image=public.ecr.aws/docker/library/nginx:stable-alpine"
+
+      - name: Login to ECR
+        id: ecr
+        run: |
+          REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | \
+            docker login --username AWS --password-stdin "$REGISTRY"
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        id: image
+        run: |
+          IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "uri=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform apply (deploy image)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          SEED="${{ github.event.inputs.seed_on_start || 'false' }}"
+          terraform apply -auto-approve \
+            -var="container_image=${{ steps.image.outputs.uri }}" \
+            -var="seed_on_start=${SEED}"
+
+      - name: Force ECS rollout
+        run: |
+          CLUSTER=$(terraform -chdir=$TF_DIR output -raw ecs_cluster_name)
+          SERVICE=$(terraform -chdir=$TF_DIR output -raw ecs_service_name)
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+
+      - name: Deployment summary
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          {
+            echo "## Dev deployment"
+            echo "URL: $(terraform output -raw app_url)"
+            echo "Image: ${{ steps.image.outputs.uri }}"
+          } >> "$GITHUB_STEP_SUMMARY"
