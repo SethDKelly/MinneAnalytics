@@ -65,7 +65,7 @@ jobs:
         id: image
         run: |
           IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ github.sha }}"
-          docker build -t "$IMAGE" .
+          docker build --progress=plain -t "$IMAGE" .
           docker push "$IMAGE"
           echo "uri=$IMAGE" >> "$GITHUB_OUTPUT"
 
