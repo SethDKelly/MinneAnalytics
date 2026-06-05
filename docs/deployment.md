@@ -34,11 +34,25 @@ push to dev
   → ECS rolling deploy
 ```
 
+### Naming
+
+| Context | Value |
+|---------|-------|
+| GitHub repository (OIDC) | **`SethDKelly/MinneAnalytics`** — exact casing required |
+| Clone URL | `https://github.com/SethDKelly/MinneAnalytics.git` |
+| AWS resource prefix | `minneanalytics-dev` (lowercase; IAM/ECS/ECR names) |
+
+If your local clone folder differs (e.g. `Minneanalytics`), update the remote:
+
+```powershell
+git remote set-url origin https://github.com/SethDKelly/MinneAnalytics.git
+```
+
 ### Prerequisites
 
 | Item | Location |
 |------|----------|
-| OIDC trust for this repo | aws-backbone `github_repositories` includes `SethDKelly/MinneAnalytics` |
+| OIDC trust for this repo | aws-backbone `github_repositories` includes **`SethDKelly/MinneAnalytics`** |
 | Remote state bucket | `aws-backbone-terraform-state-521018312783` (shared) |
 | `dev` branch pushed | This repository |
 

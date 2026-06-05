@@ -113,7 +113,7 @@ Setup scripts copy `.env.example` → `.env`, install dependencies, apply the sc
 **Automated (recommended)**
 
 ```powershell
-cd Minneanalytics
+cd MinneAnalytics
 .\scripts\setup.ps1
 npm run dev
 ```
@@ -121,7 +121,7 @@ npm run dev
 **Manual**
 
 ```powershell
-cd Minneanalytics
+cd MinneAnalytics
 copy .env.example .env
 npm install
 npm run db:push
@@ -137,7 +137,7 @@ npm run dev
 **Automated (recommended)**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 chmod +x scripts/setup.sh   # first time only
 ./scripts/setup.sh
 npm run dev
@@ -146,7 +146,7 @@ npm run dev
 **Manual**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 cp .env.example .env
 npm install
 npm run db:push
@@ -162,7 +162,7 @@ npm run dev
 **Automated (recommended)**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 chmod +x scripts/setup.sh   # first time only
 ./scripts/setup.sh
 npm run dev
@@ -171,7 +171,7 @@ npm run dev
 **Manual**
 
 ```bash
-cd Minneanalytics
+cd MinneAnalytics
 cp .env.example .env
 npm install
 npm run db:push
