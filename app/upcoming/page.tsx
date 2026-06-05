@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getPublicConferences } from "@/lib/conference-queries";
 import { getSubmissionWindowState } from "@/lib/submission-window";
 
+export const dynamic = "force-dynamic";
+
 export default async function UpcomingPage() {
   const conferences = await getPublicConferences();
 

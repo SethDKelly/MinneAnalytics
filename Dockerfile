@@ -8,7 +8,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+# Build-time placeholder DB; /upcoming is force-dynamic. Avoids Prisma errors during image build.
+ENV DATABASE_URL=file:/tmp/build.db
+RUN npx prisma db push --skip-generate && npm run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app

@@ -49,9 +49,9 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform init
 
-      - name: Terraform apply (bootstrap infra + ECR)
+      - name: Terraform apply (ensure ECR exists)
         working-directory: ${{ env.TF_DIR }}
-        run: terraform apply -auto-approve -var="container_image=public.ecr.aws/docker/library/nginx:stable-alpine"
+        run: terraform apply -auto-approve -target=aws_ecr_repository.app
 
       - name: Login to ECR
         id: ecr
