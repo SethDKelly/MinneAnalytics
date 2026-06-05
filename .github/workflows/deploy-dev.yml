@@ -64,7 +64,11 @@ jobs:
       - name: Build and push image
         id: image
         run: |
+          set -euo pipefail
           IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ github.sha }}"
+          echo "Building builder stage..."
+          docker build --progress=plain --target builder -t "${IMAGE}-builder" .
+          echo "Building production image..."
           docker build --progress=plain -t "$IMAGE" .
           docker push "$IMAGE"
           echo "uri=$IMAGE" >> "$GITHUB_OUTPUT"
@@ -79,10 +83,11 @@ jobs:
 
       - name: Force ECS rollout
         run: |
+          set -euo pipefail
           CLUSTER=$(terraform -chdir=$TF_DIR output -raw ecs_cluster_name)
           SERVICE=$(terraform -chdir=$TF_DIR output -raw ecs_service_name)
           aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
-          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE" --max-attempts 60
 
       - name: Deployment summary
         working-directory: ${{ env.TF_DIR }}
