@@ -45,6 +45,20 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build Next.js app
+        run: npm ci && npm run build
+
+      - name: Verify Docker build context
+        run: |
+          test -d .next/standalone
+          test -d .next/static
+          test -d node_modules/.prisma
+
       - name: Terraform init
         working-directory: ${{ env.TF_DIR }}
         run: terraform init

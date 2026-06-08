@@ -1,4 +1,15 @@
-# Expects `npm run build` to have run on the host (GitHub Actions) before `docker build`.
+FROM node:24-bookworm-slim AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM node:24-bookworm-slim AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
 FROM node:24-bookworm-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
@@ -13,19 +24,17 @@ ENV DATA_DIR=/data
 ENV UPLOAD_DIR=/data/uploads
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-
-COPY public ./public
-COPY .next/standalone ./
-COPY .next/static ./.next/static
-COPY prisma ./prisma
-COPY node_modules/.prisma ./node_modules/.prisma
-COPY node_modules/@prisma ./node_modules/@prisma
-COPY package.json ./package.json
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/package.json ./package.json
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh \
   && npm install --no-save prisma@6.9.0 tsx@4.19.4 \
   && chown -R nextjs:nodejs /app
-
 USER nextjs
 EXPOSE 3000
 ENTRYPOINT ["/entrypoint.sh"]
