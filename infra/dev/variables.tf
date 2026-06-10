@@ -33,3 +33,9 @@ variable "seed_on_start" {
   type        = bool
   default     = false
 }
+
+variable "app_desired_count" {
+  description = "ECS tasks to run. Set to 0 to pause the app and avoid Fargate charges."
+  type        = number
+  default     = 0
+}

@@ -90,6 +90,25 @@ GitHub → Actions → **Deploy to dev** → Run workflow.
 
 Single-instance by design — suitable for demos, not production scale.
 
+### Pause the app (save Fargate cost)
+
+Set `app_desired_count = 0` in Terraform (default when paused). Apply via CLI or push to `dev`:
+
+```powershell
+cd infra/dev
+terraform apply -var="app_desired_count=0" -var="container_image=<current-ecr-uri>"
+```
+
+The ALB, EFS, and ECR remain (small ongoing cost). Data on EFS is preserved.
+
+To resume:
+
+```powershell
+terraform apply -var="app_desired_count=1" -var="container_image=<current-ecr-uri>"
+```
+
+Or re-run **Deploy to dev** after setting `app_desired_count` back to `1` in `infra/dev/variables.tf`.
+
 ### Environment variables (AWS)
 
 Set in `infra/dev/main.tf` task definition:
