@@ -44,6 +44,28 @@ resource "aws_efs_file_system" "data" {
   encrypted      = true
 }
 
+resource "aws_efs_access_point" "data" {
+  file_system_id = aws_efs_file_system.data.id
+
+  posix_user {
+    gid = 1001
+    uid = 1001
+  }
+
+  root_directory {
+    path = "/data"
+    creation_info {
+      owner_gid   = 1001
+      owner_uid   = 1001
+      permissions = "755"
+    }
+  }
+
+  tags = {
+    Name = "${local.name}-data"
+  }
+}
+
 resource "aws_security_group" "efs" {
   name        = "${local.name}-efs"
   description = "EFS for ${local.name}"
@@ -191,6 +213,10 @@ resource "aws_ecs_task_definition" "app" {
   execution_role_arn       = aws_iam_role.ecs_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   container_definitions = jsonencode([{
     name      = "app"
     image     = var.container_image
@@ -230,9 +256,13 @@ resource "aws_ecs_task_definition" "app" {
     name = "data"
 
     efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.data.id
+      file_system_id = aws_efs_file_system.data.id
       transit_encryption = "ENABLED"
-      root_directory     = "/"
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.data.id
+        iam             = "DISABLED"
+      }
     }
   }
 }
@@ -243,6 +273,8 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
+  health_check_grace_period_seconds = 180
 
   network_configuration {
     subnets          = data.aws_subnets.default.ids

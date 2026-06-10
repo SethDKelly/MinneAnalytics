@@ -86,19 +86,34 @@ jobs:
 
       - name: Terraform apply (deploy image)
         working-directory: ${{ env.TF_DIR }}
-        run: |
-          SEED="${{ github.event.inputs.seed_on_start || 'false' }}"
-          terraform apply -auto-approve \
-            -var="container_image=${{ steps.image.outputs.uri }}" \
-            -var="seed_on_start=${SEED}"
+        env:
+          TF_VAR_container_image: ${{ steps.image.outputs.uri }}
+          TF_VAR_seed_on_start: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.seed_on_start == 'true' }}
+        run: terraform apply -auto-approve
 
-      - name: Force ECS rollout
+      - name: Wait for ECS rollout
         run: |
           set -euo pipefail
           CLUSTER=$(terraform -chdir=$TF_DIR output -raw ecs_cluster_name)
           SERVICE=$(terraform -chdir=$TF_DIR output -raw ecs_service_name)
-          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
-          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE" --max-attempts 60
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment >/dev/null
+          echo "Waiting for service to stabilize (up to 15 min)..."
+          for attempt in $(seq 1 60); do
+            read -r ROLLOUT RUNNING DESIRED <<< "$(
+              aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" \
+                --query 'services[0].[deployments[?status==`PRIMARY`].rolloutState | [0], runningCount, desiredCount]' \
+                --output text
+            )"
+            echo "attempt ${attempt}: rollout=${ROLLOUT} running=${RUNNING}/${DESIRED}"
+            if [ "$ROLLOUT" = "COMPLETED" ] && [ "$RUNNING" = "$DESIRED" ] && [ "$RUNNING" != "0" ]; then
+              echo "Service is stable."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Service did not stabilize in time."
+          aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE"
+          exit 1
 
       - name: Deployment summary
         working-directory: ${{ env.TF_DIR }}
