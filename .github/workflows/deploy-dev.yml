@@ -88,7 +88,8 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         env:
           TF_VAR_container_image: ${{ steps.image.outputs.uri }}
-          TF_VAR_seed_on_start: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.seed_on_start == 'true' }}
+          # GHA omits falsy booleans from env; always emit an explicit string for TF_VAR_*.
+          TF_VAR_seed_on_start: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.seed_on_start == 'true' && 'true' || 'false' }}
         run: terraform apply -auto-approve
 
       - name: Wait for ECS rollout
