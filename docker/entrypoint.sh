@@ -10,7 +10,7 @@ echo "Applying database schema..."
 
 if [ "${SEED_ON_START:-false}" = "true" ]; then
   echo "Seeding database..."
-  /app/node_modules/.bin/tsx prisma/seed.ts
+  node /app/node_modules/tsx/dist/cli.mjs prisma/seed.ts
 fi
 
 echo "Starting Next.js..."

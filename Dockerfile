@@ -18,13 +18,18 @@ ENV HOSTNAME=0.0.0.0
 COPY public ./public
 COPY .next/standalone ./
 COPY .next/static ./.next/static
+COPY lib ./lib
 COPY prisma ./prisma
 COPY node_modules/.prisma ./node_modules/.prisma
 COPY node_modules/@prisma ./node_modules/@prisma
+COPY node_modules/tsx ./node_modules/tsx
+COPY node_modules/esbuild ./node_modules/esbuild
 COPY package.json ./package.json
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh \
-  && npm install --no-save prisma@6.9.0 tsx@4.19.4 \
+  && npm install --no-save prisma@6.9.0 \
+  && test -f node_modules/tsx/dist/cli.mjs \
+  && test -f prisma/seed.ts \
   && chown -R nextjs:nodejs /app
 
 USER nextjs
