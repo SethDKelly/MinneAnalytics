@@ -13,7 +13,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
   - 001-C — Problem, Actor-Need & Purpose Inventory
   - 001-D — Candidate Concept Discovery & Boundary Hypotheses
   - 001-E — Concept Criteria, Independence & Genericity Review
-- **Next:** 001-F — Operational Principle Development
+  - 001-F — Operational Principle Development
+- **Next:** 001-G — Discovery Consolidation & Concept Candidate Gate
 
 ## Design authority
 
@@ -34,10 +35,10 @@ See [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-
 3. **001-C — Problem, Actor-Need & Purpose Inventory** — complete
 4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — complete
 5. **001-E — Concept Criteria, Independence & Genericity Review** — complete
-6. **001-F — Operational Principle Development** — next
-7. **001-G — Discovery Consolidation & Concept Candidate Gate**
+6. **001-F — Operational Principle Development** — complete
+7. **001-G — Discovery Consolidation & Concept Candidate Gate** — next
 
-Later phases will specify surviving concepts, define application composition and synchronizations, reconcile the conceptual model against the existing implementation, and consolidate a canonical v0 baseline. Their exact subdivision will be determined from the discovery results rather than fixed prematurely.
+Later phases will specify surviving concepts, define application composition and synchronizations, reconcile the conceptual model against the existing implementation, and consolidate a canonical v0 baseline. Their exact subdivision is determined from discovery results rather than fixed from implementation structure.
 
 ## 001-B archaeology baseline
 
@@ -105,13 +106,50 @@ Key 001-D decomposition findings included:
 
 001-E adversarially tests every 001-D candidate for **specificity, completeness, independence, and genericity** rather than preserving the candidate list by default.
 
-The review changes the set materially:
+The review changed the set materially:
 
-- **13** candidates survive substantially as proposed;
-- **5** survive only after material rename/narrowing/replacement;
-- **3** are demoted from the current v0 concept set.
+- **13** candidates survived substantially as proposed;
+- **5** survived only after material rename/narrowing/replacement;
+- **3** were demoted from the current v0 concept set.
 
-### 001-F candidate set — 18
+### 001-F input set — 18
+
+**Strong:** Proposal, Revision, Evaluation, Feedback, Selection, Withdrawal, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
+
+**Provisional-strong:** Controlled Disclosure, Dispatch.
+
+**Provisional:** Availability Window, Coverage Target, Registration.
+
+### Demoted during 001-E
+
+- **Authorization** — application-wide authority policy/composition concern; future delegation/grant behavior may justify rediscovery.
+- **Export** — cross-concept representation/projection capability rather than authoritative concept state.
+- **Audit Trail** — provenance design rule plus future cross-concept audit signal.
+
+### Major 001-E corrections
+
+- `Disclosure` → **Controlled Disclosure** to avoid generic access-control semantics.
+- `Retraction` → **Withdrawal** to describe originator participation agency precisely.
+- `Coverage` → **Coverage Target**; actual composition is derived from Selection + Classification/attributes rather than duplicated concept state.
+- `Communication` → **Dispatch** to separate operational sends from Feedback and current template storage.
+- `Obligation` → **Registration** because the generalized obligation umbrella was too broad for the evidence.
+- effective participation, evaluation freshness, edit eligibility, actual composition, coverage gaps, publication eligibility, and Dispatch recipient eligibility remain **derived/composed behavior**, not new concepts.
+
+### 001-E artifacts
+
+- [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md) — synthesis and exit review
+- [Concept Criteria Scorecard](evidence/001-E-criteria-scorecard.md) — all 21 candidate dispositions
+- [Independence & Composition Review](evidence/001-E-independence-and-composition-review.md) — direct-dependency tests and retained composition signals
+- [Genericity & Boundary Decisions](evidence/001-E-genericity-and-boundary-decisions.md) — under/over-generalization corrections and naming decisions
+- [Surviving Candidate Baseline](evidence/001-E-surviving-candidate-baseline.md) — 18-candidate handoff into 001-F
+
+## 001-F operational-principle baseline
+
+001-F requires every 001-E survivor to tell one concise, archetypal, concept-local story showing how the concept fulfills its purpose.
+
+This removes one additional candidate rather than forcing all 18 through the gate.
+
+### 001-G input set — 17
 
 **Strong:**
 
@@ -138,32 +176,51 @@ The review changes the set materially:
 
 - Availability Window
 - Coverage Target
-- Registration
 
-### Demoted from the current concept set
+### Demoted during 001-F
 
-- **Authorization** — retained as application-wide authority policy/composition concern; future delegation/grant behavior may justify rediscovery.
-- **Export** — retained as cross-concept representation/projection capability rather than authoritative concept state.
-- **Audit Trail** — retained as provenance design rule plus future cross-concept audit signal.
+- **Registration** — current behavior exposes a locally/externally sourced registration fact, but no sufficiently evidenced concept-local registration/enrollment lifecycle. Owning register/cancel actions would invent product behavior; merely mirroring status is too weak for an independent concept.
 
-### Major 001-E corrections
+The underlying registration need remains future/composition evidence and can be rediscovered if MinneAnalytics later owns a real registration/enrollment workflow.
 
-- `Disclosure` → **Controlled Disclosure** to avoid generic access-control semantics.
-- `Retraction` → **Withdrawal** to describe originator participation agency precisely.
-- `Coverage` → **Coverage Target**; actual composition is derived from Selection + Classification/attributes rather than duplicated concept state.
-- `Communication` → **Dispatch** to separate operational sends from Feedback and current template storage.
-- `Obligation` → **Registration** because the generalized obligation umbrella was too broad for the evidence.
-- effective participation, evaluation freshness, edit eligibility, actual composition, coverage gaps, publication eligibility, and dispatch recipient eligibility remain **derived/composed behavior**, not new concepts.
+### Strong 001-F boundary confirmations
 
-### 001-E artifacts
+Operational principles strengthen the independence of:
 
-- [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md) — synthesis and exit review
-- [Concept Criteria Scorecard](evidence/001-E-criteria-scorecard.md) — all 21 candidate dispositions
-- [Independence & Composition Review](evidence/001-E-independence-and-composition-review.md) — direct-dependency tests and retained composition signals
-- [Genericity & Boundary Decisions](evidence/001-E-genericity-and-boundary-decisions.md) — under/over-generalization corrections and naming decisions
-- [Surviving Candidate Baseline](evidence/001-E-surviving-candidate-baseline.md) — authoritative candidate handoff into 001-F
+- Proposal ↔ Revision;
+- Evaluation ↔ Controlled Disclosure ↔ Feedback;
+- Selection ↔ Withdrawal;
+- Capacity ↔ Schedule;
+- Classification ↔ Vocabulary;
+- Deliverable ↔ Publication;
+- Publication ↔ Archive.
 
-Passing 001-E does not make these candidates canonical. 001-F must still attempt to falsify each one through a concise, natural operational principle.
+No surviving principle requires `Conference`, `Program`, `Submission`, current role names, or current enum state machines to remain understandable.
+
+### Derived/composed behavior still excluded
+
+- effective participation;
+- current/stale Evaluation;
+- needs-score/rescore queues;
+- actual program composition;
+- coverage gap/excess;
+- edit eligibility;
+- schedule eligibility;
+- publication eligibility;
+- Dispatch recipient eligibility;
+- authority grants/role policy;
+- external-fact ingestion;
+- export/report projection;
+- global audit history.
+
+### 001-F artifacts
+
+- [001-F — Operational Principle Development](001-F-operational-principle-development.md) — synthesis and exit review
+- [Operational Principles](evidence/001-F-operational-principles.md) — principle attempted for all 18 001-E survivors
+- [Operational-Principle Falsification Review](evidence/001-F-operational-principle-falsification.md) — pass/fail review and Registration demotion
+- [Surviving Operational-Principle Baseline](evidence/001-F-surviving-candidate-baseline.md) — authoritative 17-candidate handoff into 001-G
+
+Passing 001-F still does not make the 17 candidates canonical. 001-G must consolidate the complete discovery corpus and explicitly decide which candidates are admitted to formal Phase 002 specification, admitted provisionally, deferred, or rejected.
 
 ## Branch discipline
 
