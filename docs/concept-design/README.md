@@ -11,7 +11,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
   - 001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules
   - 001-B — Historical Intent Reconstruction & Repository Archaeology
   - 001-C — Problem, Actor-Need & Purpose Inventory
-- **Next:** 001-D — Candidate Concept Discovery & Boundary Hypotheses
+  - 001-D — Candidate Concept Discovery & Boundary Hypotheses
+- **Next:** 001-E — Concept Criteria, Independence & Genericity Review
 
 ## Design authority
 
@@ -30,8 +31,8 @@ See [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-
 1. **001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules** — complete
 2. **001-B — Historical Intent Reconstruction & Repository Archaeology** — complete
 3. **001-C — Problem, Actor-Need & Purpose Inventory** — complete
-4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — next
-5. **001-E — Concept Criteria, Independence & Genericity Review**
+4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — complete
+5. **001-E — Concept Criteria, Independence & Genericity Review** — next
 6. **001-F — Operational Principle Development**
 7. **001-G — Discovery Consolidation & Concept Candidate Gate**
 
@@ -53,7 +54,7 @@ Later phases will specify surviving concepts, define application composition and
 
 001-C inserts an explicit problem/need/purpose layer between repository archaeology and concept discovery. This prevents the retrofit from simply renaming current tables, enums, roles, or pages as concepts.
 
-The current baseline contains:
+The baseline contains:
 
 - **27 implementation-neutral problems**;
 - **12 behavioral actor roles** defined by responsibility rather than current role enums;
@@ -70,7 +71,42 @@ The current baseline contains:
 - [Purpose Inventory](evidence/001-C-purpose-inventory.md) — purpose candidates, non-goals, overlap, and consolidation tests
 - [Traceability Matrix](evidence/001-C-traceability-matrix.md) — 001-B intent → problem → actor need → purpose disposition
 
-These purposes are the evidence inputs to 001-D. They are not yet concept specifications or a canonical concept set.
+## 001-D candidate baseline
+
+001-D is the first phase to propose concept names and boundaries. It produces a **testable, non-canonical candidate decomposition** derived from the 001-C purposes rather than from the implementation.
+
+The baseline contains **21 candidates**:
+
+- **Strong:** Proposal, Revision, Evaluation, Disclosure, Feedback, Selection, Retraction, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
+- **Provisional:** Availability Window, Authorization, Coverage, Communication, Export, Obligation.
+- **Exploratory:** Audit Trail.
+
+Several purposes are intentionally modeled as composition rather than standalone concepts:
+
+- mutable-content eligibility;
+- evaluation applicability/freshness after revision;
+- ingestion of externally authoritative facts.
+
+Key decomposition findings include:
+
+- `Submission` is not a concept boundary;
+- `ProgramStatus` likely flattens Selection and Retraction histories;
+- `AbstractReviewStatus` decomposes across Revision, Feedback, Evaluation composition, and unresolved acknowledgement;
+- `Theme` decomposes into Vocabulary, Classification, and Coverage;
+- Evaluation, Disclosure, and Feedback remain distinct despite sharing review UI;
+- Selection, Deliverable readiness, and Publication remain distinct downstream decisions;
+- public publication and internal completed-event Archive are distinct;
+- `Program` and `Conference` are not accepted as coordinating god concepts.
+
+### 001-D artifacts
+
+- [001-D — Candidate Concept Discovery & Boundary Hypotheses](001-D-candidate-concept-discovery-and-boundary-hypotheses.md) — synthesis and exit review
+- [Candidate Concept Inventory](evidence/001-D-candidate-concept-inventory.md) — 21 candidate hypotheses, purpose basis, proposed scope, and alternatives
+- [Concept Boundary Hypotheses](evidence/001-D-boundary-hypotheses.md) — explicit split/merge/composition tests
+- [Purpose → Candidate Traceability](evidence/001-D-purpose-to-candidate-traceability.md) — disposition of every 001-C purpose and inherited implementation noun
+- [Composition Signals & Explicit Non-Concepts](evidence/001-D-composition-signals-and-non-concepts.md) — likely synchronization signals, application-policy signals, and rejected accidental concepts
+
+These candidates are inputs to 001-E. None is canonical until it survives concept-criteria review.
 
 ## Branch discipline
 
