@@ -12,7 +12,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
   - 001-B — Historical Intent Reconstruction & Repository Archaeology
   - 001-C — Problem, Actor-Need & Purpose Inventory
   - 001-D — Candidate Concept Discovery & Boundary Hypotheses
-- **Next:** 001-E — Concept Criteria, Independence & Genericity Review
+  - 001-E — Concept Criteria, Independence & Genericity Review
+- **Next:** 001-F — Operational Principle Development
 
 ## Design authority
 
@@ -32,8 +33,8 @@ See [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-
 2. **001-B — Historical Intent Reconstruction & Repository Archaeology** — complete
 3. **001-C — Problem, Actor-Need & Purpose Inventory** — complete
 4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — complete
-5. **001-E — Concept Criteria, Independence & Genericity Review** — next
-6. **001-F — Operational Principle Development**
+5. **001-E — Concept Criteria, Independence & Genericity Review** — complete
+6. **001-F — Operational Principle Development** — next
 7. **001-G — Discovery Consolidation & Concept Candidate Gate**
 
 Later phases will specify surviving concepts, define application composition and synchronizations, reconcile the conceptual model against the existing implementation, and consolidate a canonical v0 baseline. Their exact subdivision will be determined from the discovery results rather than fixed prematurely.
@@ -75,19 +76,13 @@ The baseline contains:
 
 001-D is the first phase to propose concept names and boundaries. It produces a **testable, non-canonical candidate decomposition** derived from the 001-C purposes rather than from the implementation.
 
-The baseline contains **21 candidates**:
+The baseline entered 001-E with **21 candidates**:
 
 - **Strong:** Proposal, Revision, Evaluation, Disclosure, Feedback, Selection, Retraction, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
 - **Provisional:** Availability Window, Authorization, Coverage, Communication, Export, Obligation.
 - **Exploratory:** Audit Trail.
 
-Several purposes are intentionally modeled as composition rather than standalone concepts:
-
-- mutable-content eligibility;
-- evaluation applicability/freshness after revision;
-- ingestion of externally authoritative facts.
-
-Key decomposition findings include:
+Key 001-D decomposition findings included:
 
 - `Submission` is not a concept boundary;
 - `ProgramStatus` likely flattens Selection and Retraction histories;
@@ -106,7 +101,69 @@ Key decomposition findings include:
 - [Purpose → Candidate Traceability](evidence/001-D-purpose-to-candidate-traceability.md) — disposition of every 001-C purpose and inherited implementation noun
 - [Composition Signals & Explicit Non-Concepts](evidence/001-D-composition-signals-and-non-concepts.md) — likely synchronization signals, application-policy signals, and rejected accidental concepts
 
-These candidates are inputs to 001-E. None is canonical until it survives concept-criteria review.
+## 001-E criteria baseline
+
+001-E adversarially tests every 001-D candidate for **specificity, completeness, independence, and genericity** rather than preserving the candidate list by default.
+
+The review changes the set materially:
+
+- **13** candidates survive substantially as proposed;
+- **5** survive only after material rename/narrowing/replacement;
+- **3** are demoted from the current v0 concept set.
+
+### 001-F candidate set — 18
+
+**Strong:**
+
+- Proposal
+- Revision
+- Evaluation
+- Feedback
+- Selection
+- Withdrawal
+- Capacity
+- Classification
+- Vocabulary
+- Deliverable
+- Schedule
+- Publication
+- Archive
+
+**Provisional-strong:**
+
+- Controlled Disclosure
+- Dispatch
+
+**Provisional:**
+
+- Availability Window
+- Coverage Target
+- Registration
+
+### Demoted from the current concept set
+
+- **Authorization** — retained as application-wide authority policy/composition concern; future delegation/grant behavior may justify rediscovery.
+- **Export** — retained as cross-concept representation/projection capability rather than authoritative concept state.
+- **Audit Trail** — retained as provenance design rule plus future cross-concept audit signal.
+
+### Major 001-E corrections
+
+- `Disclosure` → **Controlled Disclosure** to avoid generic access-control semantics.
+- `Retraction` → **Withdrawal** to describe originator participation agency precisely.
+- `Coverage` → **Coverage Target**; actual composition is derived from Selection + Classification/attributes rather than duplicated concept state.
+- `Communication` → **Dispatch** to separate operational sends from Feedback and current template storage.
+- `Obligation` → **Registration** because the generalized obligation umbrella was too broad for the evidence.
+- effective participation, evaluation freshness, edit eligibility, actual composition, coverage gaps, publication eligibility, and dispatch recipient eligibility remain **derived/composed behavior**, not new concepts.
+
+### 001-E artifacts
+
+- [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md) — synthesis and exit review
+- [Concept Criteria Scorecard](evidence/001-E-criteria-scorecard.md) — all 21 candidate dispositions
+- [Independence & Composition Review](evidence/001-E-independence-and-composition-review.md) — direct-dependency tests and retained composition signals
+- [Genericity & Boundary Decisions](evidence/001-E-genericity-and-boundary-decisions.md) — under/over-generalization corrections and naming decisions
+- [Surviving Candidate Baseline](evidence/001-E-surviving-candidate-baseline.md) — authoritative candidate handoff into 001-F
+
+Passing 001-E does not make these candidates canonical. 001-F must still attempt to falsify each one through a concise, natural operational principle.
 
 ## Branch discipline
 
