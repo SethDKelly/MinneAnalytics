@@ -10,7 +10,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Completed:**
   - 001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules
   - 001-B — Historical Intent Reconstruction & Repository Archaeology
-- **Next:** 001-C — Problem, Actor-Need & Purpose Inventory
+  - 001-C — Problem, Actor-Need & Purpose Inventory
+- **Next:** 001-D — Candidate Concept Discovery & Boundary Hypotheses
 
 ## Design authority
 
@@ -28,8 +29,8 @@ See [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-
 
 1. **001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules** — complete
 2. **001-B — Historical Intent Reconstruction & Repository Archaeology** — complete
-3. **001-C — Problem, Actor-Need & Purpose Inventory** — next
-4. **001-D — Candidate Concept Discovery & Boundary Hypotheses**
+3. **001-C — Problem, Actor-Need & Purpose Inventory** — complete
+4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — next
 5. **001-E — Concept Criteria, Independence & Genericity Review**
 6. **001-F — Operational Principle Development**
 7. **001-G — Discovery Consolidation & Concept Candidate Gate**
@@ -48,7 +49,28 @@ Later phases will specify surviving concepts, define application composition and
 - [Historical Intent Ledger](evidence/001-B-intent-ledger.md) — normalized behavioral intent and explicit non-intent observations
 - [Terminology, Contradictions & Exclusions](evidence/001-B-terminology-contradictions-and-exclusions.md) — inherited vocabulary risks, unresolved evidence, and implementation/demo exclusions
 
-These artifacts are evidence inputs to 001-C. They do not constitute the canonical concept set.
+## 001-C purpose baseline
+
+001-C inserts an explicit problem/need/purpose layer between repository archaeology and concept discovery. This prevents the retrofit from simply renaming current tables, enums, roles, or pages as concepts.
+
+The current baseline contains:
+
+- **27 implementation-neutral problems**;
+- **12 behavioral actor roles** defined by responsibility rather than current role enums;
+- actor-specific needs and cross-actor tensions;
+- **26 purpose candidates** with explicit scope/non-goals;
+- a traceability mapping covering all 52 positive 001-B intent observations;
+- explicit preservation of every relevant 001-B ambiguity and implementation/demo exclusion.
+
+### 001-C artifacts
+
+- [001-C — Problem, Actor-Need & Purpose Inventory](001-C-problem-actor-need-and-purpose-inventory.md) — synthesis and exit review
+- [Problem Inventory](evidence/001-C-problem-inventory.md) — implementation-neutral problem statements
+- [Actor-Need Inventory](evidence/001-C-actor-needs.md) — behavioral actors, needs, and tensions
+- [Purpose Inventory](evidence/001-C-purpose-inventory.md) — purpose candidates, non-goals, overlap, and consolidation tests
+- [Traceability Matrix](evidence/001-C-traceability-matrix.md) — 001-B intent → problem → actor need → purpose disposition
+
+These purposes are the evidence inputs to 001-D. They are not yet concept specifications or a canonical concept set.
 
 ## Branch discipline
 
