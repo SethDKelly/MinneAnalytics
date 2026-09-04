@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal specification in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B
-- **Next:** 002-C — Program Choice, Participation, Scarcity & Representation Intent
+- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C
+- **Next:** 002-D — Vocabulary & Classification
 
 ## Start here
 
@@ -53,8 +53,12 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
    - [Evaluation](knowledge/concepts/evaluation.md) — specified
    - [Controlled Disclosure](knowledge/concepts/controlled-disclosure.md) — specified; Phase 001 provisional condition resolved
    - [Feedback](knowledge/concepts/feedback.md) — specified
-3. **002-C — Program Choice, Participation, Scarcity & Representation Intent** — next
-4. **002-D — Vocabulary & Classification**
+3. [002-C — Program Choice, Participation, Scarcity & Representation Intent](002-C-program-choice-participation-scarcity-and-representation-intent.md) — **complete**
+   - [Selection](knowledge/concepts/selection.md) — specified
+   - [Withdrawal](knowledge/concepts/withdrawal.md) — specified
+   - [Capacity](knowledge/concepts/capacity.md) — specified
+   - [Coverage Target](knowledge/concepts/coverage-target.md) — specified; Phase 001 provisional condition resolved
+4. **002-D — Vocabulary & Classification** — next
 5. **002-E — Deliverable & Scheduling Execution**
 6. **002-F — Publication, Dispatch & Historical Closure**
 7. **002-G — Formal Specification Consolidation & Synchronization Handoff**
@@ -63,9 +67,11 @@ The remaining concept maturity and group membership are maintained in the [Conce
 
 ## Formal-specification results to date
 
-002-A formally separates durable offer identity, mutable history, and governed temporal opportunity.
+002-A separates durable offer identity, mutable history, and governed temporal opportunity.
 
-002-B formally separates evaluator-attributed judgment, staged information disclosure, and recipient-directed response. Evaluation currentness/aggregation, reveal conditions, Feedback-triggered revision, and notification delivery remain composition/synchronization concerns rather than concept state.
+002-B separates evaluator-attributed judgment, staged information disclosure, and recipient-directed response.
+
+002-C separates organizer choice from originator withdrawal, effective participation from either source fact, hard finite scarcity from soft representation intent, and desired representation from observed composition.
 
 The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
 
