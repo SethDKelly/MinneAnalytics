@@ -1,6 +1,6 @@
 # 004-A — Migration Discipline, Baseline & Additive Schema Foundation
 
-Status: **Complete pending final CI evidence**  
+Status: **Complete**  
 Concept model maturity: **v0 specified; implementation execution in progress**  
 Branch: **`concept-design/v0-implementation`**  
 Design baseline: `concept-design/v0-discovery` at 003-G commit `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
@@ -191,16 +191,23 @@ All gates default to **false** when absent.
 
 004-A does not import these gates into current application routes, so current behavior remains unchanged.
 
-## 9. CI enforcement
+## 9. CI enforcement and exit evidence
 
-CI now runs on pushes to `concept-design/v0-implementation` and validates:
+CI runs on pushes to `concept-design/v0-implementation` with stale runs cancelled in favor of the newest branch head.
+
+The 004-A substantive gate passed in GitHub Actions run **33839632346**. On the same implementation head, CI successfully completed:
 
 1. dependency installation;
-2. OKF documentation links/metadata;
-3. 004-A migration foundation structure;
+2. OKF documentation validation;
+3. 004-A migration foundation verification;
 4. `prisma validate`;
-5. lint;
-6. build.
+5. a **fresh-database** `prisma migrate deploy` applying both the pre-004-A baseline and additive reconciliation migration;
+6. machine-readable baseline report generation against the fresh migrated database;
+7. an **existing-database adoption rehearsal** by copying the checked-in pre-004-A SQLite fixture, marking the baseline applied with `prisma migrate resolve`, applying the additive migration, and generating the migration report;
+8. lint;
+9. the optimized Next.js production build using the migrated CI database.
+
+The first implementation-branch CI run also exposed two pre-existing OKF index/frontmatter inconsistencies. `reconciliation/index.md` and `synchronizations/index.md` were corrected to the validator's established nested-index convention before the final gate was accepted.
 
 This turns the implementation branch into a continuously checked execution branch rather than postponing schema validation until a future merge.
 
@@ -232,18 +239,19 @@ A gap moves to `implementation-in-progress` only when its actual semantic slice 
 
 ## 12. Exit criteria
 
-004-A passes when:
+004-A passes because:
 
-- the implementation branch is rooted at the 003-G baseline;
+- the implementation branch is rooted at the exact 003-G baseline;
+- the discovery branch remains unchanged at that baseline;
 - checked-in baseline/additive Prisma migrations exist;
 - persistent migration commands and adoption instructions exist;
 - additive target schema matches the accepted Phase 003 persistence/recovery foundations;
 - migration provenance/reporting support exists;
 - backup/restore rehearsal tooling exists;
 - semantic rollout gates exist and default off;
-- CI validates migration structure + Prisma schema + existing build;
+- CI validates OKF, migration structure, Prisma schema, fresh migration, existing-database adoption, migration reports, lint, and the production build;
 - no semantic authority has moved.
 
-After final CI confirmation, the next package is:
+Next package:
 
 > **004-B — Revision, Classification, Evaluation & Feedback Canonicalization**
