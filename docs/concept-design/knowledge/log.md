@@ -1,13 +1,19 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Gate**: Completed 002-G — Formal Specification Consolidation & Synchronization Handoff; Phase 002 is complete.
+* **Decision**: Accepted all 17 Phase 001-G candidates as the v0 formally specified concept baseline; no provisional admissions remain.
+* **Composition**: Added canonical MinneAnalytics v0 reference alignment: durable operational behavior uses Proposal identity, version-sensitive Evaluation/Classification use exact Revision identity, Publication uses exact MaterialRef/ArtifactVersion, and Dispatch dedupe uses stable RecipientRef.
+* **Synchronization**: Established eight required synchronization families covering offer/revision initialization, version-specific Classification, Evaluation-driven reveal, effective-participation Capacity/Deliverable/Schedule effects, and publication-eligibility loss.
+* **Policy**: Classified edit eligibility, Evaluation applicability, effective participation, Coverage warnings, Schedule eligibility, Publication eligibility, Dispatch audience/message preparation, and Archive mutation gating as application policy rather than concept state.
+* **Projection**: Classified current aggregates/work queues, effective participation, observed/prospective composition, Coverage assessments, public listings, and dispatch-eligibility views as derived projections rather than new sources of truth.
+* **Failure semantics**: Distinguished hard precondition-style coordination from source-authoritative follow-up; Withdrawal must remain true even when downstream Capacity/Schedule/Publication cleanup requires retry/convergence.
+* **Handoff**: Added implementation reconciliation register and established Phase 003 — Implementation Reconciliation & Architecture Mapping as the next design activity; product/domain refactoring remains unauthorized until reconciliation planning completes.
 * **Specification**: Completed 002-F — Publication, Dispatch & Historical Closure.
-* **Specification**: Promoted Publication to `maturity: specified` with exact MaterialRef exposure, reversible publish/unpublish/republish state, and durable historical exposure provenance.
-* **Resolution**: Resolved Dispatch's Phase 001 provisional condition positively and promoted it to `maturity: specified`; Dispatch now owns performed Batch/SendRecord history, exact per-recipient message/endpoint evidence, and semantic same-round dedupe while templates, eligibility, Feedback, and provider transport remain external.
-* **Specification**: Promoted Archive to `maturity: specified` as a monotonic retained-internal-closure fact rather than a broad conference lifecycle or public archive concept.
-* **Boundary**: All 17 Phase 001-G concepts are now formally specified; no provisional admissions remain.
-* **Boundary**: Kept Deliverable readiness, Selection/Withdrawal/share policy, recipient eligibility, template generation, provider delivery mechanics, and Archive↔Publication timing outside the three concepts for 002-G synchronization/application composition.
-* **Reconciliation**: Flagged mutable/dynamic current deck-publication behavior, potential historical-publicId exposure, missing exact rendered-message snapshots in send history, same-round `includeAlreadyEmailed` ambiguity, and reversible current conference archival as later implementation-reconciliation concerns.
+* **Specification**: Promoted Publication to `maturity: specified` with exact MaterialRef/PublicSurfaceRef identity, reversible current availability, immutable exposure history, and no mutable-latest repointing.
+* **Resolution**: Resolved Dispatch's Phase 001 provisional condition positively and promoted it to `maturity: specified` with provider-neutral Batch/SendRecord state, exact message/endpoint evidence, and same-round semantic dedupe.
+* **Specification**: Promoted Archive to `maturity: specified` as monotonic internal closure with durable actor/time provenance and no intrinsic reopen/general-lifecycle state.
+* **Boundary**: Separated public Publication from internal Archive closure and kept templates, recipient eligibility, provider transport, readiness/share policy, and post-closure operation policy outside the three concepts.
 * **Specification**: Completed 002-E — Deliverable & Scheduling Execution.
 * **Specification**: Promoted Deliverable to `maturity: specified` with durable artifact requirement state, immutable provided ArtifactVersion history, and version-specific concern/ready Assessment history.
 * **Boundary**: Readiness now applies to the exact current artifact version; providing a replacement artifact does not inherit earlier readiness and does not erase prior review history.
@@ -23,7 +29,7 @@
 * **Specification**: Promoted Withdrawal to `maturity: specified` as a monotonic originator rescission fact that does not rewrite Selection history and has no invented reinstatement lifecycle.
 * **Specification**: Promoted Capacity to `maturity: specified` with finite Pool limits, class-sensitive rates, Allocation/Release state, and a hard no-overallocation invariant; committed/remaining/saturated are derived.
 * **Resolution**: Resolved Coverage Target's Phase 001 provisional condition positively and promoted it to `maturity: specified`; desired bounds are authoritative while observed composition, gaps/excesses, warnings, and visualizations remain derived application projections.
-* **Boundary**: Distinguished hard Capacity scarcity from soft Coverage Target planning intent and kept effective participation, Selection↔Capacity allocation, Withdrawal-triggered release, observed-composition calculation, and warning policy for later synchronization/application design.
+* **Boundary**: Distinguished hard Capacity scarcity from soft Coverage Target planning intent and kept effective participation, Selection↔Capacity allocation, Withdrawal-triggered release, observed-composition calculation, and warning policy for later synchronization/application-policy design.
 * **Specification**: Completed 002-B — Evaluation, Disclosure & Directed Response.
 * **Specification**: Promoted Evaluation to `maturity: specified` with exact-subject attribution, opaque Judgment, evaluator-owned revision of the same judgment, optional private context, and explicit exclusion of aggregate/currentness/work-queue semantics.
 * **Resolution**: Resolved Controlled Disclosure's Phase 001 provisional condition positively and promoted it to `maturity: specified`; the concept now owns one participant/context/information exposure relation with monotonic reveal rather than generic access control.
