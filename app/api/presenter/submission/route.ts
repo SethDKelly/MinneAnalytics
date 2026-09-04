@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import {
+  appendCanonicalRevision,
+  CanonicalRevisionUnavailableError,
+  RevisionCommandConflictError,
+  StaleRevisionHeadError,
+} from "@/lib/concept-design/revision-evaluation";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { getSubmissionByPresenterToken } from "@/lib/presenter-auth";
 import {
@@ -85,8 +92,40 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "No changes to save" }, { status: 400 });
   }
 
-  const nextVersion = submission.abstractVersion + 1;
+  if (isImplementationGateEnabled("revisionEvaluationWrites")) {
+    try {
+      const result = await appendCanonicalRevision({
+        submissionId: submission.id,
+        expectedRevisionId: submission.currentRevisionId,
+        commandKey: request.headers.get("Idempotency-Key")?.trim() || null,
+        requireExpectedHead: true,
+        snapshot: after,
+        changedFields,
+        changeNote: parsed.data.changeNote?.trim() || null,
+      });
+      return NextResponse.json({
+        ok: true,
+        submissionRevisionId: result.revision.id,
+        abstractVersion: result.revision.version,
+        abstractReviewStatus: "REVISED",
+        replayed: result.replayed,
+      });
+    } catch (error) {
+      if (
+        error instanceof StaleRevisionHeadError ||
+        error instanceof CanonicalRevisionUnavailableError ||
+        error instanceof RevisionCommandConflictError
+      ) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+  }
 
+  const nextVersion = submission.abstractVersion + 1;
   await prisma.$transaction(async (tx) => {
     await tx.submissionTheme.deleteMany({ where: { submissionId: submission.id } });
     await tx.submission.update({
