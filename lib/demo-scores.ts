@@ -1,4 +1,6 @@
 import type { ProgramStatus } from "@prisma/client";
+import { isImplementationGateEnabled } from "./concept-design/implementation-gates";
+import { recordCanonicalEvaluation } from "./concept-design/revision-evaluation";
 import { prisma } from "./db";
 import { roundScore, SCORE_STEP } from "./scoring-scale";
 
@@ -36,22 +38,36 @@ export async function autoPopulateDemoScores(
     select: { id: true },
   });
 
+  const canonicalWrites = isImplementationGateEnabled("revisionEvaluationWrites");
   for (const { id: reviewerAccessId } of reviewers) {
     const value = randomDemoScore(range.min, range.max);
-    await prisma.score.upsert({
-      where: {
-        submissionId_reviewerAccessId: { submissionId, reviewerAccessId },
-      },
-      create: {
+    if (canonicalWrites) {
+      await recordCanonicalEvaluation({
         submissionId,
         reviewerAccessId,
         value,
-        scoredAbstractVersion: submission.abstractVersion,
-      },
-      update: {
-        value,
-        scoredAbstractVersion: submission.abstractVersion,
-      },
+      });
+      continue;
+    }
+
+    const existing = await prisma.score.findFirst({
+      where: { submissionId, reviewerAccessId },
+      orderBy: { updatedAt: "desc" },
     });
+    if (existing) {
+      await prisma.score.update({
+        where: { id: existing.id },
+        data: { value, scoredAbstractVersion: submission.abstractVersion },
+      });
+    } else {
+      await prisma.score.create({
+        data: {
+          submissionId,
+          reviewerAccessId,
+          value,
+          scoredAbstractVersion: submission.abstractVersion,
+        },
+      });
+    }
   }
 }
