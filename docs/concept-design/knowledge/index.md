@@ -27,11 +27,19 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [Synchronization & Application Composition](synchronizations/) - Canonical cross-concept entrypoint.
 * [MinneAnalytics v0 Synchronization & Composition Contract](synchronizations/minneanalytics-v0.md) - Reference alignment, required synchronizations, application policies, derived projections, and failure semantics for the accepted v0 model.
 
+# Implementation reconciliation
+
+* [Implementation Reconciliation](reconciliation/) - Canonical entrypoint for mapping the accepted design to the current implementation.
+* [MinneAnalytics v0 Implementation Ownership Map](reconciliation/minneanalytics-v0-implementation-ownership.md) - Semantic ownership of current models, fields, routes, helpers, policy mechanisms, and projections across all 17 concepts.
+* [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Prioritized implementation-reconciliation gaps, recoverability classes, and later Phase 003 ownership.
+
 # Current maturity
 
-**Phase 002 formal specification is complete.** All 17 Phase 001-G concepts are formally specified and no provisional admissions remain.
+**Phase 002 formal specification is complete. Phase 003 implementation reconciliation is in progress.**
 
-Phase 003 is the next design activity: **Implementation Reconciliation & Architecture Mapping**. Product/domain code changes remain unauthorized until that reconciliation identifies and plans concrete semantic gaps.
+[003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](../003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) is complete. All 17 concepts have an implementation mapping, and the current reconciliation baseline contains 18 semantic gaps plus 4 cross-cutting policy gaps.
+
+The next activity is **003-B — Persistence, Identity, History & Migration Target Design**. Product/domain code changes remain unauthorized until Phase 003 has designed target persistence/reference/history and migration-safe implementation changes.
 
 # Historical design record
 
