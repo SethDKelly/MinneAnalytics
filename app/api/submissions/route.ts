@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { establishInitialRevision } from "@/lib/concept-design/revision-evaluation";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { serializeDegrees } from "@/lib/degrees";
 import { clientIp, checkRateLimit } from "@/lib/rate-limit";
@@ -119,6 +121,7 @@ export async function POST(request: Request) {
 
     const presenterToken = generateToken();
     const d = parsed.data;
+    const canonicalWrites = isImplementationGateEnabled("revisionEvaluationWrites");
 
     const submission = await prisma.$transaction(async (tx) => {
       const created = await tx.submission.create({
@@ -173,13 +176,26 @@ export async function POST(request: Request) {
         });
       }
 
-      await tx.submissionRevision.create({
-        data: {
+      if (canonicalWrites) {
+        await establishInitialRevision(tx, {
           submissionId: created.id,
-          version: 1,
-          ...revisionSnapshotFromSubmission(created, resolvedThemeIds),
-        },
-      });
+          snapshot: {
+            title: created.title,
+            abstract: created.abstract,
+            bio: created.bio,
+            technicalLevel: created.technicalLevel,
+            themeIds: resolvedThemeIds,
+          },
+        });
+      } else {
+        await tx.submissionRevision.create({
+          data: {
+            submissionId: created.id,
+            version: 1,
+            ...revisionSnapshotFromSubmission(created, resolvedThemeIds),
+          },
+        });
+      }
       return created;
     });
 
