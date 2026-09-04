@@ -54,6 +54,18 @@ These remain policy-reconciliation questions rather than new concepts:
 * **SG-P03 — Archive/post-event operations:** current `assertConferenceAcceptsMutations` is a broad active-only gate; permitted post-closure Publication, Dispatch, export, or correction behavior must be explicit.
 * **SG-P04 — Publication share/rights:** `deckShareable` is an implementation input to Publication eligibility; its authority, provenance, and change semantics must be made explicit during policy reconciliation.
 
+# Current target-design status
+
+Phase 003 architecture has now supplied target designs for several gaps without closing their implementation obligations:
+
+* **SG-005** — persistence target established in 003-B; staging/reveal, exact information-key, blind-mode transition, and legacy-cohort policy are defined by [003-D Disclosure, Sharing & Publication Policy Baseline](disclosure-publication-policy-baseline.md). Runtime/migration verification remains open.
+* **SG-008 / SG-009** — exact-material Publication persistence was designed in 003-B and exact eligibility/public-token policy was designed in 003-D. Runtime/public-access migration remains open.
+* **SG-013** — distinct Window persistence was designed in 003-B; manual suspension and lifecycle/edit policy were designed in 003-D. API/UI compatibility and migration remain open.
+* **SG-017** — 003-C separates Feedback from notification Dispatch; 003-D separates Feedback from edit permission by requiring an explicit scoped revision exception. Legacy `abstractReviewStatus` compatibility remains 003-E work.
+* **SG-P01 through SG-P04** — target policy is now defined by [003-D Authority, Lifecycle & Operational Policy Target](authority-lifecycle-operational-policy-target.md) and the disclosure/publication baseline. These gaps remain implementation-open until route/API/UI cutover and migration verification.
+
+A gap is not considered closed merely because its target architecture or policy has been documented.
+
 # Deferred signals retained
 
 The accepted model still does not promote:
@@ -69,8 +81,8 @@ Existing role helpers, attendee/VIP fields, logs, and export endpoints must not 
 
 * **003-B** owns persistence/reference/history target decisions for SG-001–SG-013 where structural state is involved.
 * **003-C** owns synchronization, transaction, idempotency, and recovery consequences, especially SG-003, SG-004, SG-014, SG-016, and publication/withdrawal cleanup.
-* **003-D** owns SG-005 and SG-P01–SG-P04 policy/lifecycle/disclosure implications.
-* **003-E** owns compatibility projections and API/UI interpretation of combined current statuses/queues.
-* **003-F** owns migration/backfill/rollout treatment for accepted target changes.
+* **003-D** has now target-designed SG-005 and SG-P01–SG-P04 policy/lifecycle/disclosure implications plus policy portions of SG-008, SG-009, SG-013, and SG-017.
+* **003-E** owns compatibility projections and API/UI interpretation of combined current statuses/queues/policy outcomes.
+* **003-F** owns migration/backfill/rollout treatment and runtime verification for accepted target changes.
 
 No gap in this baseline independently authorizes runtime refactoring before its target and migration implications are designed.
