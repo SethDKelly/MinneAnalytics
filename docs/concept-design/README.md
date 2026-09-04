@@ -57,7 +57,7 @@ Application code, migrations, tests, and implementation documentation describe c
 3. [001-C — Problem, Actor-Need & Purpose Inventory](001-C-problem-actor-need-and-purpose-inventory.md)
 4. [001-D — Candidate Concept Discovery & Boundary Hypotheses](001-D-candidate-concept-discovery-and-boundary-hypotheses.md)
 5. [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md)
-6. [001-F — Operational Principle Development](001-F-operational-principles.md)
+6. [001-F — Operational Principle Development](001-F-operational-principle-development.md)
 7. [001-G — Discovery Consolidation & Concept Candidate Gate](001-G-discovery-consolidation-and-concept-candidate-gate.md)
 
 The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisions/001-g-discovery-gate.md).
