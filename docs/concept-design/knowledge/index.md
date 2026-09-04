@@ -15,14 +15,14 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 # Decisions
 
 * [Adopt OKF as the Concept Design Knowledge Layer](decisions/okf-adoption.md) - Uses OKF v0.2 for canonical design knowledge without making documentation structure drive runtime architecture.
-* [001-G Discovery Gate Decision](decisions/001-g-discovery-gate.md) - Completes Phase 001 and admits 17 candidates to Phase 002 formal specification, four provisionally.
+* [001-G Discovery Gate Decision](decisions/001-g-discovery-gate.md) - Completes Phase 001 and admits 17 candidates to Phase 002 formal specification, four provisionally at the gate.
 
 # Concept catalog
 
-* [Concept Catalog](concepts/) - Canonical nodes for the 17 candidates admitted by the Phase 001 discovery gate.
+* [Concept Catalog](concepts/) - Current canonical concept maturity, formal specifications, and remaining Phase 002 work.
 
-The catalog currently contains 13 admitted and 4 provisionally admitted candidates. Their `maturity` metadata describes discovery-gate status; Phase 002 will extend the same nodes with formal abstract state, actions, and intrinsic invariants.
+Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) has formally specified Proposal, Revision, and Availability Window. Availability Window's Phase 001 provisional condition is resolved positively; Controlled Disclosure, Dispatch, and Coverage Target remain provisionally admitted pending their respective specification groups.
 
 # Historical design record
 
-The detailed discovery record remains outside this bundle at the [`docs/concept-design/` entrypoint](../README.md). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
+The detailed design record remains outside this bundle at the [`docs/concept-design/` entrypoint](../README.md). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
