@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal specification in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C
-- **Next:** 002-D — Vocabulary & Classification
+- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D
+- **Next:** 002-E — Deliverable & Scheduling Execution
 
 ## Start here
 
@@ -58,8 +58,10 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
    - [Withdrawal](knowledge/concepts/withdrawal.md) — specified
    - [Capacity](knowledge/concepts/capacity.md) — specified
    - [Coverage Target](knowledge/concepts/coverage-target.md) — specified; Phase 001 provisional condition resolved
-4. **002-D — Vocabulary & Classification** — next
-5. **002-E — Deliverable & Scheduling Execution**
+4. [002-D — Vocabulary & Classification](002-D-vocabulary-and-classification.md) — **complete**
+   - [Vocabulary](knowledge/concepts/vocabulary.md) — specified
+   - [Classification](knowledge/concepts/classification.md) — specified
+5. **002-E — Deliverable & Scheduling Execution** — next
 6. **002-F — Publication, Dispatch & Historical Closure**
 7. **002-G — Formal Specification Consolidation & Synchronization Handoff**
 
@@ -72,6 +74,8 @@ The remaining concept maturity and group membership are maintained in the [Conce
 002-B separates evaluator-attributed judgment, staged information disclosure, and recipient-directed response.
 
 002-C separates organizer choice from originator withdrawal, effective participation from either source fact, hard finite scarcity from soft representation intent, and desired representation from observed composition.
+
+002-D separates stable reusable-term identity/lifecycle from subject Classification and keeps both independent from Coverage Target. It also carries forward the application-level decision of whether MinneAnalytics classifications attach to a durable Proposal or exact Revision identities when version-sensitive classification matters.
 
 The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
 
