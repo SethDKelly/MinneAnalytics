@@ -28,6 +28,14 @@ jobs:
       - run: npx prisma validate
         env:
           DATABASE_URL: file:./prisma/ci.db
+      - name: Apply fresh migration chain
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+      - name: Generate migration baseline report
+        run: npm run db:migration:report -- --environment ci --out-dir /tmp/minne-migration-report
+        env:
+          DATABASE_URL: file:./ci-migrate.db
       - run: npm run lint
       - run: npm run build
         env:
