@@ -4,10 +4,10 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
+- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; bounded runtime implementation authorized
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C; 003-D; 003-E; 003-F
-- **Next:** 003-G — Implementation Reconciliation Consolidation & Execution Handoff
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G)
+- **Next:** 004-A — Migration Discipline, Baseline & Additive Schema Foundation
 
 ## Start here
 
@@ -29,6 +29,9 @@ For current normative design knowledge, begin with:
 - [v0 Interface Compatibility & Cutover Baseline](knowledge/reconciliation/interface-compatibility-baseline.md)
 - [v0 Migration, Backfill & Rollout Execution Plan](knowledge/reconciliation/migration-rollout-execution-plan.md)
 - [v0 Backfill, Validation & Reversibility Baseline](knowledge/reconciliation/backfill-validation-reversibility-baseline.md)
+- [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md)
+- [v0 Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md)
+- [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md)
 
 Canonical documentation behavior is governed by:
 
@@ -74,29 +77,38 @@ All 17 concepts are formally specified. The canonical Phase 002 gate is [002-G F
 
 Use the [v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md) rather than restating its cross-concept rules here.
 
-## Phase 003 — Implementation Reconciliation & Architecture Mapping — in progress
+## Phase 003 — Implementation Reconciliation & Architecture Mapping — complete
 
-Phase 003 reconciles the existing implementation against accepted Concept Design authority before application refactoring is authorized.
+Phase 003 reconciled the existing implementation against the accepted Concept Design model and established a migration-safe runtime handoff.
 
 1. [003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) — **complete**
 2. [003-B — Persistence, Identity, History & Migration Target Design](003-B-persistence-identity-history-and-migration-target-design.md) — **complete**
 3. [003-C — Synchronization, Transaction, Idempotency & Recovery Architecture](003-C-synchronization-transaction-idempotency-and-recovery-architecture.md) — **complete**
-   - [Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
-   - [Idempotency & Recovery Baseline](knowledge/reconciliation/idempotency-recovery-baseline.md)
 4. [003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation](003-D-authority-lifecycle-disclosure-and-operational-policy-reconciliation.md) — **complete**
-   - [Authority, Lifecycle & Operational Policy Target](knowledge/reconciliation/authority-lifecycle-operational-policy-target.md)
-   - [Disclosure, Sharing & Publication Policy Baseline](knowledge/reconciliation/disclosure-publication-policy-baseline.md)
 5. [003-E — Derived Views, API/UI State & Compatibility Reconciliation](003-E-derived-views-api-ui-state-and-compatibility-reconciliation.md) — **complete**
-   - [Derived View, API & UI State Target](knowledge/reconciliation/derived-view-api-ui-target.md)
-   - [Interface Compatibility & Cutover Baseline](knowledge/reconciliation/interface-compatibility-baseline.md)
 6. [003-F — Data Migration, Backfill, Rollout & Reversibility Plan](003-F-data-migration-backfill-rollout-and-reversibility-plan.md) — **complete**
-   - [Migration, Backfill & Rollout Execution Plan](knowledge/reconciliation/migration-rollout-execution-plan.md)
-   - [Backfill, Validation & Reversibility Baseline](knowledge/reconciliation/backfill-validation-reversibility-baseline.md)
-7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff** — next
+7. [003-G — Implementation Reconciliation Consolidation & Execution Handoff](003-G-implementation-reconciliation-consolidation-and-execution-handoff.md) — **complete**
 
-003-A established the semantic gaps. 003-B defined persistent identity/history targets and migration truth. 003-C defined atomic vs convergent execution, idempotency, and external-resource recovery. 003-D defined capabilities, lifecycle, disclosure, sharing, exact-material Publication, and post-Archive operations. 003-E defined semantic read/API/UI state and legacy compatibility. 003-F now supplies the ordered F0–F9 migration program, backfill provenance/quarantine rules, semantic write/read cutover, rollback floors, and destructive-cleanup gates.
+The canonical Phase 003 gate is [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md).
 
-The migration target deliberately allows useful projections and compatibility adapters during rollout, but rejects indefinite bidirectional authority. Rollback may restore compatibility reads, not erase newly captured canonical history or weaken exact public/protected-information safeguards.
+All 18 semantic gaps and 4 policy gaps now have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. They remain implementation-open until verified by Phase 004 evidence.
+
+## Phase 004 — v0 Implementation Execution & Migration — authorized
+
+Phase 004 executes the accepted reconciliation architecture. The authoritative package order and constraints are in the [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md).
+
+1. **004-A — Migration Discipline, Baseline & Additive Schema Foundation** — next
+2. **004-B — Revision, Classification, Evaluation & Feedback Canonicalization**
+3. **004-C — Selection, Withdrawal, Capacity & Deliverable Canonicalization**
+4. **004-D — Availability, Archive, Authority & Disclosure Policy Implementation**
+5. **004-E — Publication, Public Access, Schedule & Dispatch Hardening**
+6. **004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement**
+7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate**
+8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review**
+
+Runtime implementation is authorized **only within these bounded packages and gates**. Additive schema/runtime work may begin in 004-A. Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
+
+The preferred branch discipline is to preserve the 003-G gate commit as the v0 design/reconciliation baseline and begin Phase 004 implementation from it on a dedicated branch such as `concept-design/v0-implementation`.
 
 ## Knowledge architecture
 
@@ -104,12 +116,14 @@ The repository uses three complementary layers:
 
 1. **Canonical knowledge** — `knowledge/` OKF nodes for current normative design knowledge.
 2. **Historical design record** — numbered phase/evidence files showing how conclusions were reached.
-3. **Implementation record** — source code and implementation documentation showing current realization.
+3. **Implementation record** — source code, migrations, tests, reports, and implementation documentation showing current realization.
 
 Do not create a fourth prose layer that restates the same rules. Prefer links to the canonical owner.
 
-## Branch discipline
+## Branch and implementation discipline
 
-003-F still authorizes **no application/domain/schema/API/UI/refactoring changes**.
+Phase 003 itself changed no product/domain runtime behavior.
 
-003-G must perform the final cross-phase consistency audit, verify every SG/SG-P item has a complete target and execution path, define the logical implementation slices/dependencies, establish implementation evidence/closure reporting, and explicitly decide whether runtime implementation may begin.
+During Phase 004, code may change under the explicit 003-G authorization, but implementation must preserve canonical semantics, migration no-fabrication rules, one-way compatibility after write cutover, rollback floors, and the evidence/closure requirements in the [Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md).
+
+If runtime evidence contradicts an accepted semantic target, stop the affected slice and amend the narrowest canonical owner intentionally rather than encoding an undocumented exception.
