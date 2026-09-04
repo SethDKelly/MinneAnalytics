@@ -40,12 +40,18 @@ jobs:
         run: npm run db:migration:report -- --environment ci --out-dir /tmp/minne-migration-report
         env:
           DATABASE_URL: file:./ci-migrate.db
-      - name: Rehearse existing database baseline adoption
+      - name: Verify 004-B canonical history semantics
+        run: npm run db:004-b:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_WRITE_REVISION_EVALUATION: "true"
+      - name: Rehearse existing database baseline adoption and 004-B backfill
         run: |
           cp prisma/prisma/dev.db prisma/ci-existing.db
           npx prisma migrate resolve --applied 20260904000000_baseline
           npx prisma migrate deploy
           npm run db:migration:report -- --environment ci-existing --out-dir /tmp/minne-existing-migration-report
+          npm run db:004-b:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-backfill
         env:
           DATABASE_URL: file:./ci-existing.db
       - run: npm run lint
