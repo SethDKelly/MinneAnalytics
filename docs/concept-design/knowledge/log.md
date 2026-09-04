@@ -1,6 +1,16 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-B — Persistence, Identity, History & Migration Target Design.
+* **Persistence target**: Reused existing `Submission.id`, `SubmissionRevision.id`, `Score.id`, `PresenterFeedback.id`, `Theme.id`, `DeckFile.id`, Schedule IDs, and Dispatch Batch/SendRecord IDs where their semantic identity already fits; no parallel identity system is introduced merely for conceptual naming symmetry.
+* **History target**: Required new durable identity/history only for Availability Window, Controlled Disclosure, Selection Decisions, Withdrawal, Capacity Pool/Allocation, Coverage Target, Vocabulary TermState, Deliverable Requirement/Assessment, Publication/PublicationState, and Archive closure.
+* **Reference target**: Made exact `SubmissionRevision.id` the version-sensitive anchor for Evaluation, Classification, abstract Feedback, and current Revision relationships while retaining integer versions as compatibility ordinals.
+* **Capacity/Coverage boundary**: Rejected an automatic sponsor-specific Capacity rate; current sponsor min/max evidence is representation/planning intent and should map to Coverage Target/policy unless different scarce-unit consumption is later demonstrated.
+* **Compatibility**: Established current aggregate fields such as `programStatus`, `abstractVersion`, current Submission content, `SubmissionTheme`, `deckStatus`, Theme current state/targets, and Conference publication/archive/window fields as transitional projections or policy inputs rather than competing canonical truth.
+* **Migration truth**: Established native, backfilled-historical, backfilled-current-state, and legacy-unknown provenance classes; missing prior Evaluation, disclosure, decision, publication, assessment, dispatch-message, and archive/reopen history must not be fabricated.
+* **Rollout posture**: Required expand-first coexistence and preservation of truthful new history through rollback; destructive cleanup is deferred to later compatibility/migration gates.
+* **Tooling finding**: Recorded that the current Prisma/SQLite workflow uses `prisma db push` without checked-in migration history; 003-F must define a versioned production-safe migration/backfill/rollback mechanism before destructive schema evolution.
+* **Handoff**: Advanced Phase 003 to 003-C — Synchronization, Transaction, Idempotency & Recovery Architecture. 003-B authorizes no Prisma/application runtime changes.
 * **Reconciliation**: Completed 003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register.
 * **Ownership**: Added the canonical MinneAnalytics v0 Implementation Ownership Map for all 17 concepts, distinguishing semantic ownership from physical table/module boundaries and explicitly permitting useful implementation aggregates to remain where they preserve independent histories and invariants.
 * **Gap baseline**: Established 18 semantic gaps and 4 cross-cutting policy gaps with stable IDs, priority, recoverability class, and later Phase 003 ownership.
