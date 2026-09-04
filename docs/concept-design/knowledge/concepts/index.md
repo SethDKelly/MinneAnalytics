@@ -1,17 +1,18 @@
 # Concept Catalog
 
-These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G. Phase 002 incrementally adds formal abstract state, actions, intrinsic invariants, and synchronization boundaries to the same nodes rather than creating a parallel specification layer.
+These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G. Phase 002 incrementally adds formal abstract state, actions, intrinsic invariants, derived observations, and synchronization boundaries to the same nodes rather than creating a parallel specification layer.
 
 # Formally specified
 
 * [Proposal](proposal.md) - Durable offer identity and originator/subject reference; specified in 002-A.
 * [Revision](revision.md) - Append-only linear change history with one current revision per tracked subject; specified in 002-A.
 * [Availability Window](availability-window.md) - Referable governed opportunity with a valid half-open interval and derived upcoming/open/closed phase; specified in 002-A and no longer provisional.
+* [Evaluation](evaluation.md) - Evaluator-attributed judgment about an exact referable subject state with optional private context; specified in 002-B.
+* [Controlled Disclosure](controlled-disclosure.md) - Monotonic staged exposure of a specific information item to a participant/context; specified in 002-B and no longer provisional.
+* [Feedback](feedback.md) - Immutable recipient-directed response about an exact referable subject; specified in 002-B.
 
 # Admitted — awaiting formal specification
 
-* [Evaluation](evaluation.md) - Independently formed evaluator judgment.
-* [Feedback](feedback.md) - Recipient-directed response about a subject.
 * [Selection](selection.md) - Consequential organizer choice among candidates.
 * [Withdrawal](withdrawal.md) - Originator rescission of participation/commitment.
 * [Capacity](capacity.md) - Finite commitment capacity and consumption.
@@ -24,7 +25,6 @@ These nodes are the canonical knowledge representation of the concepts admitted 
 
 # Provisionally admitted — awaiting resolution/formal specification
 
-* [Controlled Disclosure](controlled-disclosure.md) - Staged information exposure with intentional reveal; must remain narrower than generic access control.
 * [Dispatch](dispatch.md) - Performed operational sends with durable recipient/round semantics; must remain separate from Feedback and provider/template implementation.
 * [Coverage Target](coverage-target.md) - Desired representation only; actual composition remains derived application state.
 
@@ -35,4 +35,5 @@ Authorization/delegation, Export/report definitions, cross-concept Audit Trail, 
 # Specification progression
 
 * [002-A — Offer, Change & Temporal Availability](../../002-A-offer-change-and-temporal-availability.md) formally specifies Proposal, Revision, and Availability Window.
-* 002-B will formally specify Evaluation, Controlled Disclosure, and Feedback.
+* [002-B — Evaluation, Disclosure & Directed Response](../../002-B-evaluation-disclosure-and-directed-response.md) formally specifies Evaluation, Controlled Disclosure, and Feedback.
+* 002-C will formally specify Selection, Withdrawal, Capacity, and Coverage Target.
