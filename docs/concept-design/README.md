@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C; 003-D; 003-E
-- **Next:** 003-F — Data Migration, Backfill, Rollout & Reversibility Plan
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C; 003-D; 003-E; 003-F
+- **Next:** 003-G — Implementation Reconciliation Consolidation & Execution Handoff
 
 ## Start here
 
@@ -27,6 +27,8 @@ For current normative design knowledge, begin with:
 - [v0 Disclosure, Sharing & Publication Policy Baseline](knowledge/reconciliation/disclosure-publication-policy-baseline.md)
 - [v0 Derived View, API & UI State Target](knowledge/reconciliation/derived-view-api-ui-target.md)
 - [v0 Interface Compatibility & Cutover Baseline](knowledge/reconciliation/interface-compatibility-baseline.md)
+- [v0 Migration, Backfill & Rollout Execution Plan](knowledge/reconciliation/migration-rollout-execution-plan.md)
+- [v0 Backfill, Validation & Reversibility Baseline](knowledge/reconciliation/backfill-validation-reversibility-baseline.md)
 
 Canonical documentation behavior is governed by:
 
@@ -87,12 +89,14 @@ Phase 003 reconciles the existing implementation against accepted Concept Design
 5. [003-E — Derived Views, API/UI State & Compatibility Reconciliation](003-E-derived-views-api-ui-state-and-compatibility-reconciliation.md) — **complete**
    - [Derived View, API & UI State Target](knowledge/reconciliation/derived-view-api-ui-target.md)
    - [Interface Compatibility & Cutover Baseline](knowledge/reconciliation/interface-compatibility-baseline.md)
-6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan** — next
-7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
+6. [003-F — Data Migration, Backfill, Rollout & Reversibility Plan](003-F-data-migration-backfill-rollout-and-reversibility-plan.md) — **complete**
+   - [Migration, Backfill & Rollout Execution Plan](knowledge/reconciliation/migration-rollout-execution-plan.md)
+   - [Backfill, Validation & Reversibility Baseline](knowledge/reconciliation/backfill-validation-reversibility-baseline.md)
+7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff** — next
 
-003-A established the semantic gaps. 003-B defined persistent identity/history targets and expand-first migration truth. 003-C defined atomic vs convergent execution, idempotency, and external-resource recovery. 003-D defined action capabilities, lifecycle, disclosure, sharing, exact-material Publication, and permitted post-Archive operations. 003-E now defines how canonical facts, derived views, compatibility projections, and transient operation state cross the API/UI boundary.
+003-A established the semantic gaps. 003-B defined persistent identity/history targets and migration truth. 003-C defined atomic vs convergent execution, idempotency, and external-resource recovery. 003-D defined capabilities, lifecycle, disclosure, sharing, exact-material Publication, and post-Archive operations. 003-E defined semantic read/API/UI state and legacy compatibility. 003-F now supplies the ordered F0–F9 migration program, backfill provenance/quarantine rules, semantic write/read cutover, rollback floors, and destructive-cleanup gates.
 
-The target deliberately preserves composition-oriented screens and useful legacy fields where they ease migration, but no compound status, queue, badge, or compatibility field may remain an independent write authority after canonical cutover.
+The migration target deliberately allows useful projections and compatibility adapters during rollout, but rejects indefinite bidirectional authority. Rollback may restore compatibility reads, not erase newly captured canonical history or weaken exact public/protected-information safeguards.
 
 ## Knowledge architecture
 
@@ -106,6 +110,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-003-E still authorizes **no application/domain/schema/refactoring changes**.
+003-F still authorizes **no application/domain/schema/API/UI/refactoring changes**.
 
-003-F must now turn the full Phase 003 target into a versioned, staged, reversible implementation plan: additive schema batches, truthful backfill, semantic command/read-model introduction, compatibility adapters, shadow/parity validation, public-access hardening, rollout/rollback boundaries, and eventual legacy retirement.
+003-G must perform the final cross-phase consistency audit, verify every SG/SG-P item has a complete target and execution path, define the logical implementation slices/dependencies, establish implementation evidence/closure reporting, and explicitly decide whether runtime implementation may begin.
