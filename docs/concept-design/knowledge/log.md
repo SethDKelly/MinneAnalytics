@@ -1,6 +1,11 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Specification**: Completed 002-E — Deliverable & Scheduling Execution.
+* **Specification**: Promoted Deliverable to `maturity: specified` with durable artifact requirement state, immutable provided ArtifactVersion history, and version-specific concern/ready Assessment history.
+* **Boundary**: Readiness now applies to the exact current artifact version; providing a replacement artifact does not inherit earlier readiness and does not erase prior review history.
+* **Specification**: Promoted Schedule to `maturity: specified` with explicit Schedule/Opportunity state and planner-controlled `Place`/`Move`/`Swap`/`Unplace` actions.
+* **Boundary**: Generated schedules remain suggestions until explicit placement is applied; Selection, Withdrawal, Capacity, Deliverable readiness, demand, and generation heuristics remain synchronization/application inputs rather than Schedule state.
 * **Specification**: Completed 002-D — Vocabulary & Classification.
 * **Specification**: Promoted Vocabulary to `maturity: specified` with stable Term identity, append-only wording/availability history, and explicit `Contribute`/`Correct`/`Retire`/`Restore` lifecycle actions.
 * **Specification**: Promoted Classification to `maturity: specified` as the current SubjectRef↔TermRef association relation, independent from term governance, Coverage Target, Selection, and Revision history.
