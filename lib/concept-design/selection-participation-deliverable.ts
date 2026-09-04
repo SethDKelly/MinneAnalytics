@@ -258,13 +258,16 @@ async function createParticipationExitWork(
   });
 }
 
-async function completeCleanupWork(workId: string, effect: () => Promise<void>) {
+async function completeCleanupWork(
+  workId: string,
+  effect: (tx: Prisma.TransactionClient) => Promise<void>
+) {
   await prisma.$transaction(async (tx) => {
     const work = await tx.synchronizationWork.findUnique({ where: { id: workId } });
     if (!work || work.state === "COMPLETED") return;
 
     try {
-      await effect();
+      await effect(tx);
       await tx.synchronizationWork.update({
         where: { id: work.id },
         data: {
@@ -305,8 +308,8 @@ export async function processParticipationCleanupForSource(
   for (const item of work) {
     if (item.effectKey.startsWith(CAPACITY_RELEASE_EFFECT)) {
       const submissionId = item.effectKey.slice(CAPACITY_RELEASE_EFFECT.length);
-      await completeCleanupWork(item.id, async () => {
-        await prisma.capacityAllocation.updateMany({
+      await completeCleanupWork(item.id, async (tx) => {
+        await tx.capacityAllocation.updateMany({
           where: { submissionId, releasedAt: null },
           data: { releasedByRef: actorRef, releasedAt: new Date() },
         });
@@ -316,8 +319,8 @@ export async function processParticipationCleanupForSource(
 
     if (item.effectKey.startsWith(SCHEDULE_UNPLACE_EFFECT)) {
       const submissionId = item.effectKey.slice(SCHEDULE_UNPLACE_EFFECT.length);
-      await completeCleanupWork(item.id, async () => {
-        await prisma.schedulePlacement.updateMany({
+      await completeCleanupWork(item.id, async (tx) => {
+        await tx.schedulePlacement.updateMany({
           where: { submissionId },
           data: { submissionId: null },
         });
