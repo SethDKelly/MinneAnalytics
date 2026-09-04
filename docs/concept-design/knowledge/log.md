@@ -1,6 +1,13 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Specification**: Completed 002-F — Publication, Dispatch & Historical Closure.
+* **Specification**: Promoted Publication to `maturity: specified` with exact MaterialRef exposure, reversible publish/unpublish/republish state, and durable historical exposure provenance.
+* **Resolution**: Resolved Dispatch's Phase 001 provisional condition positively and promoted it to `maturity: specified`; Dispatch now owns performed Batch/SendRecord history, exact per-recipient message/endpoint evidence, and semantic same-round dedupe while templates, eligibility, Feedback, and provider transport remain external.
+* **Specification**: Promoted Archive to `maturity: specified` as a monotonic retained-internal-closure fact rather than a broad conference lifecycle or public archive concept.
+* **Boundary**: All 17 Phase 001-G concepts are now formally specified; no provisional admissions remain.
+* **Boundary**: Kept Deliverable readiness, Selection/Withdrawal/share policy, recipient eligibility, template generation, provider delivery mechanics, and Archive↔Publication timing outside the three concepts for 002-G synchronization/application composition.
+* **Reconciliation**: Flagged mutable/dynamic current deck-publication behavior, potential historical-publicId exposure, missing exact rendered-message snapshots in send history, same-round `includeAlreadyEmailed` ambiguity, and reversible current conference archival as later implementation-reconciliation concerns.
 * **Specification**: Completed 002-E — Deliverable & Scheduling Execution.
 * **Specification**: Promoted Deliverable to `maturity: specified` with durable artifact requirement state, immutable provided ArtifactVersion history, and version-specific concern/ready Assessment history.
 * **Boundary**: Readiness now applies to the exact current artifact version; providing a replacement artifact does not inherit earlier readiness and does not erase prior review history.
