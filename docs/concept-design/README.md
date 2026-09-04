@@ -4,17 +4,14 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — Phase 001 discovery gate complete
+- **Concept model maturity:** v0 — formal specification in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** 001-A through 001-G
-- **Next:** Phase 002 — Formal Concept Specification
-- **Next subgroup:** 002-A — Offer, Change & Temporal Availability
+- **Completed:** Phase 001 (001-A through 001-G); 002-A
+- **Next:** 002-B — Evaluation, Disclosure & Directed Response
 
 ## Start here
 
-For current design knowledge, begin with the [Concept Design knowledge index](knowledge/index.md).
-
-The Phase 001 canonical gate is [001-G Discovery Gate Decision](knowledge/decisions/001-g-discovery-gate.md), and the current concept entry set is the [Concept Catalog](knowledge/concepts/).
+For current normative design knowledge, begin with the [Concept Design knowledge index](knowledge/index.md) and [Concept Catalog](knowledge/concepts/).
 
 Canonical documentation behavior is governed by:
 
@@ -22,15 +19,15 @@ Canonical documentation behavior is governed by:
 - [Concept Design Authority](knowledge/rules/concept-design-authority.md)
 - [OKF Adoption Decision](knowledge/decisions/okf-adoption.md)
 
-The `knowledge/` directory is an [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format) bundle. It is the compact, progressively disclosed knowledge layer for current normative design knowledge.
+The `knowledge/` directory is an [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format) bundle and is the compact, progressively disclosed knowledge layer for current design authority.
 
 ## Documentation authority
 
-Numbered phase documents and `evidence/` artifacts are the **historical design record**: they preserve observations, alternatives, reasoning, falsification, and exit decisions.
+Numbered phase documents and `evidence/` artifacts are the **historical design record**: observations, alternatives, reasoning, falsification, and exit decisions.
 
-Once knowledge is promoted into a canonical OKF node, later work should reference that node instead of reproducing the full rule or concept specification. Historical records are not rewritten merely to match later wording.
+Once knowledge is promoted into a canonical OKF node, later work should reference that node instead of reproducing the full rule or concept specification. Historical records are preserved rather than rewritten merely to match later wording.
 
-Application code and implementation documentation describe the current realization; they do not override Concept Design authority. See [Concept Design Authority](knowledge/rules/concept-design-authority.md).
+Application code and implementation documentation describe current realization; they do not override Concept Design authority.
 
 ## Phase 001 — Discovery & Archaeology — complete
 
@@ -42,26 +39,36 @@ Application code and implementation documentation describe the current realizati
 6. [001-F — Operational Principle Development](001-F-operational-principle-development.md)
 7. [001-G — Discovery Consolidation & Concept Candidate Gate](001-G-discovery-consolidation-and-concept-candidate-gate.md)
 
-Each phase record links to its supporting evidence artifacts. Load those records only when the reasoning/provenance behind a canonical conclusion is needed.
+The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisions/001-g-discovery-gate.md).
 
-## Phase 002 handoff
+## Phase 002 — Formal Concept Specification — in progress
 
-Phase 001 admits **17 candidates** to formal specification:
+Phase 002 extends the canonical concept nodes with abstract state, actions, intrinsic invariants, derived observations, and explicit synchronization boundaries.
 
-- **13 admitted:** Proposal, Revision, Evaluation, Feedback, Selection, Withdrawal, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
-- **4 provisionally admitted:** Controlled Disclosure, Dispatch, Availability Window, Coverage Target.
-
-The detailed purposes, operational principles, boundaries, maturity, and provenance live in the [canonical concept nodes](knowledge/concepts/), not here.
-
-The working Phase 002 subdivision established by 001-G is:
-
-1. **002-A — Offer, Change & Temporal Availability**
-2. **002-B — Evaluation, Disclosure & Directed Response**
+1. [002-A — Offer, Change & Temporal Availability](002-A-offer-change-and-temporal-availability.md) — **complete**
+   - [Proposal](knowledge/concepts/proposal.md) — specified
+   - [Revision](knowledge/concepts/revision.md) — specified
+   - [Availability Window](knowledge/concepts/availability-window.md) — specified; Phase 001 provisional condition resolved
+2. **002-B — Evaluation, Disclosure & Directed Response** — next
 3. **002-C — Program Choice, Participation, Scarcity & Representation Intent**
 4. **002-D — Vocabulary & Classification**
 5. **002-E — Deliverable & Scheduling Execution**
 6. **002-F — Publication, Dispatch & Historical Closure**
 7. **002-G — Formal Specification Consolidation & Synchronization Handoff**
+
+The remaining concept maturity and group membership are maintained in the [Concept Catalog](knowledge/concepts/) rather than duplicated here.
+
+## 002-A result
+
+002-A formally separates:
+
+- durable offer identity from mutable history;
+- append-only Revision history from edit eligibility and evaluation freshness;
+- explicit opportunity intervals from application lifecycle/authorization policy.
+
+The complete state/action/invariant definitions live in the three canonical concept nodes above. The numbered phase record preserves only the decisions, rejected alternatives, deferred synchronization questions, and reconciliation observations.
+
+No application/domain implementation changes are authorized by 002-A.
 
 ## Knowledge architecture
 
@@ -75,6 +82,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-OKF adoption and Phase 001 completion do **not** authorize application/domain refactoring.
+Phase 002 formal specification does **not** authorize application/domain refactoring.
 
-Phase 002 should formalize abstract state/actions in the canonical concept nodes. Later synchronization/composition design and explicit implementation reconciliation should determine what product code actually needs to change.
+Synchronization/composition design and explicit implementation reconciliation should determine what product code actually needs to change.
