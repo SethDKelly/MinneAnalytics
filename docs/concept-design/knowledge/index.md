@@ -21,9 +21,9 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 
 * [Concept Catalog](concepts/) - Current canonical concept maturity, formal specifications, and remaining Phase 002 work.
 
-Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) specifies Proposal, Revision, and Availability Window; [002-B](../002-B-evaluation-disclosure-and-directed-response.md) specifies Evaluation, Controlled Disclosure, and Feedback; [002-C](../002-C-program-choice-participation-scarcity-and-representation-intent.md) specifies Selection, Withdrawal, Capacity, and Coverage Target; [002-D](../002-D-vocabulary-and-classification.md) specifies Vocabulary and Classification.
+Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) specifies Proposal, Revision, and Availability Window; [002-B](../002-B-evaluation-disclosure-and-directed-response.md) specifies Evaluation, Controlled Disclosure, and Feedback; [002-C](../002-C-program-choice-participation-scarcity-and-representation-intent.md) specifies Selection, Withdrawal, Capacity, and Coverage Target; [002-D](../002-D-vocabulary-and-classification.md) specifies Vocabulary and Classification; [002-E](../002-E-deliverable-and-scheduling-execution.md) specifies Deliverable and Schedule.
 
-Twelve concepts are now formally specified. Availability Window, Controlled Disclosure, and Coverage Target have resolved their Phase 001 provisional conditions positively. **Dispatch remains the only provisionally admitted concept awaiting formal specification.**
+Fourteen concepts are now formally specified. Availability Window, Controlled Disclosure, and Coverage Target have resolved their Phase 001 provisional conditions positively. **Dispatch remains the only provisionally admitted concept awaiting formal specification.**
 
 # Historical design record
 
