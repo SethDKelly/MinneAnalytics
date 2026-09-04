@@ -13,6 +13,14 @@
     "docs:validate": "node scripts/validate-okf.mjs",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:migrate:baseline:resolve": "prisma migrate resolve --applied 20260904000000_baseline",
+    "db:migration:verify": "node scripts/migrations/verify-foundation.mjs",
+    "db:migration:report": "tsx scripts/migrations/report-baseline.ts",
+    "db:backup": "node scripts/migrations/sqlite-backup.mjs",
+    "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -29,7 +37,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@types/node": "^20.17.57",
     "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.5",
+    "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",
