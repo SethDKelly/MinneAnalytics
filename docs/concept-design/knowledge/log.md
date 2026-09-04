@@ -1,6 +1,14 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Gate**: Completed 003-G — Implementation Reconciliation Consolidation & Execution Handoff; Phase 003 is complete.
+* **Authorization**: Authorized bounded Phase 004 runtime/schema implementation under the accepted persistence, execution, policy, interface, migration, rollback-floor, and closure-evidence constraints; this is not blanket refactoring authorization.
+* **Conformance**: Confirmed 003-A through 003-F are internally consistent and require no new coordinator/workflow concept or reopening of Phase 001/002 before implementation.
+* **Execution handoff**: Defined Phase 004 packages 004-A through 004-H, ordered from migration discipline/additive schema through exact Revision/Evaluation, participation/Capacity/Deliverable, policy/disclosure, Publication/Schedule/Dispatch, semantic UI/API cutover, validation/cleanup, and final implementation exit review.
+* **Closure governance**: Established gap states from `target-designed` through `verified-closed` and required runtime evidence for every SG-001–SG-018 and SG-P01–SG-P04; documentation or backfill alone cannot close a gap.
+* **Rollback boundary**: Preserved read rollback as distinct from authority rollback; newly captured canonical history and exact public/protected-information safeguards remain rollback floors.
+* **Branch handoff**: Recommended preserving the 003-G gate commit as the v0 design/reconciliation baseline and beginning Phase 004 from it on a dedicated `concept-design/v0-implementation` branch.
+* **Next**: Phase 004 — v0 Implementation Execution & Migration begins with 004-A — Migration Discipline, Baseline & Additive Schema Foundation.
 * **Reconciliation**: Completed 003-F — Data Migration, Backfill, Rollout & Reversibility Plan.
 * **Migration discipline**: Required checked-in Prisma migration history and controlled deploy semantics before persistent target-schema rollout; `prisma db push` may remain local-only but is not the production reconciliation mechanism.
 * **Rollout order**: Established F0–F9 progression from migration baseline/backup through additive schema, exact-reference backfill, current-state seeds, validation/quarantine, semantic write cutover, shadow reads, first-party read cutover, legacy mutation retirement, and eventual destructive cleanup.
