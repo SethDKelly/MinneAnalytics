@@ -1,6 +1,6 @@
 # 004-A — Migration & Additive Schema Foundation Evidence
 
-Status: **Implementation evidence**  
+Status: **Implementation evidence — gate passed**  
 Authority: supporting evidence; canonical semantics remain in the Phase 003 OKF nodes.
 
 ## Branch provenance
@@ -11,6 +11,7 @@ Authority: supporting evidence; canonical semantics remain in the Phase 003 OKF 
 | baseline commit | `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb` |
 | implementation branch | `concept-design/v0-implementation` |
 | branch creation | exact 003-G baseline commit |
+| discovery baseline recheck | unchanged at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb` |
 
 ## Migration artifacts
 
@@ -84,20 +85,35 @@ Existing compatibility fields and writers therefore remain operational during th
 
 Generated local reports/backups are ignored under `artifacts/migrations/`.
 
-## CI contract
+## CI gate evidence
 
-Implementation-branch CI now executes:
+GitHub Actions run **33839632346** is the substantive 004-A acceptance run.
+
+The run passed, on one implementation head:
 
 ```text
-npm ci
-npm run docs:validate
-npm run db:migration:verify
-npx prisma validate
-npm run lint
-npm run build
+npm ci                                      PASS
+npm run docs:validate                       PASS
+npm run db:migration:verify                 PASS
+npx prisma validate                         PASS
+fresh: prisma migrate deploy                PASS
+fresh: migration baseline report            PASS
+existing DB: migrate resolve baseline       PASS
+existing DB: additive migrate deploy        PASS
+existing DB: migration baseline report      PASS
+npm run lint                                PASS (one pre-existing warning)
+npm run build                               PASS
 ```
 
-The push trigger includes `concept-design/v0-implementation` so Phase 004 receives continuous verification on its own execution branch.
+The existing-database rehearsal copied `prisma/prisma/dev.db` to an isolated CI database, marked only the pre-004-A baseline as applied, then successfully deployed the additive reconciliation migration. This verifies the documented adoption path as well as the fresh-database path.
+
+An earlier implementation-branch run usefully failed `docs:validate` because two nested OKF indexes still carried frontmatter despite the validator's established convention. Those index files were corrected before the acceptance run.
+
+Another pre-acceptance run exposed that the production build had been pointed at a different empty CI database than the one migrated in the preceding step. CI was corrected to build against the migrated database; the acceptance run then passed the production build.
+
+The remaining lint warning in `lib/schedule/grid.ts` (`_` unused) predates 004-A and does not fail the existing lint contract.
+
+CI also uses branch-scoped concurrency with stale-run cancellation so later implementation packages produce a cleaner newest-head validation trail.
 
 ## Rollback classification
 
@@ -111,13 +127,17 @@ The push trigger includes `concept-design/v0-implementation` so Phase 004 receiv
 
 This makes application-code rollback from 004-A straightforward: the additive schema may remain unused without deleting anything.
 
+## Gap closure disposition
+
+No `SG-001`–`SG-018` or `SG-P01`–`SG-P04` item is closed by 004-A. The package supplies implementation infrastructure only; semantic closure still requires the writer/read/backfill/compatibility/runtime evidence defined by each later package.
+
 ## Handoff to 004-B
 
-004-B may begin only after the 004-A CI gate passes. Its first semantic slice will use the exact-reference foundation to backfill/activate:
+The 004-A CI gate passed. 004-B may now use the exact-reference foundation to backfill/activate:
 
 - `Submission.currentRevisionId`;
 - `SubmissionRevision.predecessorRevisionId`;
 - `RevisionTerm`;
-- `Score.submissionRevisionId` with later uniqueness migration;
+- `Score.submissionRevisionId` with later exact-subject uniqueness semantics;
 - `PresenterFeedback.submissionRevisionId`;
 - canonical Revision/Classification/Evaluation write behavior and current compatibility projections.
