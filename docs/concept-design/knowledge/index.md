@@ -19,11 +19,20 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 
 # Concept catalog
 
-* [Concept Catalog](concepts/) - Current canonical concept maturity, formal specifications, and remaining Phase 002 work.
+* [Concept Catalog](concepts/) - Canonical formal specifications for all 17 concepts admitted by Phase 001-G.
 
-Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) specifies Proposal, Revision, and Availability Window; [002-B](../002-B-evaluation-disclosure-and-directed-response.md) specifies Evaluation, Controlled Disclosure, and Feedback; [002-C](../002-C-program-choice-participation-scarcity-and-representation-intent.md) specifies Selection, Withdrawal, Capacity, and Coverage Target; [002-D](../002-D-vocabulary-and-classification.md) specifies Vocabulary and Classification; [002-E](../002-E-deliverable-and-scheduling-execution.md) specifies Deliverable and Schedule.
+Phase 002 formal concept specification is complete through [002-F](../002-F-publication-dispatch-and-historical-closure.md):
 
-Fourteen concepts are now formally specified. Availability Window, Controlled Disclosure, and Coverage Target have resolved their Phase 001 provisional conditions positively. **Dispatch remains the only provisionally admitted concept awaiting formal specification.**
+* [002-A](../002-A-offer-change-and-temporal-availability.md) — Proposal, Revision, Availability Window.
+* [002-B](../002-B-evaluation-disclosure-and-directed-response.md) — Evaluation, Controlled Disclosure, Feedback.
+* [002-C](../002-C-program-choice-participation-scarcity-and-representation-intent.md) — Selection, Withdrawal, Capacity, Coverage Target.
+* [002-D](../002-D-vocabulary-and-classification.md) — Vocabulary, Classification.
+* [002-E](../002-E-deliverable-and-scheduling-execution.md) — Deliverable, Schedule.
+* [002-F](../002-F-publication-dispatch-and-historical-closure.md) — Publication, Dispatch, Archive.
+
+All 17 concepts are now `maturity: specified`. Availability Window, Controlled Disclosure, Coverage Target, and Dispatch each resolved their Phase 001 provisional conditions positively. No provisional admissions remain.
+
+The next work is **002-G — Formal Specification Consolidation & Synchronization Handoff**, which will consolidate cross-concept synchronizations/application composition and prepare later implementation reconciliation without reopening concept boundaries casually.
 
 # Historical design record
 
