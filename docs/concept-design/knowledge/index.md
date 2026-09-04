@@ -36,6 +36,8 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [v0 Migration Target Baseline](reconciliation/migration-target-baseline.md) - Recoverability, provenance, expand-first coexistence, rollback, and validation constraints.
 * [v0 Synchronization, Transaction & Recovery Target](reconciliation/synchronization-transaction-recovery-target.md) - Atomic authoritative bundles, source-authoritative convergence, durable work, schedule/provider/file boundaries, and compatibility-write direction.
 * [v0 Idempotency & Recovery Baseline](reconciliation/idempotency-recovery-baseline.md) - Command/work keys, retry classes, crash recovery, uncertainty handling, and projection repair.
+* [v0 Authority, Lifecycle & Operational Policy Target](reconciliation/authority-lifecycle-operational-policy-target.md) - Capability-based action authority, lifecycle/Archive policy, Availability Window/manual suspension, edit exceptions, and post-closure operation rules.
+* [v0 Disclosure, Sharing & Publication Policy Baseline](reconciliation/disclosure-publication-policy-baseline.md) - Controlled Disclosure staging/reveal policy, blind-mode transition safety, share-eligibility provenance, exact Publication eligibility, and public-token resolution.
 
 # Current maturity
 
@@ -45,11 +47,12 @@ Completed reconciliation groups:
 
 - **003-A** — implementation ownership and semantic-gap mapping;
 - **003-B** — persistence, identity, history, and migration target design;
-- **003-C** — synchronization, transaction, idempotency, and recovery architecture.
+- **003-C** — synchronization, transaction, idempotency, and recovery architecture;
+- **003-D** — authority, lifecycle, disclosure, sharing, publication, and operational policy reconciliation.
 
-Next: **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**.
+Next: **003-E — Derived Views, API/UI State & Compatibility Reconciliation**.
 
-Product/domain/schema changes remain unauthorized until the remaining Phase 003 policy, compatibility, migration, and execution-handoff groups establish a safe implementation handoff.
+Product/domain/schema changes remain unauthorized until the remaining Phase 003 compatibility, migration, and execution-handoff groups establish a safe implementation handoff.
 
 # Historical design record
 
