@@ -1,32 +1,28 @@
 # Concept Catalog
 
-These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G. Phase 002 incrementally adds formal abstract state, actions, intrinsic invariants, derived observations, and synchronization boundaries to the same nodes rather than creating a parallel specification layer.
+These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G. Phase 002 incrementally added formal abstract state, actions, intrinsic invariants, derived observations, and synchronization boundaries to these same nodes rather than creating a parallel specification layer.
 
 # Formally specified
 
 * [Proposal](proposal.md) - Durable offer identity and originator/subject reference; specified in 002-A.
 * [Revision](revision.md) - Append-only linear change history with one current revision per tracked subject; specified in 002-A.
-* [Availability Window](availability-window.md) - Referable governed opportunity with a valid half-open interval and derived upcoming/open/closed phase; specified in 002-A and no longer provisional.
+* [Availability Window](availability-window.md) - Referable governed opportunity with a valid half-open interval and derived upcoming/open/closed phase; specified in 002-A and provisional condition resolved.
 * [Evaluation](evaluation.md) - Evaluator-attributed judgment about an exact referable subject state with optional private context; specified in 002-B.
-* [Controlled Disclosure](controlled-disclosure.md) - Monotonic staged exposure of a specific information item to a participant/context; specified in 002-B and no longer provisional.
+* [Controlled Disclosure](controlled-disclosure.md) - Monotonic staged exposure of a specific information item to a participant/context; specified in 002-B and provisional condition resolved.
 * [Feedback](feedback.md) - Immutable recipient-directed response about an exact referable subject; specified in 002-B.
 * [Selection](selection.md) - Immutable organizer decision history with selected/reserve/not-selected dispositions and explicit clearing; specified in 002-C.
 * [Withdrawal](withdrawal.md) - Monotonic originator rescission fact independent of Selection history; specified in 002-C.
 * [Capacity](capacity.md) - Finite pool with class-sensitive allocation/release and a hard no-overallocation invariant; specified in 002-C.
-* [Coverage Target](coverage-target.md) - Desired representation bounds only; observed composition remains derived; specified in 002-C and no longer provisional.
+* [Coverage Target](coverage-target.md) - Desired representation bounds only; observed composition remains derived; specified in 002-C and provisional condition resolved.
 * [Vocabulary](vocabulary.md) - Stable reusable Term identities with append-only wording/availability history and contribute/correct/retire/restore lifecycle; specified in 002-D.
 * [Classification](classification.md) - Current SubjectRef↔TermRef association relation independent of term lifecycle and representation planning; specified in 002-D.
 * [Deliverable](deliverable.md) - Durable artifact requirement with immutable provided versions and version-specific readiness Assessment history; specified in 002-E.
 * [Schedule](schedule.md) - Explicit human-adjustable placement relation over place/time Opportunities, independent of generation strategy; specified in 002-E.
+* [Publication](publication.md) - Intentional reversible public exposure of an exact MaterialRef with durable exposure history; specified in 002-F.
+* [Dispatch](dispatch.md) - Provider-neutral performed operational sends with exact per-recipient message evidence and semantic round dedupe; specified in 002-F and provisional condition resolved.
+* [Archive](archive.md) - Monotonic internal closure of a working context into retained history; specified in 002-F.
 
-# Admitted — awaiting formal specification
-
-* [Publication](publication.md) - Intentional public exposure of eligible material.
-* [Archive](archive.md) - Retained read-only internal closure/history.
-
-# Provisionally admitted — awaiting resolution/formal specification
-
-* [Dispatch](dispatch.md) - Performed operational sends with durable recipient/round semantics; must remain separate from Feedback and provider/template implementation.
+All 17 Phase 001-G candidates are now formally specified. No provisional admissions remain.
 
 # Deferred signals
 
@@ -39,4 +35,5 @@ Authorization/delegation, Export/report definitions, cross-concept Audit Trail, 
 * [002-C — Program Choice, Participation, Scarcity & Representation Intent](../../002-C-program-choice-participation-scarcity-and-representation-intent.md) formally specifies Selection, Withdrawal, Capacity, and Coverage Target.
 * [002-D — Vocabulary & Classification](../../002-D-vocabulary-and-classification.md) formally specifies Vocabulary and Classification.
 * [002-E — Deliverable & Scheduling Execution](../../002-E-deliverable-and-scheduling-execution.md) formally specifies Deliverable and Schedule.
-* 002-F will formally specify Publication, Dispatch, and Archive and resolve Dispatch's remaining provisional gate.
+* [002-F — Publication, Dispatch & Historical Closure](../../002-F-publication-dispatch-and-historical-closure.md) formally specifies Publication, Dispatch, and Archive and resolves Dispatch's final provisional gate.
+* 002-G will consolidate the complete formal model and determine the synchronization/application-composition handoff.
