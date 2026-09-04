@@ -24,6 +24,10 @@ jobs:
 
       - run: npm ci
       - run: npm run docs:validate
+      - run: npm run db:migration:verify
+      - run: npx prisma validate
+        env:
+          DATABASE_URL: file:./prisma/ci.db
       - run: npm run lint
       - run: npm run build
         env:
