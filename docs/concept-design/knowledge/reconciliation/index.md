@@ -1,12 +1,3 @@
----
-type: Implementation Reconciliation Index
-title: Implementation Reconciliation
-description: Canonical entrypoint for mapping the accepted v0 Concept Design model to the existing MinneAnalytics implementation and its target persistence, execution, policy, interface, migration, and implementation-handoff architecture.
-tags: [concept-design, implementation-reconciliation, architecture-mapping]
-status: stable
-authority: canonical
-phase: 003-G
----
 # Implementation Reconciliation
 
 Use this directory for current normative conclusions about how the existing implementation relates to the accepted Concept Design model, how that realization should evolve safely, and how runtime implementation is executed and verified.
@@ -30,17 +21,15 @@ Concept semantics remain owned by the [Concept Catalog](../concepts/), and cross
 * [v0 Implementation Execution Handoff](implementation-execution-handoff.md) — Phase 004 work-package order, bounded implementation authorization, dependencies, branch boundary, and execution constraints.
 * [v0 Implementation Closure & Evidence Baseline](implementation-closure-evidence-baseline.md) — SG/SG-P runtime closure states, required evidence, high-risk closure rules, rollback-floor verification, and Phase 004 exit reporting.
 
-# Phase 003 status
+# Current status
 
-**Phase 003 is complete.**
+**Phase 003 is complete and Phase 004 implementation execution is in progress.**
 
-003-A through 003-F established ownership, gaps, persistence/history, transaction/recovery, authority/policy, API/UI compatibility, and migration/rollback targets. 003-G performed the cross-phase consistency gate and authorized bounded Phase 004 runtime implementation.
+004-A established the checked-in migration discipline and additive schema/recovery/provenance substrate without moving semantic write authority.
 
-Canonical gate: [003-G Implementation Reconciliation Gate](../decisions/003-g-implementation-reconciliation-gate.md).
+Next: **004-B — Revision, Classification, Evaluation & Feedback Canonicalization**.
 
-Next: **004-A — Migration Discipline, Baseline & Additive Schema Foundation**.
-
-Runtime/schema work is now permitted only under the [Implementation Execution Handoff](implementation-execution-handoff.md). Destructive cleanup remains separately gated and is not generally authorized by Phase 003 completion.
+Runtime/schema work is permitted only under the [Implementation Execution Handoff](implementation-execution-handoff.md). Destructive cleanup remains separately gated and is not generally authorized before 004-G.
 
 # Historical audit evidence
 
@@ -55,6 +44,8 @@ Detailed implementation observations and design reasoning remain in the numbered
 * [003-G — Implementation Reconciliation Consolidation & Execution Handoff](../../003-G-implementation-reconciliation-consolidation-and-execution-handoff.md)
 * [003-G Reconciliation Conformance & Closure Matrix](../../evidence/003-G-reconciliation-conformance-and-closure-matrix.md)
 * [003-G Implementation Work Package & Dependency Matrix](../../evidence/003-G-implementation-work-package-and-dependency-matrix.md)
+* [004-A — Migration Discipline, Baseline & Additive Schema Foundation](../../004-A-migration-discipline-baseline-and-additive-schema-foundation.md)
+* [004-A Migration & Additive Schema Foundation Evidence](../../evidence/004-A-migration-and-schema-foundation-evidence.md)
 
 # Authority rule
 
