@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal specification in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A
-- **Next:** 002-B — Evaluation, Disclosure & Directed Response
+- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B
+- **Next:** 002-C — Program Choice, Participation, Scarcity & Representation Intent
 
 ## Start here
 
@@ -49,8 +49,11 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
    - [Proposal](knowledge/concepts/proposal.md) — specified
    - [Revision](knowledge/concepts/revision.md) — specified
    - [Availability Window](knowledge/concepts/availability-window.md) — specified; Phase 001 provisional condition resolved
-2. **002-B — Evaluation, Disclosure & Directed Response** — next
-3. **002-C — Program Choice, Participation, Scarcity & Representation Intent**
+2. [002-B — Evaluation, Disclosure & Directed Response](002-B-evaluation-disclosure-and-directed-response.md) — **complete**
+   - [Evaluation](knowledge/concepts/evaluation.md) — specified
+   - [Controlled Disclosure](knowledge/concepts/controlled-disclosure.md) — specified; Phase 001 provisional condition resolved
+   - [Feedback](knowledge/concepts/feedback.md) — specified
+3. **002-C — Program Choice, Participation, Scarcity & Representation Intent** — next
 4. **002-D — Vocabulary & Classification**
 5. **002-E — Deliverable & Scheduling Execution**
 6. **002-F — Publication, Dispatch & Historical Closure**
@@ -58,17 +61,15 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
 
 The remaining concept maturity and group membership are maintained in the [Concept Catalog](knowledge/concepts/) rather than duplicated here.
 
-## 002-A result
+## Formal-specification results to date
 
-002-A formally separates:
+002-A formally separates durable offer identity, mutable history, and governed temporal opportunity.
 
-- durable offer identity from mutable history;
-- append-only Revision history from edit eligibility and evaluation freshness;
-- explicit opportunity intervals from application lifecycle/authorization policy.
+002-B formally separates evaluator-attributed judgment, staged information disclosure, and recipient-directed response. Evaluation currentness/aggregation, reveal conditions, Feedback-triggered revision, and notification delivery remain composition/synchronization concerns rather than concept state.
 
-The complete state/action/invariant definitions live in the three canonical concept nodes above. The numbered phase record preserves only the decisions, rejected alternatives, deferred synchronization questions, and reconciliation observations.
+The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
 
-No application/domain implementation changes are authorized by 002-A.
+No application/domain implementation changes are authorized by Phase 002 specification work.
 
 ## Knowledge architecture
 
