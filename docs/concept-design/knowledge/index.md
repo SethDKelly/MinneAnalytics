@@ -17,6 +17,7 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [Adopt OKF as the Concept Design Knowledge Layer](decisions/okf-adoption.md) - Uses OKF v0.2 for canonical design knowledge without making documentation structure drive runtime architecture.
 * [001-G Discovery Gate Decision](decisions/001-g-discovery-gate.md) - Completes Phase 001 and admits 17 candidates to Phase 002 formal specification.
 * [002-G Formal Specification & Composition Gate](decisions/002-g-formal-specification-and-composition-gate.md) - Completes Phase 002 with all 17 concepts formally specified and hands the accepted model to implementation reconciliation.
+* [003-G Implementation Reconciliation Gate](decisions/003-g-implementation-reconciliation-gate.md) - Completes Phase 003 and authorizes bounded Phase 004 runtime implementation under the accepted reconciliation, migration, rollback-floor, and evidence rules.
 
 # Concept catalog
 
@@ -27,11 +28,11 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [Synchronization & Application Composition](synchronizations/) - Canonical cross-concept entrypoint.
 * [MinneAnalytics v0 Synchronization & Composition Contract](synchronizations/minneanalytics-v0.md) - Reference alignment, required synchronizations, application policies, derived projections, and failure semantics for the accepted v0 model.
 
-# Implementation reconciliation
+# Implementation reconciliation and execution handoff
 
-* [Implementation Reconciliation](reconciliation/) - Canonical implementation-mapping and target-architecture entrypoint.
+* [Implementation Reconciliation](reconciliation/) - Canonical implementation-mapping, target-architecture, migration, and execution-handoff entrypoint.
 * [v0 Implementation Ownership Map](reconciliation/minneanalytics-v0-implementation-ownership.md) - Current semantic ownership across implementation structures.
-* [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Stable prioritized semantic/policy gap IDs.
+* [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Stable prioritized semantic/policy gap IDs and current execution status.
 * [v0 Persistence, Identity & History Target](reconciliation/persistence-identity-history-target.md) - Stable identity reuse, required durable histories, exact references, and compatibility projections.
 * [v0 Migration Target Baseline](reconciliation/migration-target-baseline.md) - Recoverability, provenance, expand-first coexistence, rollback, and validation constraints.
 * [v0 Synchronization, Transaction & Recovery Target](reconciliation/synchronization-transaction-recovery-target.md) - Atomic authoritative bundles, source-authoritative convergence, durable work, schedule/provider/file boundaries, and compatibility-write direction.
@@ -42,23 +43,18 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [v0 Interface Compatibility & Cutover Baseline](reconciliation/interface-compatibility-baseline.md) - Legacy field dispositions, additive semantic interfaces, compatibility adapters, parity/shadow comparison, consumer inventory, and retirement gates.
 * [v0 Migration, Backfill & Rollout Execution Plan](reconciliation/migration-rollout-execution-plan.md) - Ordered F0–F9 schema/backfill/write/read/retirement waves and rollback classes.
 * [v0 Backfill, Validation & Reversibility Baseline](reconciliation/backfill-validation-reversibility-baseline.md) - Provenance, quarantine/blocking rules, invariant/scenario/parity gates, rollback floors, and destructive-cleanup requirements.
+* [v0 Implementation Execution Handoff](reconciliation/implementation-execution-handoff.md) - Phase 004 packages, bounded runtime authorization, dependencies, execution constraints, and stop-and-amend rule.
+* [v0 Implementation Closure & Evidence Baseline](reconciliation/implementation-closure-evidence-baseline.md) - Runtime closure states, evidence requirements, high-risk gap verification, rollback-floor checks, and final closure reporting.
 
 # Current maturity
 
-**Phase 002 formal specification is complete. Phase 003 implementation reconciliation is in progress and has completed 003-A through 003-F.**
+**Phase 002 formal specification and Phase 003 implementation reconciliation are complete.**
 
-Completed reconciliation groups:
+All 17 concepts are formally specified. All 18 semantic gaps and 4 policy gaps have accepted target architectures, migration/cutover paths, Phase 004 ownership, and runtime closure criteria.
 
-- **003-A** — implementation ownership and semantic-gap mapping;
-- **003-B** — persistence, identity, history, and migration target design;
-- **003-C** — synchronization, transaction, idempotency, and recovery architecture;
-- **003-D** — authority, lifecycle, disclosure, sharing, publication, and operational policy reconciliation;
-- **003-E** — derived views, API/UI state, and compatibility reconciliation;
-- **003-F** — data migration, backfill, rollout, validation, and reversibility planning.
+Phase 004 runtime implementation is now authorized under the 003-G gate.
 
-Next: **003-G — Implementation Reconciliation Consolidation & Execution Handoff**.
-
-Product/domain/schema changes remain unauthorized until 003-G confirms the full reconciliation package is internally consistent and establishes the explicit implementation execution handoff.
+Next: **004-A — Migration Discipline, Baseline & Additive Schema Foundation**.
 
 # Historical design record
 
