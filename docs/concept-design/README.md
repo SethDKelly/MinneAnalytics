@@ -4,10 +4,10 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation next
+- **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G)
-- **Next:** 003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A
+- **Next:** 003-B — Persistence, Identity, History & Migration Target Design
 
 ## Start here
 
@@ -16,7 +16,9 @@ For current normative design knowledge, begin with:
 - [Concept Design knowledge index](knowledge/index.md)
 - [Concept Catalog](knowledge/concepts/)
 - [MinneAnalytics v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md)
-- [002-G Formal Specification & Composition Gate](knowledge/decisions/002-g-formal-specification-and-composition-gate.md)
+- [Implementation Reconciliation](knowledge/reconciliation/)
+- [MinneAnalytics v0 Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
+- [003-A Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
 
 Canonical documentation behavior is governed by:
 
@@ -94,19 +96,23 @@ Cross-concept behaviors such as effective participation, Evaluation currentness,
 
 No hidden ProgramStatus/Workflow/SynchronizationManager concept was required.
 
-## Phase 003 — Implementation Reconciliation & Architecture Mapping — next
+## Phase 003 — Implementation Reconciliation & Architecture Mapping — in progress
 
-Phase 003 should reconcile the existing implementation against accepted Concept Design authority before application refactoring is authorized.
+Phase 003 reconciles the existing implementation against accepted Concept Design authority before application refactoring is authorized.
 
-1. **003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register**
-2. **003-B — Persistence, Identity, History & Migration Target Design**
+1. [003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) — **complete**
+   - [Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
+   - [Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
+2. **003-B — Persistence, Identity, History & Migration Target Design** — next
 3. **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture**
 4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**
 5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation**
 6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**
 7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
 
-The initial reconciliation backlog is maintained in [002-G Implementation Reconciliation Register](evidence/002-G-implementation-reconciliation-register.md).
+003-A maps all 17 concepts to the current implementation and establishes a baseline of 18 semantic gaps plus 4 cross-cutting policy gaps. The most important finding is that several existing physical aggregates are reusable, but mutable combined fields currently erase or fail to preserve independent conceptual histories.
+
+Detailed source-path evidence remains in the 003-A `evidence/` artifacts. Later work should begin from the canonical reconciliation nodes rather than restating that inventory.
 
 ## Knowledge architecture
 
@@ -120,6 +126,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-Completion of Phase 002 does **not** itself authorize application/domain refactoring.
+003-A does **not** authorize application/domain refactoring.
 
-Phase 003 must map and reconcile the current code against the canonical concepts and synchronization contract, identify concrete semantic gaps and migration needs, and explicitly authorize later implementation changes.
+003-B must now design persistence, reference identity, immutable history, compatibility projections, and migration-safe targets. Concrete application changes should be authorized only after the relevant Phase 003 design and migration work establishes a safe execution plan.
