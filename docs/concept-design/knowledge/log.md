@@ -1,6 +1,11 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Specification**: Completed 002-D — Vocabulary & Classification.
+* **Specification**: Promoted Vocabulary to `maturity: specified` with stable Term identity, append-only wording/availability history, and explicit `Contribute`/`Correct`/`Retire`/`Restore` lifecycle actions.
+* **Specification**: Promoted Classification to `maturity: specified` as the current SubjectRef↔TermRef association relation, independent from term governance, Coverage Target, Selection, and Revision history.
+* **Boundary**: Retirement no longer implies classification deletion; existing associations may remain interpretable while new classification eligibility can depend on Vocabulary availability through later application composition.
+* **Boundary**: Preserved the version-sensitive classification question for later synchronization design: MinneAnalytics may classify durable Proposal identities or exact Revision identities without merging Classification into Revision.
 * **Specification**: Completed 002-C — Program Choice, Participation, Scarcity & Representation Intent.
 * **Specification**: Promoted Selection to `maturity: specified` with immutable organizer Decision history, selected/reserve/not-selected dispositions, explicit clearing, and no intrinsic Withdrawal or Evaluation state.
 * **Specification**: Promoted Withdrawal to `maturity: specified` as a monotonic originator rescission fact that does not rewrite Selection history and has no invented reinstatement lifecycle.
