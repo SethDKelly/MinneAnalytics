@@ -4,10 +4,10 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal specification in progress
+- **Concept model maturity:** v0 — formal concept specification complete; synchronization consolidation next
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D; 002-E
-- **Next:** 002-F — Publication, Dispatch & Historical Closure
+- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D; 002-E; 002-F
+- **Next:** 002-G — Formal Specification Consolidation & Synchronization Handoff
 
 ## Start here
 
@@ -43,7 +43,7 @@ The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisi
 
 ## Phase 002 — Formal Concept Specification — in progress
 
-Phase 002 extends the canonical concept nodes with abstract state, actions, intrinsic invariants, derived observations, and explicit synchronization boundaries.
+Phase 002 formal specification has now completed all concept subgroups. 002-G will consolidate the model and establish the synchronization/application-composition handoff.
 
 1. [002-A — Offer, Change & Temporal Availability](002-A-offer-change-and-temporal-availability.md) — **complete**
    - [Proposal](knowledge/concepts/proposal.md) — specified
@@ -64,10 +64,13 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
 5. [002-E — Deliverable & Scheduling Execution](002-E-deliverable-and-scheduling-execution.md) — **complete**
    - [Deliverable](knowledge/concepts/deliverable.md) — specified
    - [Schedule](knowledge/concepts/schedule.md) — specified
-6. **002-F — Publication, Dispatch & Historical Closure** — next
-7. **002-G — Formal Specification Consolidation & Synchronization Handoff**
+6. [002-F — Publication, Dispatch & Historical Closure](002-F-publication-dispatch-and-historical-closure.md) — **complete**
+   - [Publication](knowledge/concepts/publication.md) — specified
+   - [Dispatch](knowledge/concepts/dispatch.md) — specified; Phase 001 provisional condition resolved
+   - [Archive](knowledge/concepts/archive.md) — specified
+7. **002-G — Formal Specification Consolidation & Synchronization Handoff** — next
 
-The remaining concept maturity and group membership are maintained in the [Concept Catalog](knowledge/concepts/) rather than duplicated here.
+All 17 concepts admitted at the Phase 001-G gate are now formally specified. All four provisional admissions—Availability Window, Controlled Disclosure, Coverage Target, and Dispatch—resolved positively during formal specification.
 
 ## Formal-specification results to date
 
@@ -81,9 +84,32 @@ The remaining concept maturity and group membership are maintained in the [Conce
 
 002-E separates artifact requirement from file/storage implementation, binds readiness to the exact provided artifact version, separates readiness from Publication, and treats Schedule as explicit planner-controlled place/time placement rather than algorithm output or Capacity state.
 
+002-F separates exact public exposure from mutable source/readiness state, performed operational Dispatch from templates/Feedback/provider mechanics, and retained internal Archive closure from public Publication or a broad Conference lifecycle.
+
 The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
 
 No application/domain implementation changes are authorized by Phase 002 specification work.
+
+## 002-G handoff focus
+
+002-G should now consolidate, test, and classify cross-concept synchronization/application rules rather than reopening concept internals by default. Key handoff areas include:
+
+- Proposal/Revision initialization and edit availability;
+- Revision/Evaluation currentness;
+- Evaluation/Controlled Disclosure sequencing;
+- Feedback-triggered revision/notification;
+- Selection/Withdrawal/effective participation;
+- Selection/Capacity allocation;
+- Classification/Selection/Coverage Target composition;
+- version-sensitive Classification subject choice;
+- Selection→Deliverable and Deliverable→Publication;
+- Selection/Withdrawal→Schedule eligibility;
+- generated Schedule suggestions versus explicit acceptance;
+- Publication exact-material eligibility;
+- Dispatch audience resolution and send semantics;
+- Archive-driven mutation gating and its relationship to Publication/Dispatch.
+
+The output should prepare explicit implementation reconciliation while preserving concept independence.
 
 ## Knowledge architecture
 
