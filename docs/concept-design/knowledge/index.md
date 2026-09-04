@@ -25,4 +25,4 @@ The catalog currently contains 13 admitted and 4 provisionally admitted candidat
 
 # Historical design record
 
-The detailed discovery record remains outside this bundle under [`docs/concept-design/`](../). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
+The detailed discovery record remains outside this bundle at the [`docs/concept-design/` entrypoint](../README.md). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
