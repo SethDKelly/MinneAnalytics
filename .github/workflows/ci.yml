@@ -47,7 +47,12 @@ jobs:
         env:
           DATABASE_URL: file:./ci-migrate.db
           MINNE_V0_WRITE_REVISION_EVALUATION: "true"
-      - name: Rehearse existing database baseline adoption and 004-B backfill
+      - name: Verify 004-C participation and Deliverable semantics
+        run: npm run db:004-c:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
+      - name: Rehearse existing database adoption and semantic backfills
         run: |
           cp prisma/prisma/dev.db prisma/ci-existing.db
           npx prisma migrate resolve --applied 20260904000000_baseline
@@ -55,6 +60,7 @@ jobs:
           npm run db:migration:report -- --environment ci-existing --out-dir /tmp/minne-existing-migration-report
           npm run db:004-b:vocabulary-backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-vocabulary
           npm run db:004-b:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-backfill
+          npm run db:004-c:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-c-backfill
         env:
           DATABASE_URL: file:./ci-existing.db
       - run: npm run lint
