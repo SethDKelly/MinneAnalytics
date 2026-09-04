@@ -1,6 +1,12 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Specification**: Completed 002-C — Program Choice, Participation, Scarcity & Representation Intent.
+* **Specification**: Promoted Selection to `maturity: specified` with immutable organizer Decision history, selected/reserve/not-selected dispositions, explicit clearing, and no intrinsic Withdrawal or Evaluation state.
+* **Specification**: Promoted Withdrawal to `maturity: specified` as a monotonic originator rescission fact that does not rewrite Selection history and has no invented reinstatement lifecycle.
+* **Specification**: Promoted Capacity to `maturity: specified` with finite Pool limits, class-sensitive rates, Allocation/Release state, and a hard no-overallocation invariant; committed/remaining/saturated are derived.
+* **Resolution**: Resolved Coverage Target's Phase 001 provisional condition positively and promoted it to `maturity: specified`; desired bounds are authoritative while observed composition, gaps/excesses, warnings, and visualizations remain derived application projections.
+* **Boundary**: Distinguished hard Capacity scarcity from soft Coverage Target planning intent and kept effective participation, Selection↔Capacity allocation, Withdrawal-triggered release, observed-composition calculation, and warning policy for later synchronization/application design.
 * **Specification**: Completed 002-B — Evaluation, Disclosure & Directed Response.
 * **Specification**: Promoted Evaluation to `maturity: specified` with exact-subject attribution, opaque Judgment, evaluator-owned revision of the same judgment, optional private context, and explicit exclusion of aggregate/currentness/work-queue semantics.
 * **Resolution**: Resolved Controlled Disclosure's Phase 001 provisional condition positively and promoted it to `maturity: specified`; the concept now owns one participant/context/information exposure relation with monotonic reveal rather than generic access control.
