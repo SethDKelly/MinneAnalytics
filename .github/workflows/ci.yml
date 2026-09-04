@@ -40,6 +40,14 @@ jobs:
         run: npm run db:migration:report -- --environment ci --out-dir /tmp/minne-migration-report
         env:
           DATABASE_URL: file:./ci-migrate.db
+      - name: Rehearse existing database baseline adoption
+        run: |
+          cp prisma/prisma/dev.db prisma/ci-existing.db
+          npx prisma migrate resolve --applied 20260904000000_baseline
+          npx prisma migrate deploy
+          npm run db:migration:report -- --environment ci-existing --out-dir /tmp/minne-existing-migration-report
+        env:
+          DATABASE_URL: file:./ci-existing.db
       - run: npm run lint
       - run: npm run build
         env:
