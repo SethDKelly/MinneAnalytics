@@ -1,17 +1,17 @@
 ---
 type: Implementation Reconciliation Index
 title: Implementation Reconciliation
-description: Canonical entrypoint for mapping the accepted v0 Concept Design model to the existing MinneAnalytics implementation and its target persistence, execution, policy, interface, and migration architecture.
+description: Canonical entrypoint for mapping the accepted v0 Concept Design model to the existing MinneAnalytics implementation and its target persistence, execution, policy, interface, migration, and implementation-handoff architecture.
 tags: [concept-design, implementation-reconciliation, architecture-mapping]
 status: stable
 authority: canonical
-phase: 003-F
+phase: 003-G
 ---
 # Implementation Reconciliation
 
-Use this directory for current normative conclusions about how the existing implementation relates to the accepted Concept Design model and how that realization should evolve safely.
+Use this directory for current normative conclusions about how the existing implementation relates to the accepted Concept Design model, how that realization should evolve safely, and how runtime implementation is executed and verified.
 
-Concept semantics remain owned by the [Concept Catalog](../concepts/), and cross-concept behavior remains owned by the [MinneAnalytics v0 Synchronization & Composition Contract](../synchronizations/minneanalytics-v0.md). This directory owns neither; it maps implementation realization, execution architecture, application policy, interface compatibility, and migration rollout to them.
+Concept semantics remain owned by the [Concept Catalog](../concepts/), and cross-concept behavior remains owned by the [MinneAnalytics v0 Synchronization & Composition Contract](../synchronizations/minneanalytics-v0.md). This directory owns neither; it maps implementation realization, execution architecture, application policy, interface compatibility, migration rollout, and implementation evidence/closure to them.
 
 # Current canonical reconciliation knowledge
 
@@ -27,14 +27,20 @@ Concept semantics remain owned by the [Concept Catalog](../concepts/), and cross
 * [v0 Interface Compatibility & Cutover Baseline](interface-compatibility-baseline.md) — legacy-field dispositions, additive semantic interfaces, command adapters, parity/shadow checks, consumer inventory, and compatibility retirement gates.
 * [v0 Migration, Backfill & Rollout Execution Plan](migration-rollout-execution-plan.md) — F0–F9 implementation waves, exact-reference/current-state backfill order, semantic write/read cutover, legacy mutation retirement, and rollback classes.
 * [v0 Backfill, Validation & Reversibility Baseline](backfill-validation-reversibility-baseline.md) — provenance, quarantine/blocking criteria, invariant/scenario/parity gates, rollback floors, and destructive-cleanup readiness.
+* [v0 Implementation Execution Handoff](implementation-execution-handoff.md) — Phase 004 work-package order, bounded implementation authorization, dependencies, branch boundary, and execution constraints.
+* [v0 Implementation Closure & Evidence Baseline](implementation-closure-evidence-baseline.md) — SG/SG-P runtime closure states, required evidence, high-risk closure rules, rollback-floor verification, and Phase 004 exit reporting.
 
-# Current Phase 003 status
+# Phase 003 status
 
-**003-A through 003-F are complete.** The Concept Design model now has an implementation ownership map, semantic-gap register, persistence/history target, transaction/recovery architecture, authority/lifecycle/disclosure/publication policy, interface compatibility target, and executable migration/backfill/rollout plan.
+**Phase 003 is complete.**
 
-Next: **003-G — Implementation Reconciliation Consolidation & Execution Handoff**.
+003-A through 003-F established ownership, gaps, persistence/history, transaction/recovery, authority/policy, API/UI compatibility, and migration/rollback targets. 003-G performed the cross-phase consistency gate and authorized bounded Phase 004 runtime implementation.
 
-Runtime/schema changes remain unauthorized until 003-G performs the final cross-phase consistency review and issues the explicit implementation execution handoff.
+Canonical gate: [003-G Implementation Reconciliation Gate](../decisions/003-g-implementation-reconciliation-gate.md).
+
+Next: **004-A — Migration Discipline, Baseline & Additive Schema Foundation**.
+
+Runtime/schema work is now permitted only under the [Implementation Execution Handoff](implementation-execution-handoff.md). Destructive cleanup remains separately gated and is not generally authorized by Phase 003 completion.
 
 # Historical audit evidence
 
@@ -46,11 +52,12 @@ Detailed implementation observations and design reasoning remain in the numbered
 * [003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation](../../003-D-authority-lifecycle-disclosure-and-operational-policy-reconciliation.md)
 * [003-E — Derived Views, API/UI State & Compatibility Reconciliation](../../003-E-derived-views-api-ui-state-and-compatibility-reconciliation.md)
 * [003-F — Data Migration, Backfill, Rollout & Reversibility Plan](../../003-F-data-migration-backfill-rollout-and-reversibility-plan.md)
-* [003-F Migration Wave & Cutover Matrix](../../evidence/003-F-migration-wave-and-cutover-matrix.md)
-* [003-F Backfill Provenance, Validation & Rollback Matrix](../../evidence/003-F-backfill-provenance-validation-and-rollback-matrix.md)
+* [003-G — Implementation Reconciliation Consolidation & Execution Handoff](../../003-G-implementation-reconciliation-consolidation-and-execution-handoff.md)
+* [003-G Reconciliation Conformance & Closure Matrix](../../evidence/003-G-reconciliation-conformance-and-closure-matrix.md)
+* [003-G Implementation Work Package & Dependency Matrix](../../evidence/003-G-implementation-work-package-and-dependency-matrix.md)
 
 # Authority rule
 
-A physical implementation aggregate may realize several concepts, policies, synchronizations, and projections. Reconciliation must preserve semantic ownership and history without assuming one table/service/route per concept.
+A physical implementation aggregate may realize several concepts, policies, synchronizations, and projections. Implementation must preserve semantic ownership and history without assuming one table/service/route per concept.
 
-003-F does not turn migration infrastructure into domain concepts. Prisma migrations, backfill manifests, quarantine reports, feature/configuration gates, compatibility adapters, and rollback procedures are implementation mechanisms governed by the canonical semantic targets above.
+Phase 004 evidence may refine physical realization and operational tooling. It does not override canonical Concept Design semantics merely because runtime code is newer.
