@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B
-- **Next:** 003-C — Synchronization, Transaction, Idempotency & Recovery Architecture
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C
+- **Next:** 003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation
 
 ## Start here
 
@@ -21,6 +21,8 @@ For current normative design knowledge, begin with:
 - [003-A Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
 - [v0 Persistence, Identity & History Target](knowledge/reconciliation/persistence-identity-history-target.md)
 - [v0 Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
+- [v0 Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
+- [v0 Idempotency & Recovery Baseline](knowledge/reconciliation/idempotency-recovery-baseline.md)
 
 Canonical documentation behavior is governed by:
 
@@ -71,20 +73,18 @@ Use the [v0 Synchronization & Composition Contract](knowledge/synchronizations/m
 Phase 003 reconciles the existing implementation against accepted Concept Design authority before application refactoring is authorized.
 
 1. [003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) — **complete**
-   - [Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
-   - [Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
 2. [003-B — Persistence, Identity, History & Migration Target Design](003-B-persistence-identity-history-and-migration-target-design.md) — **complete**
-   - [Persistence, Identity & History Target](knowledge/reconciliation/persistence-identity-history-target.md)
-   - [Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
-3. **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture** — next
-4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**
+3. [003-C — Synchronization, Transaction, Idempotency & Recovery Architecture](003-C-synchronization-transaction-idempotency-and-recovery-architecture.md) — **complete**
+   - [Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
+   - [Idempotency & Recovery Baseline](knowledge/reconciliation/idempotency-recovery-baseline.md)
+4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation** — next
 5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation**
 6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**
 7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
 
-003-A established 18 semantic gaps plus 4 policy gaps. 003-B now defines which existing IDs survive, where durable history must be added, how exact Revision/Artifact references work, what remains a compatibility projection, and which legacy history can or cannot be honestly reconstructed.
+003-A established the semantic gaps. 003-B defined persistent identity/history targets and expand-first migration truth. 003-C now defines which cross-concept operations are atomic, which source actions commit before convergent cleanup, how retries avoid duplicate semantic history, and how external provider/file boundaries remain truthful under uncertainty.
 
-The target is deliberately **reuse-before-replace** and **expand-first**: existing aggregates may remain when they preserve the required semantics, and destructive cleanup is deferred until later compatibility/migration gates.
+The execution target deliberately uses ordinary local database transactions and narrow durable work/outbox infrastructure where needed; it does **not** introduce Workflow, SynchronizationManager, distributed saga, or broker requirements.
 
 ## Knowledge architecture
 
@@ -98,6 +98,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-003-B still authorizes **no application/domain/schema refactoring**.
+003-C still authorizes **no application/domain/schema refactoring**.
 
-003-C must next design synchronization transactions, idempotency, retry/convergence, compatibility write projection, and recovery semantics. Concrete application changes should be authorized only after the remaining Phase 003 design and migration work establishes a safe execution handoff.
+003-D must next reconcile actor authority, Availability Window override/edit policy, Archive/post-closure behavior, Controlled Disclosure reveal policy and legacy cohorts, Publication sharing/rights, and other operational action eligibility before compatibility/API and executable migration work can be finalized.
