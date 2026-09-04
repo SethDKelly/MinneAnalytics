@@ -15,24 +15,23 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 # Decisions
 
 * [Adopt OKF as the Concept Design Knowledge Layer](decisions/okf-adoption.md) - Uses OKF v0.2 for canonical design knowledge without making documentation structure drive runtime architecture.
-* [001-G Discovery Gate Decision](decisions/001-g-discovery-gate.md) - Completes Phase 001 and admits 17 candidates to Phase 002 formal specification, four provisionally at the gate.
+* [001-G Discovery Gate Decision](decisions/001-g-discovery-gate.md) - Completes Phase 001 and admits 17 candidates to Phase 002 formal specification.
+* [002-G Formal Specification & Composition Gate](decisions/002-g-formal-specification-and-composition-gate.md) - Completes Phase 002 with all 17 concepts formally specified and hands the accepted model to implementation reconciliation.
 
 # Concept catalog
 
-* [Concept Catalog](concepts/) - Canonical formal specifications for all 17 concepts admitted by Phase 001-G.
+* [Concept Catalog](concepts/) - Canonical purpose, operational principle, abstract state, actions, invariants, derived observations, and concept-local synchronization boundaries for all 17 specified concepts.
 
-Phase 002 formal concept specification is complete through [002-F](../002-F-publication-dispatch-and-historical-closure.md):
+# Synchronization and application composition
 
-* [002-A](../002-A-offer-change-and-temporal-availability.md) — Proposal, Revision, Availability Window.
-* [002-B](../002-B-evaluation-disclosure-and-directed-response.md) — Evaluation, Controlled Disclosure, Feedback.
-* [002-C](../002-C-program-choice-participation-scarcity-and-representation-intent.md) — Selection, Withdrawal, Capacity, Coverage Target.
-* [002-D](../002-D-vocabulary-and-classification.md) — Vocabulary, Classification.
-* [002-E](../002-E-deliverable-and-scheduling-execution.md) — Deliverable, Schedule.
-* [002-F](../002-F-publication-dispatch-and-historical-closure.md) — Publication, Dispatch, Archive.
+* [Synchronization & Application Composition](synchronizations/) - Canonical cross-concept entrypoint.
+* [MinneAnalytics v0 Synchronization & Composition Contract](synchronizations/minneanalytics-v0.md) - Reference alignment, required synchronizations, application policies, derived projections, and failure semantics for the accepted v0 model.
 
-All 17 concepts are now `maturity: specified`. Availability Window, Controlled Disclosure, Coverage Target, and Dispatch each resolved their Phase 001 provisional conditions positively. No provisional admissions remain.
+# Current maturity
 
-The next work is **002-G — Formal Specification Consolidation & Synchronization Handoff**, which will consolidate cross-concept synchronizations/application composition and prepare later implementation reconciliation without reopening concept boundaries casually.
+**Phase 002 formal specification is complete.** All 17 Phase 001-G concepts are formally specified and no provisional admissions remain.
+
+Phase 003 is the next design activity: **Implementation Reconciliation & Architecture Mapping**. Product/domain code changes remain unauthorized until that reconciliation identifies and plans concrete semantic gaps.
 
 # Historical design record
 
