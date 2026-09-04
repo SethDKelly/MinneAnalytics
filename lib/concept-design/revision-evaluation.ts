@@ -56,15 +56,21 @@ async function establishRevisionTerms(
   revisionId: string,
   themeIds: string[]
 ) {
-  const normalized = normalizedThemeIds(themeIds);
-  if (normalized.length === 0) return;
-  await tx.revisionTerm.createMany({
-    data: normalized.map((themeId) => ({
-      submissionRevisionId: revisionId,
-      themeId,
-    })),
-    skipDuplicates: true,
-  });
+  for (const themeId of normalizedThemeIds(themeIds)) {
+    await tx.revisionTerm.upsert({
+      where: {
+        submissionRevisionId_themeId: {
+          submissionRevisionId: revisionId,
+          themeId,
+        },
+      },
+      update: {},
+      create: {
+        submissionRevisionId: revisionId,
+        themeId,
+      },
+    });
+  }
 }
 
 export async function establishInitialRevision(
