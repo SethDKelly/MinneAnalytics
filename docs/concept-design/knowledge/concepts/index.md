@@ -1,6 +1,6 @@
 # Concept Catalog
 
-These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G. Phase 002 incrementally added formal abstract state, actions, intrinsic invariants, derived observations, and synchronization boundaries to these same nodes rather than creating a parallel specification layer.
+These nodes are the canonical knowledge representation of the concepts admitted by Phase 001-G and formally specified by Phase 002. Formal abstract state, actions, intrinsic invariants, derived observations, and concept-local synchronization boundaries live in these nodes rather than in parallel specification documents.
 
 # Formally specified
 
@@ -22,11 +22,25 @@ These nodes are the canonical knowledge representation of the concepts admitted 
 * [Dispatch](dispatch.md) - Provider-neutral performed operational sends with exact per-recipient message evidence and semantic round dedupe; specified in 002-F and provisional condition resolved.
 * [Archive](archive.md) - Monotonic internal closure of a working context into retained history; specified in 002-F.
 
-All 17 Phase 001-G candidates are now formally specified. No provisional admissions remain.
+All 17 Phase 001-G candidates are formally specified. No provisional admissions remain.
+
+# Application composition
+
+The concept nodes intentionally do not restate cross-concept application rules. Use the canonical [MinneAnalytics v0 Synchronization & Composition Contract](../synchronizations/minneanalytics-v0.md) for:
+
+- Proposal/Revision/Classification reference alignment;
+- effective participation;
+- Evaluation currentness and disclosure sequencing;
+- Selection/Capacity/Withdrawal coordination;
+- Coverage projections;
+- Deliverable/Schedule participation behavior;
+- Publication eligibility/material identity;
+- Dispatch audience/dedupe composition;
+- Archive mutation gating.
 
 # Deferred signals
 
-Authorization/delegation, Export/report definitions, cross-concept Audit Trail, and Registration/Enrollment are not in the current Phase 002 concept set. See the [001-G discovery gate decision](../decisions/001-g-discovery-gate.md) for their disposition.
+Authorization/delegation, Export/report definitions, cross-concept Audit Trail, and Registration/Enrollment are not in the current concept set. See the [001-G discovery gate decision](../decisions/001-g-discovery-gate.md) for their disposition.
 
 # Specification progression
 
@@ -35,5 +49,9 @@ Authorization/delegation, Export/report definitions, cross-concept Audit Trail, 
 * [002-C — Program Choice, Participation, Scarcity & Representation Intent](../../002-C-program-choice-participation-scarcity-and-representation-intent.md) formally specifies Selection, Withdrawal, Capacity, and Coverage Target.
 * [002-D — Vocabulary & Classification](../../002-D-vocabulary-and-classification.md) formally specifies Vocabulary and Classification.
 * [002-E — Deliverable & Scheduling Execution](../../002-E-deliverable-and-scheduling-execution.md) formally specifies Deliverable and Schedule.
-* [002-F — Publication, Dispatch & Historical Closure](../../002-F-publication-dispatch-and-historical-closure.md) formally specifies Publication, Dispatch, and Archive and resolves Dispatch's final provisional gate.
-* 002-G will consolidate the complete formal model and determine the synchronization/application-composition handoff.
+* [002-F — Publication, Dispatch & Historical Closure](../../002-F-publication-dispatch-and-historical-closure.md) formally specifies Publication, Dispatch, and Archive.
+* [002-G — Formal Specification Consolidation & Synchronization Handoff](../../002-G-formal-specification-consolidation-and-synchronization-handoff.md) accepts the complete v0 baseline and establishes the canonical cross-concept handoff.
+
+# Phase 002 result
+
+**Complete.** The next activity is Phase 003 implementation reconciliation and architecture mapping, not additional concept specification by default.
