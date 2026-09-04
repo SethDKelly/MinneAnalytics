@@ -1,6 +1,16 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-C — Synchronization, Transaction, Idempotency & Recovery Architecture.
+* **Execution classes**: Established TX-A atomic authoritative bundles, TX-B source-authoritative commits with convergent follow-up, TX-C independent notification/external consequences, and TX-D non-transactional resource/provider boundaries.
+* **Atomicity**: Classified Offer/Revision establishment, local Evaluation→Disclosure reveal, and newly-effective Selection + Capacity + required Deliverable establishment as local atomic transactions.
+* **Source authority**: Required Withdrawal and participation-exit Selection Decisions to commit independently of Capacity/Schedule/Publication cleanup; downstream cleanup is represented as durable idempotent work and cannot erase source truth.
+* **Idempotency**: Established semantic uniqueness, expected-head append, stable command keys, and `(syncId, sourceRef, effectKey)` work keys so retries do not manufacture duplicate Revision/Decision/Publication/Dispatch history.
+* **Schedule**: Replaced clear-then-generate target semantics with non-mutating generation proposals followed by expected-base, single-transaction accepted placement application.
+* **External boundaries**: Required exact prepared Dispatch message/recipient evidence plus provider uncertainty handling, and recoverable storage→ArtifactVersion commit/orphan cleanup for Deliverable uploads.
+* **Compatibility direction**: After canonical write cutover, legacy aggregate fields are repaired/projected canonical→compatibility; uncontrolled bidirectional authority is prohibited.
+* **Anti-bloat**: Durable work/outbox infrastructure remains an implementation mechanism; no Workflow, SynchronizationManager, distributed saga, message broker, or global event-sourcing requirement was introduced.
+* **Handoff**: Advanced Phase 003 to 003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation. 003-C authorizes no runtime/schema/provider changes.
 * **Reconciliation**: Completed 003-B — Persistence, Identity, History & Migration Target Design.
 * **Persistence target**: Reused existing `Submission.id`, `SubmissionRevision.id`, `Score.id`, `PresenterFeedback.id`, `Theme.id`, `DeckFile.id`, Schedule IDs, and Dispatch Batch/SendRecord IDs where their semantic identity already fits; no parallel identity system is introduced merely for conceptual naming symmetry.
 * **History target**: Required new durable identity/history only for Availability Window, Controlled Disclosure, Selection Decisions, Withdrawal, Capacity Pool/Allocation, Coverage Target, Vocabulary TermState, Deliverable Requirement/Assessment, Publication/PublicationState, and Archive closure.
