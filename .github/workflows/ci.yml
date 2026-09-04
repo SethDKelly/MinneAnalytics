@@ -41,7 +41,9 @@ jobs:
         env:
           DATABASE_URL: file:./ci-migrate.db
       - name: Verify 004-B canonical history semantics
-        run: npm run db:004-b:verify
+        run: |
+          npm run db:004-b:verify
+          npm run db:004-b:vocabulary-verify
         env:
           DATABASE_URL: file:./ci-migrate.db
           MINNE_V0_WRITE_REVISION_EVALUATION: "true"
@@ -51,6 +53,7 @@ jobs:
           npx prisma migrate resolve --applied 20260904000000_baseline
           npx prisma migrate deploy
           npm run db:migration:report -- --environment ci-existing --out-dir /tmp/minne-existing-migration-report
+          npm run db:004-b:vocabulary-backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-vocabulary
           npm run db:004-b:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-backfill
         env:
           DATABASE_URL: file:./ci-existing.db
