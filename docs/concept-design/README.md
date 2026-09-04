@@ -1,13 +1,14 @@
 # MinneAnalytics Concept Design
 
-This directory contains the repository's Daniel Jackson–style Concept Design retrofit.
+This directory contains the repository's Daniel Jackson–style Concept Design retrofit and its bounded implementation execution record.
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; bounded runtime implementation authorized
-- **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G)
-- **Next:** 004-A — Migration Discipline, Baseline & Additive Schema Foundation
+- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation in progress
+- **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
+- **Working implementation branch:** `concept-design/v0-implementation`
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A
+- **Next:** 004-B — Revision, Classification, Evaluation & Feedback Canonicalization
 
 ## Start here
 
@@ -43,11 +44,11 @@ The `knowledge/` directory is an [Open Knowledge Format (OKF) v0.2](https://gith
 
 ## Documentation authority
 
-Numbered phase documents and `evidence/` artifacts are the **historical design record**: observations, alternatives, reasoning, falsification, and exit decisions.
+Numbered phase documents and `evidence/` artifacts are the **historical design/implementation record**: observations, alternatives, reasoning, migration decisions, implementation evidence, and exit results.
 
 Once knowledge is promoted into a canonical OKF node, later work should reference that node instead of reproducing the full rule or concept specification. Historical records are preserved rather than rewritten merely to match later wording.
 
-Application code and implementation documentation describe current realization; they do not override Concept Design authority.
+Application code, migrations, tests, and implementation documentation describe current realization; they do not override Concept Design authority.
 
 ## Phase 001 — Discovery & Archaeology — complete
 
@@ -91,14 +92,18 @@ Phase 003 reconciled the existing implementation against the accepted Concept De
 
 The canonical Phase 003 gate is [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md).
 
-All 18 semantic gaps and 4 policy gaps now have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. They remain implementation-open until verified by Phase 004 evidence.
+All 18 semantic gaps and 4 policy gaps have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. They remain implementation-open until verified by Phase 004 evidence.
 
-## Phase 004 — v0 Implementation Execution & Migration — authorized
+## Phase 004 — v0 Implementation Execution & Migration — in progress
 
 Phase 004 executes the accepted reconciliation architecture. The authoritative package order and constraints are in the [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md).
 
-1. **004-A — Migration Discipline, Baseline & Additive Schema Foundation** — next
-2. **004-B — Revision, Classification, Evaluation & Feedback Canonicalization**
+1. [004-A — Migration Discipline, Baseline & Additive Schema Foundation](004-A-migration-discipline-baseline-and-additive-schema-foundation.md) — **complete**
+   - created `concept-design/v0-implementation` from the exact 003-G gate commit;
+   - established checked-in Prisma baseline + additive migration history;
+   - added target persistence/recovery/migration-evidence schema without semantic cutover;
+   - added default-off rollout gates, baseline reports, SQLite backup/restore rehearsal tooling, and implementation-branch CI migration validation.
+2. **004-B — Revision, Classification, Evaluation & Feedback Canonicalization** — next
 3. **004-C — Selection, Withdrawal, Capacity & Deliverable Canonicalization**
 4. **004-D — Availability, Archive, Authority & Disclosure Policy Implementation**
 5. **004-E — Publication, Public Access, Schedule & Dispatch Hardening**
@@ -106,23 +111,23 @@ Phase 004 executes the accepted reconciliation architecture. The authoritative p
 7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate**
 8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review**
 
-Runtime implementation is authorized **only within these bounded packages and gates**. Additive schema/runtime work may begin in 004-A. Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
+004-A creates the implementation substrate only. No SG/SG-P item is considered closed merely because a target table/reference now exists; semantic writers, reads, backfill, legacy-authority retirement, and runtime evidence remain package-specific obligations.
 
-The preferred branch discipline is to preserve the 003-G gate commit as the v0 design/reconciliation baseline and begin Phase 004 implementation from it on a dedicated branch such as `concept-design/v0-implementation`.
+Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
 
 ## Knowledge architecture
 
 The repository uses three complementary layers:
 
 1. **Canonical knowledge** — `knowledge/` OKF nodes for current normative design knowledge.
-2. **Historical design record** — numbered phase/evidence files showing how conclusions were reached.
-3. **Implementation record** — source code, migrations, tests, reports, and implementation documentation showing current realization.
+2. **Historical design/implementation record** — numbered phase/evidence files showing how conclusions were reached and implemented.
+3. **Implementation record** — source code, migrations, tests, reports, and CI evidence showing current realization.
 
 Do not create a fourth prose layer that restates the same rules. Prefer links to the canonical owner.
 
 ## Branch and implementation discipline
 
-Phase 003 itself changed no product/domain runtime behavior.
+The completed discovery/specification/reconciliation branch remains `concept-design/v0-discovery` at the 003-G baseline. Runtime work proceeds on `concept-design/v0-implementation`.
 
 During Phase 004, code may change under the explicit 003-G authorization, but implementation must preserve canonical semantics, migration no-fabrication rules, one-way compatibility after write cutover, rollback floors, and the evidence/closure requirements in the [Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md).
 
