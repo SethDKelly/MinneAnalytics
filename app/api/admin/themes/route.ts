@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  establishInitialTermState,
+  recordTermState,
+} from "@/lib/concept-design/vocabulary";
 import { prisma } from "@/lib/db";
 import { canManageThemes, getReviewerByToken } from "@/lib/reviewer";
 import { slugifyThemeName } from "@/lib/themes";
@@ -26,17 +31,38 @@ export async function POST(request: Request) {
     _max: { sortOrder: true },
   });
 
-  const theme = await prisma.theme.create({
-    data: {
-      conferenceId: reviewer.conferenceId,
-      name,
-      slug,
-      source: "ADMIN",
-      targetMin,
-      targetMax,
-      sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
-    },
-  });
+  const canonicalWrites = isImplementationGateEnabled("revisionEvaluationWrites");
+  const theme = canonicalWrites
+    ? await prisma.$transaction(async (tx) => {
+        const created = await tx.theme.create({
+          data: {
+            conferenceId: reviewer.conferenceId,
+            name,
+            slug,
+            source: "ADMIN",
+            targetMin,
+            targetMax,
+            sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+          },
+        });
+        await establishInitialTermState(tx, {
+          themeId: created.id,
+          label: created.name,
+          recordedByRef: reviewer.id,
+        });
+        return tx.theme.findUniqueOrThrow({ where: { id: created.id } });
+      })
+    : await prisma.theme.create({
+        data: {
+          conferenceId: reviewer.conferenceId,
+          name,
+          slug,
+          source: "ADMIN",
+          targetMin,
+          targetMax,
+          sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+        },
+      });
 
   return NextResponse.json({ ok: true, theme });
 }
@@ -58,24 +84,48 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Theme not found" }, { status: 404 });
   }
 
-  const data: {
-    name?: string;
-    targetMin?: number;
-    targetMax?: number;
-    removedAt?: Date | null;
-    source?: "ADMIN" | "PRESENTER";
-  } = {};
+  const name = body.name !== undefined ? String(body.name).trim() : undefined;
+  if (name !== undefined && !name) {
+    return NextResponse.json({ error: "Name required" }, { status: 400 });
+  }
+  const targetMin =
+    body.targetMin !== undefined ? Math.max(0, Number(body.targetMin) || 0) : undefined;
+  const targetMax =
+    body.targetMax !== undefined ? Math.max(0, Number(body.targetMax) || 0) : undefined;
+  const source = body.source === "ADMIN" ? ("ADMIN" as const) : undefined;
+  const availability =
+    body.removed === true ? ("RETIRED" as const) :
+    body.removed === false ? ("AVAILABLE" as const) : undefined;
 
-  if (body.name !== undefined) data.name = String(body.name).trim();
-  if (body.targetMin !== undefined) data.targetMin = Math.max(0, Number(body.targetMin) || 0);
-  if (body.targetMax !== undefined) data.targetMax = Math.max(0, Number(body.targetMax) || 0);
-  if (body.removed === true) data.removedAt = new Date();
-  if (body.removed === false) data.removedAt = null;
-  if (body.source === "ADMIN") data.source = "ADMIN";
+  if (isImplementationGateEnabled("revisionEvaluationWrites") && (name || availability)) {
+    const theme = await prisma.$transaction(async (tx) => {
+      if (targetMin !== undefined || targetMax !== undefined || source !== undefined) {
+        await tx.theme.update({
+          where: { id: themeId },
+          data: { targetMin, targetMax, source },
+        });
+      }
+      await recordTermState(tx, {
+        themeId,
+        label: name,
+        availability,
+        recordedByRef: reviewer.id,
+      });
+      return tx.theme.findUniqueOrThrow({ where: { id: themeId } });
+    });
+    return NextResponse.json({ ok: true, theme });
+  }
 
   const theme = await prisma.theme.update({
     where: { id: themeId },
-    data,
+    data: {
+      name,
+      targetMin,
+      targetMax,
+      removedAt:
+        body.removed === true ? new Date() : body.removed === false ? null : undefined,
+      source,
+    },
   });
 
   return NextResponse.json({ ok: true, theme });
@@ -101,6 +151,17 @@ export async function DELETE(request: Request) {
   });
   if (!existing) {
     return NextResponse.json({ error: "Theme not found" }, { status: 404 });
+  }
+
+  if (isImplementationGateEnabled("revisionEvaluationWrites")) {
+    await prisma.$transaction(async (tx) => {
+      await recordTermState(tx, {
+        themeId,
+        availability: "RETIRED",
+        recordedByRef: reviewer.id,
+      });
+    });
+    return NextResponse.json({ ok: true, softRemoved: true });
   }
 
   if (existing._count.submissions > 0) {
