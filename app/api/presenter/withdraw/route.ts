@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  presenterActorRef,
+  recordCanonicalWithdrawal,
+} from "@/lib/concept-design/selection-participation-deliverable";
 import { hashToken } from "@/lib/tokens";
 
 export async function POST(request: Request) {
@@ -11,6 +16,19 @@ export async function POST(request: Request) {
   });
   if (!submission) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (isImplementationGateEnabled("selectionParticipationWrites")) {
+    const result = await recordCanonicalWithdrawal({
+      submissionId: submission.id,
+      actorRef: presenterActorRef(submission.id),
+    });
+    return NextResponse.json({
+      ok: true,
+      withdrawalId: result.withdrawal.id,
+      replayed: result.replayed,
+      cleanupPending: result.cleanupPending,
+    });
   }
 
   if (submission.programStatus === "WITHDRAWN") {
