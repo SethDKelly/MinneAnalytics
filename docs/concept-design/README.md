@@ -7,221 +7,59 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Concept model maturity:** v0 — discovery
 - **Working branch:** `concept-design/v0-discovery`
 - **Current phase:** 001 — Discovery & Archaeology
-- **Completed:**
-  - 001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules
-  - 001-B — Historical Intent Reconstruction & Repository Archaeology
-  - 001-C — Problem, Actor-Need & Purpose Inventory
-  - 001-D — Candidate Concept Discovery & Boundary Hypotheses
-  - 001-E — Concept Criteria, Independence & Genericity Review
-  - 001-F — Operational Principle Development
-- **Next:** 001-G — Discovery Consolidation & Concept Candidate Gate
+- **Completed:** 001-A through 001-F
+- **Next:** [001-G — Discovery Consolidation & Concept Candidate Gate](001-G-discovery-consolidation-and-concept-candidate-gate.md) *(created when the gate is executed)*
 
-## Design authority
+## Start here
 
-The Concept Design model describes MinneAnalytics' intended behavioral structure independently of the current implementation.
+For current design knowledge, begin with the [Concept Design knowledge index](knowledge/index.md).
 
-Existing code, schemas, routes, UI organization, APIs, and architecture documentation are evidence of implemented behavior and historical decisions. They are not, by themselves, authoritative definitions of concepts or concept boundaries.
+Canonical documentation behavior is governed by:
 
-During v0 discovery, conflicts between recovered intent, current behavior, future intent, implementation, and new design hypotheses must be recorded rather than silently resolved in favor of the existing implementation.
+- [Documentation Authority & Cross-Reference Rules](knowledge/rules/documentation-authority.md)
+- [Concept Design Authority](knowledge/rules/concept-design-authority.md)
+- [OKF Adoption Decision](knowledge/decisions/okf-adoption.md)
 
-See [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-design-authority-methodology-evidence-and-anti-bias.md) for the governing methodology.
+The `knowledge/` directory is an [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format) bundle. It is the compact, progressively disclosed knowledge layer for settled rules and gated design knowledge.
 
-## Working progression
+## Documentation authority
 
-### 001 — Discovery & Archaeology
+Numbered phase documents and `evidence/` artifacts are the **historical design record**: they preserve observations, alternatives, reasoning, falsification, and exit decisions.
 
-1. **001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules** — complete
-2. **001-B — Historical Intent Reconstruction & Repository Archaeology** — complete
-3. **001-C — Problem, Actor-Need & Purpose Inventory** — complete
-4. **001-D — Candidate Concept Discovery & Boundary Hypotheses** — complete
-5. **001-E — Concept Criteria, Independence & Genericity Review** — complete
-6. **001-F — Operational Principle Development** — complete
+Once knowledge is promoted into a canonical OKF node, later work should reference that node instead of reproducing the full rule or concept specification. Historical records are not rewritten merely to match later wording.
+
+Application code and implementation documentation describe the current realization; they do not override Concept Design authority. See [Concept Design Authority](knowledge/rules/concept-design-authority.md).
+
+## Phase 001 progression
+
+1. [001-A — Design Authority, Methodology, Evidence & Anti-Bias Rules](001-A-design-authority-methodology-evidence-and-anti-bias.md) — complete
+2. [001-B — Historical Intent Reconstruction & Repository Archaeology](001-B-historical-intent-reconstruction-and-repository-archaeology.md) — complete
+3. [001-C — Problem, Actor-Need & Purpose Inventory](001-C-problem-actor-need-and-purpose-inventory.md) — complete
+4. [001-D — Candidate Concept Discovery & Boundary Hypotheses](001-D-candidate-concept-discovery-and-boundary-hypotheses.md) — complete
+5. [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md) — complete
+6. [001-F — Operational Principle Development](001-F-operational-principle-development.md) — complete
 7. **001-G — Discovery Consolidation & Concept Candidate Gate** — next
 
-Later phases will specify surviving concepts, define application composition and synchronizations, reconcile the conceptual model against the existing implementation, and consolidate a canonical v0 baseline. Their exact subdivision is determined from discovery results rather than fixed from implementation structure.
+Each phase record links to its supporting evidence artifacts. Load those records only when the reasoning/provenance behind a canonical conclusion is needed.
 
-## 001-B archaeology baseline
+## Current discovery handoff
 
-001-B reconstructs historical product intent without promoting implementation structures into concepts. Its central finding is that current documentation alone is not a complete design-history source: both the original implementation plan and the detailed conference-v2 planning/backlog documents were intentionally removed after their implementation milestones, so immutable repository history remains first-class evidence.
+The authoritative input to 001-G is the [001-F Surviving Operational-Principle Baseline](evidence/001-F-surviving-candidate-baseline.md).
 
-### 001-B artifacts
+It contains 17 surviving candidates after purpose discovery, criteria review, and operational-principle falsification. The candidates are not canonical until 001-G explicitly admits them to formal specification.
 
-- [001-B — Historical Intent Reconstruction & Repository Archaeology](001-B-historical-intent-reconstruction-and-repository-archaeology.md) — synthesis and exit review
-- [Source Register](evidence/001-B-source-register.md) — evidence classes, sources, weights, and cautions
-- [Repository Timeline](evidence/001-B-repository-timeline.md) — chronological intent reconstruction
-- [Historical Intent Ledger](evidence/001-B-intent-ledger.md) — normalized behavioral intent and explicit non-intent observations
-- [Terminology, Contradictions & Exclusions](evidence/001-B-terminology-contradictions-and-exclusions.md) — inherited vocabulary risks, unresolved evidence, and implementation/demo exclusions
+## Knowledge architecture
 
-## 001-C purpose baseline
+The repository uses three complementary layers:
 
-001-C inserts an explicit problem/need/purpose layer between repository archaeology and concept discovery. This prevents the retrofit from simply renaming current tables, enums, roles, or pages as concepts.
+1. **Canonical knowledge** — `knowledge/` OKF nodes for current normative design knowledge.
+2. **Historical design record** — numbered phase/evidence files showing how conclusions were reached.
+3. **Implementation record** — source code and implementation documentation showing current realization.
 
-The baseline contains:
-
-- **27 implementation-neutral problems**;
-- **12 behavioral actor roles** defined by responsibility rather than current role enums;
-- actor-specific needs and cross-actor tensions;
-- **26 purpose candidates** with explicit scope/non-goals;
-- a traceability mapping covering all 52 positive 001-B intent observations;
-- explicit preservation of every relevant 001-B ambiguity and implementation/demo exclusion.
-
-### 001-C artifacts
-
-- [001-C — Problem, Actor-Need & Purpose Inventory](001-C-problem-actor-need-and-purpose-inventory.md) — synthesis and exit review
-- [Problem Inventory](evidence/001-C-problem-inventory.md) — implementation-neutral problem statements
-- [Actor-Need Inventory](evidence/001-C-actor-needs.md) — behavioral actors, needs, and tensions
-- [Purpose Inventory](evidence/001-C-purpose-inventory.md) — purpose candidates, non-goals, overlap, and consolidation tests
-- [Traceability Matrix](evidence/001-C-traceability-matrix.md) — 001-B intent → problem → actor need → purpose disposition
-
-## 001-D candidate baseline
-
-001-D is the first phase to propose concept names and boundaries. It produces a **testable, non-canonical candidate decomposition** derived from the 001-C purposes rather than from the implementation.
-
-The baseline entered 001-E with **21 candidates**:
-
-- **Strong:** Proposal, Revision, Evaluation, Disclosure, Feedback, Selection, Retraction, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
-- **Provisional:** Availability Window, Authorization, Coverage, Communication, Export, Obligation.
-- **Exploratory:** Audit Trail.
-
-Key 001-D decomposition findings included:
-
-- `Submission` is not a concept boundary;
-- `ProgramStatus` likely flattens Selection and Retraction histories;
-- `AbstractReviewStatus` decomposes across Revision, Feedback, Evaluation composition, and unresolved acknowledgement;
-- `Theme` decomposes into Vocabulary, Classification, and Coverage;
-- Evaluation, Disclosure, and Feedback remain distinct despite sharing review UI;
-- Selection, Deliverable readiness, and Publication remain distinct downstream decisions;
-- public publication and internal completed-event Archive are distinct;
-- `Program` and `Conference` are not accepted as coordinating god concepts.
-
-### 001-D artifacts
-
-- [001-D — Candidate Concept Discovery & Boundary Hypotheses](001-D-candidate-concept-discovery-and-boundary-hypotheses.md) — synthesis and exit review
-- [Candidate Concept Inventory](evidence/001-D-candidate-concept-inventory.md) — 21 candidate hypotheses, purpose basis, proposed scope, and alternatives
-- [Concept Boundary Hypotheses](evidence/001-D-boundary-hypotheses.md) — explicit split/merge/composition tests
-- [Purpose → Candidate Traceability](evidence/001-D-purpose-to-candidate-traceability.md) — disposition of every 001-C purpose and inherited implementation noun
-- [Composition Signals & Explicit Non-Concepts](evidence/001-D-composition-signals-and-non-concepts.md) — likely synchronization signals, application-policy signals, and rejected accidental concepts
-
-## 001-E criteria baseline
-
-001-E adversarially tests every 001-D candidate for **specificity, completeness, independence, and genericity** rather than preserving the candidate list by default.
-
-The review changed the set materially:
-
-- **13** candidates survived substantially as proposed;
-- **5** survived only after material rename/narrowing/replacement;
-- **3** were demoted from the current v0 concept set.
-
-### 001-F input set — 18
-
-**Strong:** Proposal, Revision, Evaluation, Feedback, Selection, Withdrawal, Capacity, Classification, Vocabulary, Deliverable, Schedule, Publication, Archive.
-
-**Provisional-strong:** Controlled Disclosure, Dispatch.
-
-**Provisional:** Availability Window, Coverage Target, Registration.
-
-### Demoted during 001-E
-
-- **Authorization** — application-wide authority policy/composition concern; future delegation/grant behavior may justify rediscovery.
-- **Export** — cross-concept representation/projection capability rather than authoritative concept state.
-- **Audit Trail** — provenance design rule plus future cross-concept audit signal.
-
-### Major 001-E corrections
-
-- `Disclosure` → **Controlled Disclosure** to avoid generic access-control semantics.
-- `Retraction` → **Withdrawal** to describe originator participation agency precisely.
-- `Coverage` → **Coverage Target**; actual composition is derived from Selection + Classification/attributes rather than duplicated concept state.
-- `Communication` → **Dispatch** to separate operational sends from Feedback and current template storage.
-- `Obligation` → **Registration** because the generalized obligation umbrella was too broad for the evidence.
-- effective participation, evaluation freshness, edit eligibility, actual composition, coverage gaps, publication eligibility, and Dispatch recipient eligibility remain **derived/composed behavior**, not new concepts.
-
-### 001-E artifacts
-
-- [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md) — synthesis and exit review
-- [Concept Criteria Scorecard](evidence/001-E-criteria-scorecard.md) — all 21 candidate dispositions
-- [Independence & Composition Review](evidence/001-E-independence-and-composition-review.md) — direct-dependency tests and retained composition signals
-- [Genericity & Boundary Decisions](evidence/001-E-genericity-and-boundary-decisions.md) — under/over-generalization corrections and naming decisions
-- [Surviving Candidate Baseline](evidence/001-E-surviving-candidate-baseline.md) — 18-candidate handoff into 001-F
-
-## 001-F operational-principle baseline
-
-001-F requires every 001-E survivor to tell one concise, archetypal, concept-local story showing how the concept fulfills its purpose.
-
-This removes one additional candidate rather than forcing all 18 through the gate.
-
-### 001-G input set — 17
-
-**Strong:**
-
-- Proposal
-- Revision
-- Evaluation
-- Feedback
-- Selection
-- Withdrawal
-- Capacity
-- Classification
-- Vocabulary
-- Deliverable
-- Schedule
-- Publication
-- Archive
-
-**Provisional-strong:**
-
-- Controlled Disclosure
-- Dispatch
-
-**Provisional:**
-
-- Availability Window
-- Coverage Target
-
-### Demoted during 001-F
-
-- **Registration** — current behavior exposes a locally/externally sourced registration fact, but no sufficiently evidenced concept-local registration/enrollment lifecycle. Owning register/cancel actions would invent product behavior; merely mirroring status is too weak for an independent concept.
-
-The underlying registration need remains future/composition evidence and can be rediscovered if MinneAnalytics later owns a real registration/enrollment workflow.
-
-### Strong 001-F boundary confirmations
-
-Operational principles strengthen the independence of:
-
-- Proposal ↔ Revision;
-- Evaluation ↔ Controlled Disclosure ↔ Feedback;
-- Selection ↔ Withdrawal;
-- Capacity ↔ Schedule;
-- Classification ↔ Vocabulary;
-- Deliverable ↔ Publication;
-- Publication ↔ Archive.
-
-No surviving principle requires `Conference`, `Program`, `Submission`, current role names, or current enum state machines to remain understandable.
-
-### Derived/composed behavior still excluded
-
-- effective participation;
-- current/stale Evaluation;
-- needs-score/rescore queues;
-- actual program composition;
-- coverage gap/excess;
-- edit eligibility;
-- schedule eligibility;
-- publication eligibility;
-- Dispatch recipient eligibility;
-- authority grants/role policy;
-- external-fact ingestion;
-- export/report projection;
-- global audit history.
-
-### 001-F artifacts
-
-- [001-F — Operational Principle Development](001-F-operational-principle-development.md) — synthesis and exit review
-- [Operational Principles](evidence/001-F-operational-principles.md) — principle attempted for all 18 001-E survivors
-- [Operational-Principle Falsification Review](evidence/001-F-operational-principle-falsification.md) — pass/fail review and Registration demotion
-- [Surviving Operational-Principle Baseline](evidence/001-F-surviving-candidate-baseline.md) — authoritative 17-candidate handoff into 001-G
-
-Passing 001-F still does not make the 17 candidates canonical. 001-G must consolidate the complete discovery corpus and explicitly decide which candidates are admitted to formal Phase 002 specification, admitted provisionally, deferred, or rejected.
+Do not create a fourth prose layer that restates the same rules. Prefer links to the canonical owner.
 
 ## Branch discipline
 
-The v0 discovery branch is documentation/design work unless a later reconciliation phase explicitly authorizes implementation changes. Concept discovery must not opportunistically refactor the application to fit provisional hypotheses.
+The v0 discovery branch remains design/documentation work. OKF adoption permits documentation tooling and CI validation, but it does **not** authorize application/domain refactoring.
+
+Application changes should wait for formal concept specification, synchronization/composition design, and explicit implementation reconciliation to identify what actually needs to change.
