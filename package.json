@@ -19,6 +19,8 @@
     "db:migrate:baseline:resolve": "prisma migrate resolve --applied 20260904000000_baseline",
     "db:migration:verify": "node scripts/migrations/verify-foundation.mjs",
     "db:migration:report": "tsx scripts/migrations/report-baseline.ts",
+    "db:004-b:backfill": "tsx scripts/migrations/backfill-004-b.ts",
+    "db:004-b:verify": "tsx scripts/migrations/verify-004-b.ts",
     "db:backup": "node scripts/migrations/sqlite-backup.mjs",
     "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
     "postinstall": "prisma generate"
