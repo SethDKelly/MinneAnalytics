@@ -210,6 +210,7 @@ async function main() {
             provenance: "BACKFILLED_CURRENT_STATE",
             observedAt: now,
           },
+          include: { revisionTerms: true },
         });
       } else {
         current = {
@@ -228,6 +229,7 @@ async function main() {
           commandKey: null,
           provenance: "BACKFILLED_CURRENT_STATE",
           observedAt: now,
+          revisionTerms: [],
         };
       }
       counters.currentStateRevisionsCreated += 1;
