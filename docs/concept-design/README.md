@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C
-- **Next:** 003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B; 003-C; 003-D
+- **Next:** 003-E — Derived Views, API/UI State & Compatibility Reconciliation
 
 ## Start here
 
@@ -23,6 +23,8 @@ For current normative design knowledge, begin with:
 - [v0 Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
 - [v0 Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
 - [v0 Idempotency & Recovery Baseline](knowledge/reconciliation/idempotency-recovery-baseline.md)
+- [v0 Authority, Lifecycle & Operational Policy Target](knowledge/reconciliation/authority-lifecycle-operational-policy-target.md)
+- [v0 Disclosure, Sharing & Publication Policy Baseline](knowledge/reconciliation/disclosure-publication-policy-baseline.md)
 
 Canonical documentation behavior is governed by:
 
@@ -77,14 +79,16 @@ Phase 003 reconciles the existing implementation against accepted Concept Design
 3. [003-C — Synchronization, Transaction, Idempotency & Recovery Architecture](003-C-synchronization-transaction-idempotency-and-recovery-architecture.md) — **complete**
    - [Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
    - [Idempotency & Recovery Baseline](knowledge/reconciliation/idempotency-recovery-baseline.md)
-4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation** — next
-5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation**
+4. [003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation](003-D-authority-lifecycle-disclosure-and-operational-policy-reconciliation.md) — **complete**
+   - [Authority, Lifecycle & Operational Policy Target](knowledge/reconciliation/authority-lifecycle-operational-policy-target.md)
+   - [Disclosure, Sharing & Publication Policy Baseline](knowledge/reconciliation/disclosure-publication-policy-baseline.md)
+5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation** — next
 6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**
 7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
 
-003-A established the semantic gaps. 003-B defined persistent identity/history targets and expand-first migration truth. 003-C now defines which cross-concept operations are atomic, which source actions commit before convergent cleanup, how retries avoid duplicate semantic history, and how external provider/file boundaries remain truthful under uncertainty.
+003-A established the semantic gaps. 003-B defined persistent identity/history targets and expand-first migration truth. 003-C defined atomic vs convergent execution, idempotency, and external-resource recovery. 003-D now defines action capabilities, setup/live/Archive behavior, Availability Window/manual suspension and revision-exception policy, Controlled Disclosure staging/reveal, public-sharing provenance, exact-material Publication, and permitted post-Archive operations.
 
-The execution target deliberately uses ordinary local database transactions and narrow durable work/outbox infrastructure where needed; it does **not** introduce Workflow, SynchronizationManager, distributed saga, or broker requirements.
+The target deliberately retains current roles as an initial capability-assignment mechanism but does **not** make `ADMIN`/`BOARD`/`CHAIR`, `ACTIVE`, blind-review toggles, or sharing flags into Concept Design concepts. Archive remains monotonic and role privilege never bypasses concept invariants.
 
 ## Knowledge architecture
 
@@ -98,6 +102,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-003-C still authorizes **no application/domain/schema refactoring**.
+003-D still authorizes **no application/domain/schema/refactoring changes**.
 
-003-D must next reconcile actor authority, Availability Window override/edit policy, Archive/post-closure behavior, Controlled Disclosure reveal policy and legacy cohorts, Publication sharing/rights, and other operational action eligibility before compatibility/API and executable migration work can be finalized.
+003-E must next reconcile derived read models, legacy status/API/UI compatibility, exact Revision/Artifact/Publication identities at the interface boundary, schedule proposal acceptance, and pending/blocked/uncertain operational presentation before 003-F turns the full target into an executable migration and rollout plan.
