@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal specification in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D
-- **Next:** 002-E — Deliverable & Scheduling Execution
+- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D; 002-E
+- **Next:** 002-F — Publication, Dispatch & Historical Closure
 
 ## Start here
 
@@ -61,8 +61,10 @@ Phase 002 extends the canonical concept nodes with abstract state, actions, intr
 4. [002-D — Vocabulary & Classification](002-D-vocabulary-and-classification.md) — **complete**
    - [Vocabulary](knowledge/concepts/vocabulary.md) — specified
    - [Classification](knowledge/concepts/classification.md) — specified
-5. **002-E — Deliverable & Scheduling Execution** — next
-6. **002-F — Publication, Dispatch & Historical Closure**
+5. [002-E — Deliverable & Scheduling Execution](002-E-deliverable-and-scheduling-execution.md) — **complete**
+   - [Deliverable](knowledge/concepts/deliverable.md) — specified
+   - [Schedule](knowledge/concepts/schedule.md) — specified
+6. **002-F — Publication, Dispatch & Historical Closure** — next
 7. **002-G — Formal Specification Consolidation & Synchronization Handoff**
 
 The remaining concept maturity and group membership are maintained in the [Concept Catalog](knowledge/concepts/) rather than duplicated here.
@@ -76,6 +78,8 @@ The remaining concept maturity and group membership are maintained in the [Conce
 002-C separates organizer choice from originator withdrawal, effective participation from either source fact, hard finite scarcity from soft representation intent, and desired representation from observed composition.
 
 002-D separates stable reusable-term identity/lifecycle from subject Classification and keeps both independent from Coverage Target. It also carries forward the application-level decision of whether MinneAnalytics classifications attach to a durable Proposal or exact Revision identities when version-sensitive classification matters.
+
+002-E separates artifact requirement from file/storage implementation, binds readiness to the exact provided artifact version, separates readiness from Publication, and treats Schedule as explicit planner-controlled place/time placement rather than algorithm output or Capacity state.
 
 The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
 
