@@ -1,6 +1,18 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-F — Data Migration, Backfill, Rollout & Reversibility Plan.
+* **Migration discipline**: Required checked-in Prisma migration history and controlled deploy semantics before persistent target-schema rollout; `prisma db push` may remain local-only but is not the production reconciliation mechanism.
+* **Rollout order**: Established F0–F9 progression from migration baseline/backup through additive schema, exact-reference backfill, current-state seeds, validation/quarantine, semantic write cutover, shadow reads, first-party read cutover, legacy mutation retirement, and eventual destructive cleanup.
+* **Backfill truth**: Required exact Revision/reference reconstruction before current-state business seeds; missing history remains explicitly legacy-unknown rather than fabricated.
+* **Current-state seeds**: Defined truthful Selection/Withdrawal, Capacity, Deliverable, Vocabulary/Coverage, Window, Archive, Publication, sharing-policy, Disclosure-cohort, and Dispatch migration treatment.
+* **Quarantine**: Distinguished blocking defects from expected legacy unknowns and operator-normalization requirements; canonical cutover is scoped and blocked where target invariants cannot be guaranteed.
+* **Write cutover**: Ordered semantic write slices Revision/Evaluation first, then Selection/Withdrawal/Capacity/Deliverable, lifecycle/Window/Archive, Disclosure, exact Publication, Schedule proposal/apply, and Dispatch.
+* **Read cutover**: Required semantic-vs-legacy shadow comparison with zero unexplained defects for the in-scope current scale, then bounded first-party consumer migration.
+* **Rollback**: Distinguished safe read rollback from unsafe authority rollback; after canonical history exists, legacy compatibility reads may return but raw independent legacy writers may not overwrite or contradict target truth.
+* **Rollback floors**: Protected Withdrawal, Archive, Disclosure Reveal, exact-Revision Evaluations, exact Assessments/Publications, provider uncertainty, and exact-public-material authorization from destructive rollback.
+* **Cleanup**: Deferred destructive schema/enum/route removal until consumer, parity, backup/restore, projection-repair, legacy-unknown, and history-preservation gates pass; useful denormalized projections may remain.
+* **Handoff**: Advanced Phase 003 to 003-G — Implementation Reconciliation Consolidation & Execution Handoff. 003-F still authorizes no runtime/schema/API/UI changes.
 * **Reconciliation**: Completed 003-E — Derived Views, API/UI State & Compatibility Reconciliation.
 * **Interface-state taxonomy**: Classified exposed state as canonical fact, derived application view, compatibility projection, or transient execution state; visible summaries and queues do not become write authority.
 * **Program view**: Defined `programStatus` as a deterministic lossy projection from independent Selection + Withdrawal, while target APIs/UI expose decision, withdrawal, and effective participation separately.
