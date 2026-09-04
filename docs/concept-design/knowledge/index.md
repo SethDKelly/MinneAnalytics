@@ -38,6 +38,8 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [v0 Idempotency & Recovery Baseline](reconciliation/idempotency-recovery-baseline.md) - Command/work keys, retry classes, crash recovery, uncertainty handling, and projection repair.
 * [v0 Authority, Lifecycle & Operational Policy Target](reconciliation/authority-lifecycle-operational-policy-target.md) - Capability-based action authority, lifecycle/Archive policy, Availability Window/manual suspension, edit exceptions, and post-closure operation rules.
 * [v0 Disclosure, Sharing & Publication Policy Baseline](reconciliation/disclosure-publication-policy-baseline.md) - Controlled Disclosure staging/reveal policy, blind-mode transition safety, share-eligibility provenance, exact Publication eligibility, and public-token resolution.
+* [v0 Derived View, API & UI State Target](reconciliation/derived-view-api-ui-target.md) - Canonical/derived/compatibility/operation-state classification, semantic read-model composition, explicit concealment state, queue/badge semantics, and interface command boundaries.
+* [v0 Interface Compatibility & Cutover Baseline](reconciliation/interface-compatibility-baseline.md) - Legacy field dispositions, additive semantic interfaces, compatibility adapters, parity/shadow comparison, consumer inventory, and retirement gates.
 
 # Current maturity
 
@@ -48,11 +50,12 @@ Completed reconciliation groups:
 - **003-A** — implementation ownership and semantic-gap mapping;
 - **003-B** — persistence, identity, history, and migration target design;
 - **003-C** — synchronization, transaction, idempotency, and recovery architecture;
-- **003-D** — authority, lifecycle, disclosure, sharing, publication, and operational policy reconciliation.
+- **003-D** — authority, lifecycle, disclosure, sharing, publication, and operational policy reconciliation;
+- **003-E** — derived views, API/UI state, and compatibility reconciliation.
 
-Next: **003-E — Derived Views, API/UI State & Compatibility Reconciliation**.
+Next: **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**.
 
-Product/domain/schema changes remain unauthorized until the remaining Phase 003 compatibility, migration, and execution-handoff groups establish a safe implementation handoff.
+Product/domain/schema changes remain unauthorized until the migration/rollout and final execution-handoff groups establish a safe implementation handoff.
 
 # Historical design record
 
