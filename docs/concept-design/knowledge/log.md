@@ -1,6 +1,19 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-E — Derived Views, API/UI State & Compatibility Reconciliation.
+* **Interface-state taxonomy**: Classified exposed state as canonical fact, derived application view, compatibility projection, or transient execution state; visible summaries and queues do not become write authority.
+* **Program view**: Defined `programStatus` as a deterministic lossy projection from independent Selection + Withdrawal, while target APIs/UI expose decision, withdrawal, and effective participation separately.
+* **Revision/evaluation view**: Preserved familiar Needs score/Needs rescore/current queues as derived exact-Revision Evaluation applicability views rather than persisted workflow state.
+* **Legacy review state**: Deliberately gave `abstractReviewStatus` no replacement canonical enum; target consumers use Revision, Evaluation applicability, Feedback, explicit revision-exception policy, and edit-eligibility views instead.
+* **Deliverable view**: Bound readiness presentation to exact current ArtifactVersion + Assessment; target-native compatibility projection uses submitted/concern/ready semantics, while legacy `REVIEWED` is retained only as migration residue when necessary.
+* **Disclosure view**: Replaced blank/null concealment semantics with explicit presenter-identity and peer-aggregate visibility states, with aggregate visibility scoped to exact Revision.
+* **Availability/lifecycle view**: Defined Window phase, manual suspension, setup/live mode, Archive, and reasoned edit/offer eligibility as distinct interface inputs rather than one broad status switch.
+* **Schedule/public/dispatch interfaces**: Separated generated Schedule proposal from authoritative apply, exact Publication from shareability/public-surface flags, and Dispatch preview/round/attempt/uncertainty from performed-send history.
+* **API compatibility**: Established additive semantic read models and action-oriented commands, narrow legacy adapters, canonical-only first-party write cutover, shadow/parity checks, consumer inventory, and eventual compatibility retirement gates.
+* **Error contract**: Required stable machine-readable reason codes so UI does not parse English policy/precondition/concurrency/uncertainty messages.
+* **Anti-bloat**: Required no GraphQL/CQRS/read-model database, one-endpoint-per-concept structure, persistent work queues, or screen-per-concept redesign; existing composition-oriented screens may remain.
+* **Handoff**: Advanced Phase 003 to 003-F — Data Migration, Backfill, Rollout & Reversibility Plan. 003-E authorizes no runtime/schema/API/UI changes.
 * **Reconciliation**: Completed 003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation.
 * **Authority**: Defined action-oriented application capabilities while retaining current `ADMIN`/`BOARD`/`CHAIR` roles only as an initial capability-assignment mechanism; role names are not concept state and administrator privilege does not bypass concept invariants.
 * **Lifecycle**: Narrowed ordinary application progression to setup/live/Archive, kept Archive monotonic, rejected routine reopening/regression, and replaced the broad ACTIVE-only mutation rule with action-specific lifecycle policy.
