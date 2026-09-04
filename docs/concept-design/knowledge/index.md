@@ -5,7 +5,7 @@ okf_version: "0.2"
 
 This directory is the canonical, progressively disclosed knowledge layer for the MinneAnalytics Concept Design retrofit.
 
-Historical phase records and evidence remain in the parent `docs/concept-design/` tree. They explain how decisions were reached; this bundle states the compact knowledge that later work should reuse.
+Historical phase records and evidence remain in the parent `docs/concept-design/` tree. They explain how decisions were reached and implemented; this bundle states the compact knowledge that later work should reuse.
 
 # Authority and authoring rules
 
@@ -48,14 +48,18 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 
 # Current maturity
 
-**Phase 002 formal specification and Phase 003 implementation reconciliation are complete.**
+**Phase 002 formal specification and Phase 003 implementation reconciliation are complete. Phase 004 implementation execution is in progress.**
 
 All 17 concepts are formally specified. All 18 semantic gaps and 4 policy gaps have accepted target architectures, migration/cutover paths, Phase 004 ownership, and runtime closure criteria.
 
-Phase 004 runtime implementation is now authorized under the 003-G gate.
+Implementation branch: `concept-design/v0-implementation` from the immutable 003-G baseline `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`.
 
-Next: **004-A — Migration Discipline, Baseline & Additive Schema Foundation**.
+Completed implementation package:
+
+- **004-A — Migration Discipline, Baseline & Additive Schema Foundation** — checked-in Prisma baseline/additive migration history, target persistence/recovery/provenance substrate, default-off rollout gates, migration reporting/backup rehearsal tooling, and implementation-branch CI migration validation. No semantic write authority moved and no SG/SG-P item is yet closed solely by this foundation.
+
+Next: **004-B — Revision, Classification, Evaluation & Feedback Canonicalization**.
 
 # Historical design record
 
-The detailed design record remains outside this bundle at the [`docs/concept-design/` entrypoint](../README.md). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
+The detailed design/implementation record remains outside this bundle at the [`docs/concept-design/` entrypoint](../README.md). Use those records as provenance and audit evidence. Do not treat phase-record restatements as newer authority than a canonical knowledge node unless that node explicitly delegates authority back to the phase record.
