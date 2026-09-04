@@ -30,33 +30,51 @@ export async function GET(
       abstractVersion: true,
       abstractReviewStatus: true,
       lastPresenterEditAt: true,
-      revisions: { orderBy: { version: "asc" } },
+      revisions: {
+        orderBy: { version: "asc" },
+        include: {
+          revisionTerms: {
+            include: { theme: { select: { id: true, name: true } } },
+          },
+        },
+      },
     },
   });
   if (!submission) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const themeIds = new Set<string>();
-  for (const rev of submission.revisions) {
+  const legacyThemeIds = new Set<string>();
+  for (const revision of submission.revisions) {
+    if (revision.revisionTerms.length > 0) continue;
     try {
-      const ids = JSON.parse(rev.themeIds) as string[];
-      if (Array.isArray(ids)) ids.forEach((id) => themeIds.add(id));
+      const ids = JSON.parse(revision.themeIds) as string[];
+      if (Array.isArray(ids)) ids.forEach((id) => legacyThemeIds.add(id));
     } catch {
-      /* ignore */
+      /* unresolved legacy snapshot remains empty in this view */
     }
   }
 
-  const themes =
-    themeIds.size > 0
+  const legacyThemes =
+    legacyThemeIds.size > 0
       ? await prisma.theme.findMany({
-          where: { id: { in: [...themeIds] } },
+          where: { id: { in: [...legacyThemeIds] } },
           select: { id: true, name: true },
         })
       : [];
-  const themeNamesById = Object.fromEntries(themes.map((t) => [t.id, t.name]));
+  const themeNamesById = Object.fromEntries(
+    legacyThemes.map((theme) => [theme.id, theme.name])
+  );
 
-  const rows = submission.revisions.map((r) => revisionToRow(r, themeNamesById));
+  const rows = submission.revisions.map((revision) => {
+    const exactNamesById = Object.fromEntries(
+      revision.revisionTerms.map(({ theme }) => [theme.id, theme.name])
+    );
+    return revisionToRow(
+      revision,
+      revision.revisionTerms.length > 0 ? exactNamesById : themeNamesById
+    );
+  });
 
   return NextResponse.json({
     submissionId: submission.id,
