@@ -21,7 +21,7 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 
 * [Concept Catalog](concepts/) - Current canonical concept maturity, formal specifications, and remaining Phase 002 work.
 
-Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) has formally specified Proposal, Revision, and Availability Window. Availability Window's Phase 001 provisional condition is resolved positively; Controlled Disclosure, Dispatch, and Coverage Target remain provisionally admitted pending their respective specification groups.
+Phase 002 is in progress. [002-A](../002-A-offer-change-and-temporal-availability.md) formally specifies Proposal, Revision, and Availability Window. [002-B](../002-B-evaluation-disclosure-and-directed-response.md) formally specifies Evaluation, Controlled Disclosure, and Feedback. Availability Window and Controlled Disclosure have both resolved their Phase 001 provisional conditions positively; Dispatch and Coverage Target remain provisionally admitted pending their specification groups.
 
 # Historical design record
 
