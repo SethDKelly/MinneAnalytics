@@ -13,7 +13,7 @@ sources:
 ---
 # Purpose
 
-Provide stable gap IDs and priority for Phase 003. Detailed source-path evidence belongs in the historical [003-A Semantic Gap Register](../../evidence/003-A-semantic-gap-register.md); this node owns the current compact disposition.
+Provide stable gap IDs and priority for implementation reconciliation and execution. Detailed source-path evidence belongs in the historical [003-A Semantic Gap Register](../../evidence/003-A-semantic-gap-register.md); this node owns the current compact disposition.
 
 Priority is semantic/data-loss risk, not implementation effort.
 
@@ -47,46 +47,49 @@ Priority is semantic/data-loss risk, not implementation effort.
 
 # Cross-cutting policy gaps
 
-These remain application-policy reconciliation issues rather than new concepts:
+These remain application-policy implementation issues rather than new concepts:
 
 * **SG-P01 — Edit eligibility:** compose ownership/capability, Availability Window, Archive/lifecycle, decision lock, and explicit revision exception rather than `ProgramStatus`/`AbstractReviewStatus`.
 * **SG-P02 — Authority naming/capability:** retain current roles as assignment mechanism while command boundaries consume explicit capabilities.
 * **SG-P03 — Archive/post-event operations:** replace broad active-only mutation gating with action-specific post-Archive policy.
 * **SG-P04 — Publication share/rights:** treat `deckShareable` as a migration-era share-eligibility input with provenance, not Publication state or inferred consent.
 
-# Current target-design and migration status
+# Phase 003 exit status
 
-**003-B through 003-F now provide a complete design + migration path for every SG-* and SG-P* item. None is yet marked implemented/closed.**
+**Phase 003 is complete. Every SG-* and SG-P* item is target-designed, execution-planned, migration-classified, and assigned to Phase 004 runtime closure work. None is yet `verified-closed`.**
 
-Key dispositions:
+The canonical execution owner is [v0 Implementation Execution Handoff](implementation-execution-handoff.md). Runtime closure semantics and evidence are owned by [v0 Implementation Closure & Evidence Baseline](implementation-closure-evidence-baseline.md).
+
+Key Phase 004 ownership:
+
+* **004-B** — SG-001, SG-006, SG-011/SG-012 and Feedback exact-reference portions of SG-017.
+* **004-C** — SG-002, SG-003, SG-004, SG-007 and operational portions of SG-018.
+* **004-D** — SG-005, SG-010, SG-013, remaining edit-policy portion of SG-017, and SG-P01–SG-P03.
+* **004-E** — SG-008, SG-009, SG-014, SG-015, SG-016 and SG-P04.
+* **004-F** — semantic interface/cutover portions of all gaps.
+* **004-G/004-H** — runtime verification, rollback rehearsal, legacy cleanup decisions and final closure ledger.
+
+# Accepted migration dispositions retained
 
 * **SG-001 / SG-006 / SG-012** — exact Revision anchoring is backfilled first; ambiguous legacy Evaluation history remains unknown; native Revision/Classification/Evaluation writes are the first semantic write cutover.
 * **SG-002 / SG-003 / SG-004 / SG-007** — current state is seeded truthfully; canonical selected-entry uses Capacity/Deliverable atomicity and Withdrawal uses source-authoritative convergent cleanup; `programStatus`/`deckStatus` become projections.
 * **SG-005** — existing blind-review exposure becomes a legacy in-flight unknown cohort rather than fabricated concealed/revealed history; native staging/reveal begins only in a truthful post-cutover scope.
-* **SG-008 / SG-009** — only exact current public MaterialRefs are seeded; exact Publication + eligibility becomes public authorization, and the historical-`publicId` hardening is a rollback floor.
+* **SG-008 / SG-009** — only exact current public MaterialRefs are seeded; exact Publication + eligibility becomes public authorization, and historical-`publicId` hardening is a rollback floor.
 * **SG-010** — currently archived contexts receive current-state closure seeds where supported; erased archive/reopen history stays unknown; native Archive cannot be cleared.
 * **SG-011 / SG-018** — current TermState and explicit coherent Coverage Targets can be seeded; historical Vocabulary changes and ambiguous `0/0` targets are not invented.
 * **SG-013** — only valid bounded Windows enter canonical Offer policy; missing/invalid bounds require normalization; legacy boolean remains suspension-only.
 * **SG-014** — Schedule generation migrates to proposal + expected-base apply after authoritative current placements are validated.
 * **SG-015 / SG-016** — old exact Dispatch message content remains unknown; new sends capture immutable message evidence, semantic rounds, idempotency, and uncertain-outcome handling.
-* **SG-017** — `abstractReviewStatus` has no canonical replacement; migration retires it as command/edit authority after semantic read/write consumers move.
-* **SG-P01 through SG-P04** — 003-D defines policy, 003-E defines interface representation, and 003-F defines command/read cutover and rollback treatment.
-
-The canonical execution sequence is [v0 Migration, Backfill & Rollout Execution Plan](migration-rollout-execution-plan.md). The acceptance/rollback gate is [v0 Backfill, Validation & Reversibility Baseline](backfill-validation-reversibility-baseline.md).
+* **SG-017** — `abstractReviewStatus` has no canonical replacement; implementation retires it as command/edit authority after semantic read/write consumers move.
+* **SG-P01 through SG-P04** — policy, interface representation, migration and rollback treatment are fully designed and await runtime execution.
 
 # Closure semantics
 
-A gap becomes **implemented/closed** only after all applicable conditions hold:
+Implementation-governance states are defined by the closure baseline. A gap reaches `verified-closed` only after all applicable target-write, semantic-read, migration-validation, runtime-test, legacy-authority, compatibility, consumer, and rollback-floor requirements pass.
 
-1. target persistence/policy exists in runtime;
-2. canonical write path is active;
-3. required semantic read/UI path is active or compatibility-safe;
-4. backfill/validation passes for supported scope;
-5. runtime tests exercise accepted semantics/failure cases;
-6. legacy competing authority is disabled;
-7. any retained compatibility projection is canonical→compatibility and repairable.
+A completed design document, schema migration, or successful backfill alone does not close a gap.
 
-A completed design document or successful backfill alone does not close a gap.
+Historical `legacy-unknown` evidence may remain after closure only where the canonical migration rules explicitly permit native truth to begin at cutover and the supported interfaces do not falsely claim older certainty.
 
 # Deferred signals retained
 
@@ -99,13 +102,8 @@ The accepted model still does not promote:
 
 Existing role helpers, attendee/VIP fields, logs, exports, migration manifests, compatibility statuses, and UI work queues must not silently promote these during implementation.
 
-# Phase ownership
+# Authority and implementation handoff
 
-* **003-B** owns persistence/reference/history target decisions.
-* **003-C** owns synchronization, transaction, idempotency, and recovery.
-* **003-D** owns authority/lifecycle/disclosure/publication application policy.
-* **003-E** owns semantic read/API/UI and compatibility projections.
-* **003-F** owns migration tooling discipline, backfill provenance/quarantine, canonical write/read cutover, rollback, and cleanup gates.
-* **003-G** must consolidate these owners into the explicit implementation execution handoff and future gap-closure reporting discipline.
+The canonical 003-G gate authorizes bounded runtime implementation. This gap register does not independently authorize arbitrary refactoring or destructive cleanup.
 
-No gap in this baseline independently authorizes runtime refactoring before the 003-G execution-handoff gate.
+Implementation must use the package order, stop-and-amend rule, migration safety constraints, and evidence requirements defined by the 003-G execution handoff and closure baseline.
