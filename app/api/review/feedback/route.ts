@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { emailPresenterFeedback } from "@/lib/email-stub";
 import { canScore, getReviewerByToken } from "@/lib/reviewer";
@@ -37,8 +38,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Submission not found" }, { status: 404 });
   }
 
-  const abstractVersion =
-    parsed.data.kind === "ABSTRACT" ? submission.abstractVersion : null;
+  const exactWrites = isImplementationGateEnabled("revisionEvaluationWrites");
+  const isAbstract = parsed.data.kind === "ABSTRACT";
+  if (exactWrites && isAbstract && !submission.currentRevisionId) {
+    return NextResponse.json(
+      {
+        error: "An exact current revision is required for abstract feedback",
+        code: "CANONICAL_REVISION_REQUIRED",
+      },
+      { status: 409 }
+    );
+  }
+
+  const abstractVersion = isAbstract ? submission.abstractVersion : null;
+  const submissionRevisionId =
+    exactWrites && isAbstract ? submission.currentRevisionId : null;
 
   const feedback = await prisma.$transaction(async (tx) => {
     const row = await tx.presenterFeedback.create({
@@ -48,6 +62,7 @@ export async function POST(request: Request) {
         kind: parsed.data.kind,
         body: parsed.data.body.trim(),
         abstractVersion,
+        submissionRevisionId,
       },
     });
 
@@ -83,6 +98,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     feedbackId: feedback.id,
+    submissionRevisionId: feedback.submissionRevisionId,
     abstractReviewStatus: nextStatus,
   });
 }
