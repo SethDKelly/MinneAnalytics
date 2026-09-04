@@ -1,4 +1,9 @@
 import type { Theme, ThemeSource } from "@prisma/client";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  establishInitialTermState,
+  recordTermState,
+} from "@/lib/concept-design/vocabulary";
 import { prisma } from "@/lib/db";
 
 export function slugifyThemeName(name: string): string {
@@ -42,8 +47,29 @@ export async function findOrCreatePresenterTheme(params: {
       slug,
     },
   });
+  const canonicalWrites = isImplementationGateEnabled("revisionEvaluationWrites");
+
   if (existing) {
     if (existing.removedAt) {
+      if (canonicalWrites) {
+        return prisma.$transaction(async (tx) => {
+          await tx.theme.update({
+            where: { id: existing.id },
+            data: {
+              proposedAt: new Date(),
+              proposedBySubmissionId:
+                params.proposedBySubmissionId ?? existing.proposedBySubmissionId,
+            },
+          });
+          await recordTermState(tx, {
+            themeId: existing.id,
+            label: params.name.trim(),
+            availability: "AVAILABLE",
+            recordedByRef: params.proposedBySubmissionId ?? null,
+          });
+          return tx.theme.findUniqueOrThrow({ where: { id: existing.id } });
+        });
+      }
       return prisma.theme.update({
         where: { id: existing.id },
         data: {
@@ -61,6 +87,28 @@ export async function findOrCreatePresenterTheme(params: {
     where: { conferenceId: params.conferenceId },
     _max: { sortOrder: true },
   });
+
+  if (canonicalWrites) {
+    return prisma.$transaction(async (tx) => {
+      const created = await tx.theme.create({
+        data: {
+          conferenceId: params.conferenceId,
+          name: params.name.trim(),
+          slug,
+          source: "PRESENTER",
+          proposedAt: new Date(),
+          proposedBySubmissionId: params.proposedBySubmissionId ?? null,
+          sortOrder: (maxOrder._max.sortOrder ?? 0) + 1,
+        },
+      });
+      await establishInitialTermState(tx, {
+        themeId: created.id,
+        label: created.name,
+        recordedByRef: params.proposedBySubmissionId ?? null,
+      });
+      return tx.theme.findUniqueOrThrow({ where: { id: created.id } });
+    });
+  }
 
   return prisma.theme.create({
     data: {
