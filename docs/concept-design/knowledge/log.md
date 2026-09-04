@@ -1,6 +1,17 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation.
+* **Authority**: Defined action-oriented application capabilities while retaining current `ADMIN`/`BOARD`/`CHAIR` roles only as an initial capability-assignment mechanism; role names are not concept state and administrator privilege does not bypass concept invariants.
+* **Lifecycle**: Narrowed ordinary application progression to setup/live/Archive, kept Archive monotonic, rejected routine reopening/regression, and replaced the broad ACTIVE-only mutation rule with action-specific lifecycle policy.
+* **Post-closure policy**: Explicitly permitted historical reads/exports, recovery convergence, public Unpublish, exact eligible post-event Publish/Republish, and classified post-closure-safe Dispatch purposes without reopening ordinary event mutation.
+* **Availability/edit policy**: Classified legacy `submissionsOpen` as suspension-only policy under the canonical Availability Window; ordinary Revision uses Window + ownership + decision lock, while review-requested editing requires an explicit scoped exception rather than Feedback itself granting edit authority.
+* **Controlled Disclosure**: Separated Proposal-level presenter identity from exact-Revision peer aggregate information; identity may be explicitly revealed with durable monotonic provenance, while peer aggregate reveal follows the applicable current Evaluation with no v0 manual bypass.
+* **Blind-review safety**: Locked routine blind-mode configuration once protected review activity begins so configuration changes cannot pretend prior exposure did not happen or silently reveal staged information.
+* **Sharing/publication policy**: Kept `deckShareable` as a legacy public-sharing eligibility input rather than inferred presenter consent, required provenance for target-native changes, allowed exact-material Publication after Archive, and made public tokens addresses rather than authorization.
+* **Exact public access**: Required public resolution through exact MaterialRef → currently published Publication → current eligibility, eliminating the target ambiguity where an old `publicId` can be served from mutable parent state.
+* **Anti-bloat**: Introduced no Authorization, Delegation, Consent, Workflow, PublicArchive, or ApplicationLifecycle concept; capabilities/configuration remain application policy.
+* **Handoff**: Advanced Phase 003 to 003-E — Derived Views, API/UI State & Compatibility Reconciliation. 003-D authorizes no runtime/schema/permission-code changes.
 * **Reconciliation**: Completed 003-C — Synchronization, Transaction, Idempotency & Recovery Architecture.
 * **Execution classes**: Established TX-A atomic authoritative bundles, TX-B source-authoritative commits with convergent follow-up, TX-C independent notification/external consequences, and TX-D non-transactional resource/provider boundaries.
 * **Atomicity**: Classified Offer/Revision establishment, local Evaluation→Disclosure reveal, and newly-effective Selection + Capacity + required Deliverable establishment as local atomic transactions.
