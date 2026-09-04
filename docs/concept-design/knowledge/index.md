@@ -34,6 +34,8 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Stable prioritized semantic/policy gap IDs.
 * [v0 Persistence, Identity & History Target](reconciliation/persistence-identity-history-target.md) - Stable identity reuse, required durable histories, exact references, and compatibility projections.
 * [v0 Migration Target Baseline](reconciliation/migration-target-baseline.md) - Recoverability, provenance, expand-first coexistence, rollback, and validation constraints.
+* [v0 Synchronization, Transaction & Recovery Target](reconciliation/synchronization-transaction-recovery-target.md) - Atomic authoritative bundles, source-authoritative convergence, durable work, schedule/provider/file boundaries, and compatibility-write direction.
+* [v0 Idempotency & Recovery Baseline](reconciliation/idempotency-recovery-baseline.md) - Command/work keys, retry classes, crash recovery, uncertainty handling, and projection repair.
 
 # Current maturity
 
@@ -42,11 +44,12 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 Completed reconciliation groups:
 
 - **003-A** — implementation ownership and semantic-gap mapping;
-- **003-B** — persistence, identity, history, and migration target design.
+- **003-B** — persistence, identity, history, and migration target design;
+- **003-C** — synchronization, transaction, idempotency, and recovery architecture.
 
-Next: **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture**.
+Next: **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**.
 
-Product/domain/schema changes remain unauthorized until the remaining Phase 003 design groups establish safe synchronization, policy, compatibility, migration, and execution handoff.
+Product/domain/schema changes remain unauthorized until the remaining Phase 003 policy, compatibility, migration, and execution-handoff groups establish a safe implementation handoff.
 
 # Historical design record
 
