@@ -15,7 +15,6 @@ const SCHEDULE_UNPLACE_EFFECT = "schedule-unplace:";
 
 export class CapacityUnavailableError extends Error {
   readonly code = "CAPACITY_UNAVAILABLE";
-
   constructor(message = "No remaining program capacity is available") {
     super(message);
     this.name = "CapacityUnavailableError";
@@ -24,7 +23,6 @@ export class CapacityUnavailableError extends Error {
 
 export class CapacityConfigurationError extends Error {
   readonly code = "CAPACITY_CONFIGURATION_INVALID";
-
   constructor(message: string) {
     super(message);
     this.name = "CapacityConfigurationError";
@@ -33,7 +31,6 @@ export class CapacityConfigurationError extends Error {
 
 export class SelectionHeadConflictError extends Error {
   readonly code = "SELECTION_STALE_HEAD";
-
   constructor(message = "The organizer decision changed before this command committed") {
     super(message);
     this.name = "SelectionHeadConflictError";
@@ -42,7 +39,6 @@ export class SelectionHeadConflictError extends Error {
 
 export class DeliverableHeadConflictError extends Error {
   readonly code = "DELIVERABLE_STALE_HEAD";
-
   constructor(message = "The deliverable changed before this command committed") {
     super(message);
     this.name = "DeliverableHeadConflictError";
@@ -51,7 +47,6 @@ export class DeliverableHeadConflictError extends Error {
 
 export class DeliverableUnavailableError extends Error {
   readonly code = "DELIVERABLE_UNAVAILABLE";
-
   constructor(message = "A current deck deliverable is required for this operation") {
     super(message);
     this.name = "DeliverableUnavailableError";
@@ -60,7 +55,6 @@ export class DeliverableUnavailableError extends Error {
 
 export class LegacyDeckStatusUnsupportedError extends Error {
   readonly code = "LEGACY_DECK_STATUS_UNREPRESENTABLE";
-
   constructor(message = "REVIEWED has no canonical Deliverable assessment meaning") {
     super(message);
     this.name = "LegacyDeckStatusUnsupportedError";
@@ -79,9 +73,7 @@ export function presenterActorRef(submissionId: string): string {
   return `presenter:${submissionId}`;
 }
 
-export function capacityLimitFromConference(
-  conference: ConferenceCapacityShape
-): number {
+export function capacityLimitFromConference(conference: ConferenceCapacityShape): number {
   return (
     conference.rooms * conference.sessionsPerRoom -
     conference.eodTrim -
@@ -131,46 +123,34 @@ async function ensureProgramCapacityPool(
 
   let pool = await tx.capacityPool.findUnique({
     where: {
-      conferenceId_key: {
-        conferenceId: conference.id,
-        key: PROGRAM_CAPACITY_KEY,
-      },
+      conferenceId_key: { conferenceId: conference.id, key: PROGRAM_CAPACITY_KEY },
     },
   });
-
   if (!pool) {
     pool = await tx.capacityPool.create({
-      data: {
-        conferenceId: conference.id,
-        key: PROGRAM_CAPACITY_KEY,
-        limitUnits: limit,
-      },
+      data: { conferenceId: conference.id, key: PROGRAM_CAPACITY_KEY, limitUnits: limit },
     });
+  }
+  if (pool.limitUnits !== limit) {
+    throw new CapacityConfigurationError(
+      `Canonical Capacity limit ${pool.limitUnits} conflicts with configured limit ${limit}`
+    );
   }
 
   const rate = await tx.capacityClassRate.findUnique({
     where: {
-      poolId_classRef: {
-        poolId: pool.id,
-        classRef: STANDARD_CAPACITY_CLASS,
-      },
+      poolId_classRef: { poolId: pool.id, classRef: STANDARD_CAPACITY_CLASS },
     },
   });
-
   if (!rate) {
     await tx.capacityClassRate.create({
-      data: {
-        poolId: pool.id,
-        classRef: STANDARD_CAPACITY_CLASS,
-        units: 1,
-      },
+      data: { poolId: pool.id, classRef: STANDARD_CAPACITY_CLASS, units: 1 },
     });
   } else if (rate.units !== 1) {
     throw new CapacityConfigurationError(
       `The v0 standard Capacity class must consume exactly one unit; found ${rate.units}`
     );
   }
-
   return pool;
 }
 
@@ -185,11 +165,7 @@ async function allocateProgramCapacity(
 ) {
   const pool = await ensureProgramCapacityPool(tx, input.conference);
   const existing = await tx.capacityAllocation.findFirst({
-    where: {
-      poolId: pool.id,
-      submissionId: input.submissionId,
-      releasedAt: null,
-    },
+    where: { poolId: pool.id, submissionId: input.submissionId, releasedAt: null },
   });
   if (existing) return existing;
 
@@ -197,8 +173,7 @@ async function allocateProgramCapacity(
     where: { poolId: pool.id, releasedAt: null },
     _sum: { unitsApplied: true },
   });
-  const committed = aggregate._sum.unitsApplied ?? 0;
-  if (committed + 1 > pool.limitUnits) {
+  if ((aggregate._sum.unitsApplied ?? 0) + 1 > pool.limitUnits) {
     throw new CapacityUnavailableError();
   }
 
@@ -219,15 +194,9 @@ export async function ensureDeckDeliverable(
   submissionId: string
 ) {
   const existing = await tx.deliverableRequirement.findUnique({
-    where: {
-      submissionId_kindKey: {
-        submissionId,
-        kindKey: DECK_DELIVERABLE_KIND,
-      },
-    },
+    where: { submissionId_kindKey: { submissionId, kindKey: DECK_DELIVERABLE_KIND } },
   });
   if (existing) return existing;
-
   return tx.deliverableRequirement.create({
     data: {
       submissionId,
@@ -237,25 +206,35 @@ export async function ensureDeckDeliverable(
   });
 }
 
+async function ensureCleanupWork(
+  tx: Prisma.TransactionClient,
+  syncId: string,
+  sourceRef: string,
+  effectKey: string
+) {
+  return tx.synchronizationWork.upsert({
+    where: { syncId_sourceRef_effectKey: { syncId, sourceRef, effectKey } },
+    create: { syncId, sourceRef, effectKey },
+    update: {},
+  });
+}
+
 async function createParticipationExitWork(
   tx: Prisma.TransactionClient,
   input: { sourceRef: string; submissionId: string }
 ) {
-  await tx.synchronizationWork.createMany({
-    data: [
-      {
-        syncId: "SYNC-006",
-        sourceRef: input.sourceRef,
-        effectKey: `${CAPACITY_RELEASE_EFFECT}${input.submissionId}`,
-      },
-      {
-        syncId: "SYNC-007",
-        sourceRef: input.sourceRef,
-        effectKey: `${SCHEDULE_UNPLACE_EFFECT}${input.submissionId}`,
-      },
-    ],
-    skipDuplicates: true,
-  });
+  await ensureCleanupWork(
+    tx,
+    "SYNC-006",
+    input.sourceRef,
+    `${CAPACITY_RELEASE_EFFECT}${input.submissionId}`
+  );
+  await ensureCleanupWork(
+    tx,
+    "SYNC-007",
+    input.sourceRef,
+    `${SCHEDULE_UNPLACE_EFFECT}${input.submissionId}`
+  );
 }
 
 async function completeCleanupWork(
@@ -288,7 +267,6 @@ async function completeCleanupWork(
           lastError: error instanceof Error ? error.message : "Unknown cleanup error",
         },
       });
-      throw error;
     }
   });
 }
@@ -298,10 +276,7 @@ export async function processParticipationCleanupForSource(
   actorRef: string
 ): Promise<{ pending: number }> {
   const work = await prisma.synchronizationWork.findMany({
-    where: {
-      sourceRef,
-      state: { in: ["PENDING", "BLOCKED"] },
-    },
+    where: { sourceRef, state: { in: ["PENDING", "BLOCKED"] } },
     orderBy: { createdAt: "asc" },
   });
 
@@ -314,10 +289,7 @@ export async function processParticipationCleanupForSource(
           data: { releasedByRef: actorRef, releasedAt: new Date() },
         });
       });
-      continue;
-    }
-
-    if (item.effectKey.startsWith(SCHEDULE_UNPLACE_EFFECT)) {
+    } else if (item.effectKey.startsWith(SCHEDULE_UNPLACE_EFFECT)) {
       const submissionId = item.effectKey.slice(SCHEDULE_UNPLACE_EFFECT.length);
       await completeCleanupWork(item.id, async (tx) => {
         await tx.schedulePlacement.updateMany({
@@ -338,13 +310,9 @@ export async function processParticipationCleanupForSource(
 export async function getCanonicalParticipation(submissionId: string) {
   const submission = await prisma.submission.findUnique({
     where: { id: submissionId },
-    include: {
-      currentSelectionDecision: true,
-      withdrawal: true,
-    },
+    include: { currentSelectionDecision: true, withdrawal: true },
   });
   if (!submission) return null;
-
   const disposition = submission.currentSelectionDecision?.disposition ?? null;
   const withdrawn = Boolean(submission.withdrawal);
   return {
@@ -371,9 +339,7 @@ export async function recordCanonicalSelection(input: {
   if (decisionId) {
     const replay = await prisma.selectionDecision.findUnique({ where: { id: decisionId } });
     if (replay) {
-      const cleanup = await processParticipationCleanupForSource(replay.id, input.actorRef).catch(
-        () => ({ pending: 1 })
-      );
+      const cleanup = await processParticipationCleanupForSource(replay.id, input.actorRef);
       return { decision: replay, replayed: true, cleanupPending: cleanup.pending };
     }
   }
@@ -397,10 +363,7 @@ export async function recordCanonicalSelection(input: {
       await tx.submission.update({
         where: { id: submission.id },
         data: {
-          programStatus: programStatusFromCanonical({
-            disposition: null,
-            withdrawn,
-          }),
+          programStatus: programStatusFromCanonical({ disposition: null, withdrawn }),
           approvedAt: null,
         },
       });
@@ -426,7 +389,6 @@ export async function recordCanonicalSelection(input: {
 
     const effectiveBefore = currentDisposition === "SELECTED" && !withdrawn;
     const effectiveAfter = input.disposition === "SELECTED" && !withdrawn;
-
     if (!effectiveBefore && effectiveAfter) {
       await allocateProgramCapacity(tx, {
         conference: submission.conference,
@@ -449,11 +411,8 @@ export async function recordCanonicalSelection(input: {
       },
     });
 
-    const updated = await tx.submission.updateMany({
-      where: {
-        id: submission.id,
-        currentSelectionDecisionId: current?.id ?? null,
-      },
+    const advanced = await tx.submission.updateMany({
+      where: { id: submission.id, currentSelectionDecisionId: current?.id ?? null },
       data: {
         currentSelectionDecisionId: decision.id,
         programStatus: programStatusFromCanonical({
@@ -463,7 +422,7 @@ export async function recordCanonicalSelection(input: {
         approvedAt: input.disposition === "SELECTED" ? at : null,
       },
     });
-    if (updated.count !== 1) throw new SelectionHeadConflictError();
+    if (advanced.count !== 1) throw new SelectionHeadConflictError();
 
     if (effectiveBefore && !effectiveAfter) {
       await createParticipationExitWork(tx, {
@@ -480,12 +439,8 @@ export async function recordCanonicalSelection(input: {
   });
 
   const cleanup = result.cleanupSourceRef
-    ? await processParticipationCleanupForSource(
-        result.cleanupSourceRef,
-        input.actorRef
-      ).catch(() => ({ pending: 1 }))
+    ? await processParticipationCleanupForSource(result.cleanupSourceRef, input.actorRef)
     : { pending: 0 };
-
   return {
     decision: result.decision,
     replayed: result.replayed,
@@ -497,17 +452,15 @@ export async function recordCanonicalWithdrawal(input: {
   submissionId: string;
   actorRef: string;
 }) {
-  const at = new Date();
   const existing = await prisma.withdrawalRecord.findUnique({
     where: { submissionId: input.submissionId },
   });
   if (existing) {
-    const cleanup = await processParticipationCleanupForSource(existing.id, input.actorRef).catch(
-      () => ({ pending: 1 })
-    );
+    const cleanup = await processParticipationCleanupForSource(existing.id, input.actorRef);
     return { withdrawal: existing, replayed: true, cleanupPending: cleanup.pending };
   }
 
+  const at = new Date();
   const result = await prisma.$transaction(async (tx) => {
     const submission = await tx.submission.findUnique({
       where: { id: input.submissionId },
@@ -530,39 +483,29 @@ export async function recordCanonicalWithdrawal(input: {
         withdrawnAt: at,
       },
     });
-
     await tx.submission.update({
       where: { id: submission.id },
-      data: {
-        programStatus: "WITHDRAWN",
-        withdrawnAt: at,
-      },
+      data: { programStatus: "WITHDRAWN", withdrawnAt: at },
     });
 
-    if (submission.currentSelectionDecision?.disposition === "SELECTED") {
+    const needsCleanup =
+      submission.currentSelectionDecision?.disposition === "SELECTED";
+    if (needsCleanup) {
       await createParticipationExitWork(tx, {
         sourceRef: withdrawal.id,
         submissionId: submission.id,
       });
     }
-
     return {
       withdrawal,
       replayed: false,
-      cleanupSourceRef:
-        submission.currentSelectionDecision?.disposition === "SELECTED"
-          ? withdrawal.id
-          : null,
+      cleanupSourceRef: needsCleanup ? withdrawal.id : null,
     };
   });
 
   const cleanup = result.cleanupSourceRef
-    ? await processParticipationCleanupForSource(
-        result.cleanupSourceRef,
-        input.actorRef
-      ).catch(() => ({ pending: 1 }))
+    ? await processParticipationCleanupForSource(result.cleanupSourceRef, input.actorRef)
     : { pending: 0 };
-
   return {
     withdrawal: result.withdrawal,
     replayed: result.replayed,
@@ -599,12 +542,8 @@ export async function recordProvidedDeckArtifact(input: {
         sizeBytes: input.sizeBytes,
       },
     });
-
     const advanced = await tx.deliverableRequirement.updateMany({
-      where: {
-        id: deliverable.id,
-        currentArtifactId: current?.id ?? null,
-      },
+      where: { id: deliverable.id, currentArtifactId: current?.id ?? null },
       data: { currentArtifactId: artifact.id },
     });
     if (advanced.count !== 1) throw new DeliverableHeadConflictError();
@@ -613,7 +552,6 @@ export async function recordProvidedDeckArtifact(input: {
       where: { id: input.submissionId },
       data: { deckStatus: "SUBMITTED" },
     });
-
     return artifact;
   });
 }
@@ -629,7 +567,6 @@ export async function recordCanonicalDeckAssessment(input: {
   const assessmentId = input.commandKey
     ? semanticId("assess", input.submissionId, input.commandKey)
     : undefined;
-
   if (assessmentId) {
     const replay = await prisma.deliverableAssessment.findUnique({
       where: { id: assessmentId },
@@ -670,38 +607,25 @@ export async function recordCanonicalDeckAssessment(input: {
         predecessorAssessmentId: current?.id ?? null,
       },
     });
-
     const advanced = await tx.deckFile.updateMany({
-      where: {
-        id: artifact.id,
-        currentAssessmentId: current?.id ?? null,
-      },
+      where: { id: artifact.id, currentAssessmentId: current?.id ?? null },
       data: { currentAssessmentId: assessment.id },
     });
     if (advanced.count !== 1) throw new DeliverableHeadConflictError();
 
     await tx.submission.update({
       where: { id: input.submissionId },
-      data: {
-        deckStatus: input.disposition === "READY" ? "APPROVED" : "CONCERN",
-      },
+      data: { deckStatus: input.disposition === "READY" ? "APPROVED" : "CONCERN" },
     });
-
     return { assessment, replayed: false };
   });
 }
 
 export async function projectCurrentDeckStatus(submissionId: string) {
   const deliverable = await prisma.deliverableRequirement.findUnique({
-    where: {
-      submissionId_kindKey: {
-        submissionId,
-        kindKey: DECK_DELIVERABLE_KIND,
-      },
-    },
+    where: { submissionId_kindKey: { submissionId, kindKey: DECK_DELIVERABLE_KIND } },
     include: { currentArtifact: { include: { currentAssessment: true } } },
   });
-
   if (!deliverable?.currentArtifact) return null;
   if (!deliverable.currentArtifact.currentAssessment) return "SUBMITTED" as const;
   return deliverable.currentArtifact.currentAssessment.disposition === "READY"
