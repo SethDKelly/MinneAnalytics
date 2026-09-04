@@ -68,27 +68,48 @@ export async function POST(request: Request) {
     }
   }
 
-  const version = submission.abstractVersion;
-  await prisma.score.upsert({
+  const legacyRows = await prisma.score.findMany({
     where: {
-      submissionId_reviewerAccessId: {
-        submissionId: submission.id,
-        reviewerAccessId: reviewer.id,
-      },
-    },
-    create: {
       submissionId: submission.id,
       reviewerAccessId: reviewer.id,
-      value,
-      notes,
-      scoredAbstractVersion: version,
     },
-    update: {
-      value,
-      notes,
-      scoredAbstractVersion: version,
-    },
+    orderBy: { updatedAt: "desc" },
+    take: 2,
   });
+  if (
+    legacyRows.length > 1 ||
+    legacyRows.some((row) => row.submissionRevisionId || row.exactEvaluationKey)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Canonical Evaluation history exists; legacy score authority cannot be restored",
+        code: "CANONICAL_EVALUATION_ROLLBACK_FLOOR",
+      },
+      { status: 409 }
+    );
+  }
+
+  const version = submission.abstractVersion;
+  if (legacyRows[0]) {
+    await prisma.score.update({
+      where: { id: legacyRows[0].id },
+      data: {
+        value,
+        notes,
+        scoredAbstractVersion: version,
+      },
+    });
+  } else {
+    await prisma.score.create({
+      data: {
+        submissionId: submission.id,
+        reviewerAccessId: reviewer.id,
+        value,
+        notes,
+        scoredAbstractVersion: version,
+      },
+    });
+  }
 
   return NextResponse.json({ ok: true, scoredAbstractVersion: version });
 }
