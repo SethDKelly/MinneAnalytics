@@ -1,5 +1,30 @@
 # Concept Catalog
 
-Phase 001-G promotes the candidates that pass the discovery gate into canonical OKF knowledge nodes in this directory.
+These nodes are the canonical knowledge representation of the candidates admitted by Phase 001-G. They are **not yet full concept specifications**: Phase 002 adds abstract state, actions, and any intrinsic invariants.
 
-Until that gate is complete, use the [001-F surviving candidate baseline](../../evidence/001-F-surviving-candidate-baseline.md) as the current discovery input rather than treating this empty catalog as evidence that no concepts exist.
+# Admitted
+
+* [Proposal](proposal.md) - Durable offered subject for organized consideration.
+* [Revision](revision.md) - Change-with-history for a mutable subject.
+* [Evaluation](evaluation.md) - Independently formed evaluator judgment.
+* [Feedback](feedback.md) - Recipient-directed response about a subject.
+* [Selection](selection.md) - Consequential organizer choice among candidates.
+* [Withdrawal](withdrawal.md) - Originator rescission of participation/commitment.
+* [Capacity](capacity.md) - Finite commitment capacity and consumption.
+* [Classification](classification.md) - Subject associations with reusable terms.
+* [Vocabulary](vocabulary.md) - Reusable term lifecycle, contribution, and stewardship.
+* [Deliverable](deliverable.md) - Required artifact provision and readiness.
+* [Schedule](schedule.md) - Place/time allocation with human-adjustable placements.
+* [Publication](publication.md) - Intentional public exposure of eligible material.
+* [Archive](archive.md) - Retained read-only internal closure/history.
+
+# Provisionally admitted
+
+* [Controlled Disclosure](controlled-disclosure.md) - Staged information exposure with intentional reveal; must remain narrower than generic access control.
+* [Dispatch](dispatch.md) - Performed operational sends with durable recipient/round semantics; must remain separate from Feedback and provider/template implementation.
+* [Availability Window](availability-window.md) - Visible governed opportunity interval; Phase 002 must prove value beyond generic time configuration.
+* [Coverage Target](coverage-target.md) - Desired representation only; actual composition remains derived application state.
+
+# Deferred signals
+
+Authorization/delegation, Export/report definitions, cross-concept Audit Trail, and Registration/Enrollment are not in the Phase 002 concept set. See the [001-G discovery gate decision](../decisions/001-g-discovery-gate.md) for their disposition.
