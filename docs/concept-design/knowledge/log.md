@@ -1,6 +1,11 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Specification**: Completed 002-B — Evaluation, Disclosure & Directed Response.
+* **Specification**: Promoted Evaluation to `maturity: specified` with exact-subject attribution, opaque Judgment, evaluator-owned revision of the same judgment, optional private context, and explicit exclusion of aggregate/currentness/work-queue semantics.
+* **Resolution**: Resolved Controlled Disclosure's Phase 001 provisional condition positively and promoted it to `maturity: specified`; the concept now owns one participant/context/information exposure relation with monotonic reveal rather than generic access control.
+* **Specification**: Promoted Feedback to `maturity: specified` as immutable recipient-directed response with exact subject attribution, separate from private Evaluation context and Dispatch delivery semantics.
+* **Boundary**: Kept Evaluation freshness/aggregation, reveal eligibility, Feedback-triggered Revision, `FEEDBACK_PENDING` workflow state, and notification delivery outside the three concepts for later synchronization/application-policy design.
 * **Specification**: Completed 002-A — Offer, Change & Temporal Availability.
 * **Specification**: Promoted Proposal to `maturity: specified` with durable offer state, `Offer` action, intrinsic invariants, and explicit exclusions from downstream lifecycle behavior.
 * **Specification**: Promoted Revision to `maturity: specified` with append-only linear history, `Initialize`/`Revise` actions, immutable revision provenance, and a unique current revision per tracked subject.
