@@ -4,14 +4,19 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification complete; synchronization consolidation next
+- **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation next
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); 002-A; 002-B; 002-C; 002-D; 002-E; 002-F
-- **Next:** 002-G — Formal Specification Consolidation & Synchronization Handoff
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G)
+- **Next:** 003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register
 
 ## Start here
 
-For current normative design knowledge, begin with the [Concept Design knowledge index](knowledge/index.md) and [Concept Catalog](knowledge/concepts/).
+For current normative design knowledge, begin with:
+
+- [Concept Design knowledge index](knowledge/index.md)
+- [Concept Catalog](knowledge/concepts/)
+- [MinneAnalytics v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md)
+- [002-G Formal Specification & Composition Gate](knowledge/decisions/002-g-formal-specification-and-composition-gate.md)
 
 Canonical documentation behavior is governed by:
 
@@ -41,75 +46,67 @@ Application code and implementation documentation describe current realization; 
 
 The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisions/001-g-discovery-gate.md).
 
-## Phase 002 — Formal Concept Specification — in progress
+## Phase 002 — Formal Concept Specification — complete
 
-Phase 002 formal specification has now completed all concept subgroups. 002-G will consolidate the model and establish the synchronization/application-composition handoff.
+Phase 002 formally specified all 17 concepts admitted by 001-G and then consolidated their reference identities, synchronizations, application policies, derived projections, and implementation-reconciliation handoff.
 
 1. [002-A — Offer, Change & Temporal Availability](002-A-offer-change-and-temporal-availability.md) — **complete**
-   - [Proposal](knowledge/concepts/proposal.md) — specified
-   - [Revision](knowledge/concepts/revision.md) — specified
-   - [Availability Window](knowledge/concepts/availability-window.md) — specified; Phase 001 provisional condition resolved
+   - [Proposal](knowledge/concepts/proposal.md)
+   - [Revision](knowledge/concepts/revision.md)
+   - [Availability Window](knowledge/concepts/availability-window.md)
 2. [002-B — Evaluation, Disclosure & Directed Response](002-B-evaluation-disclosure-and-directed-response.md) — **complete**
-   - [Evaluation](knowledge/concepts/evaluation.md) — specified
-   - [Controlled Disclosure](knowledge/concepts/controlled-disclosure.md) — specified; Phase 001 provisional condition resolved
-   - [Feedback](knowledge/concepts/feedback.md) — specified
+   - [Evaluation](knowledge/concepts/evaluation.md)
+   - [Controlled Disclosure](knowledge/concepts/controlled-disclosure.md)
+   - [Feedback](knowledge/concepts/feedback.md)
 3. [002-C — Program Choice, Participation, Scarcity & Representation Intent](002-C-program-choice-participation-scarcity-and-representation-intent.md) — **complete**
-   - [Selection](knowledge/concepts/selection.md) — specified
-   - [Withdrawal](knowledge/concepts/withdrawal.md) — specified
-   - [Capacity](knowledge/concepts/capacity.md) — specified
-   - [Coverage Target](knowledge/concepts/coverage-target.md) — specified; Phase 001 provisional condition resolved
+   - [Selection](knowledge/concepts/selection.md)
+   - [Withdrawal](knowledge/concepts/withdrawal.md)
+   - [Capacity](knowledge/concepts/capacity.md)
+   - [Coverage Target](knowledge/concepts/coverage-target.md)
 4. [002-D — Vocabulary & Classification](002-D-vocabulary-and-classification.md) — **complete**
-   - [Vocabulary](knowledge/concepts/vocabulary.md) — specified
-   - [Classification](knowledge/concepts/classification.md) — specified
+   - [Vocabulary](knowledge/concepts/vocabulary.md)
+   - [Classification](knowledge/concepts/classification.md)
 5. [002-E — Deliverable & Scheduling Execution](002-E-deliverable-and-scheduling-execution.md) — **complete**
-   - [Deliverable](knowledge/concepts/deliverable.md) — specified
-   - [Schedule](knowledge/concepts/schedule.md) — specified
+   - [Deliverable](knowledge/concepts/deliverable.md)
+   - [Schedule](knowledge/concepts/schedule.md)
 6. [002-F — Publication, Dispatch & Historical Closure](002-F-publication-dispatch-and-historical-closure.md) — **complete**
-   - [Publication](knowledge/concepts/publication.md) — specified
-   - [Dispatch](knowledge/concepts/dispatch.md) — specified; Phase 001 provisional condition resolved
-   - [Archive](knowledge/concepts/archive.md) — specified
-7. **002-G — Formal Specification Consolidation & Synchronization Handoff** — next
+   - [Publication](knowledge/concepts/publication.md)
+   - [Dispatch](knowledge/concepts/dispatch.md)
+   - [Archive](knowledge/concepts/archive.md)
+7. [002-G — Formal Specification Consolidation & Synchronization Handoff](002-G-formal-specification-consolidation-and-synchronization-handoff.md) — **complete**
 
-All 17 concepts admitted at the Phase 001-G gate are now formally specified. All four provisional admissions—Availability Window, Controlled Disclosure, Coverage Target, and Dispatch—resolved positively during formal specification.
+All 17 concepts are formally specified. All four Phase 001 provisional admissions—Availability Window, Controlled Disclosure, Coverage Target, and Dispatch—resolved positively.
 
-## Formal-specification results to date
+The canonical Phase 002 gate is [002-G Formal Specification & Composition Gate](knowledge/decisions/002-g-formal-specification-and-composition-gate.md).
 
-002-A separates durable offer identity, mutable history, and governed temporal opportunity.
+## Phase 002 composition result
 
-002-B separates evaluator-attributed judgment, staged information disclosure, and recipient-directed response.
+Use the [v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md) rather than restating the full rules here.
 
-002-C separates organizer choice from originator withdrawal, effective participation from either source fact, hard finite scarcity from soft representation intent, and desired representation from observed composition.
+The key reference alignment is:
 
-002-D separates stable reusable-term identity/lifecycle from subject Classification and keeps both independent from Coverage Target. It also carries forward the application-level decision of whether MinneAnalytics classifications attach to a durable Proposal or exact Revision identities when version-sensitive classification matters.
+- durable program/participation behavior → Proposal identity;
+- version-sensitive Evaluation and Classification → exact Revision identity;
+- Publication → exact immutable MaterialRef/Deliverable ArtifactVersion;
+- Dispatch dedupe → stable RecipientRef, not mutable endpoint.
 
-002-E separates artifact requirement from file/storage implementation, binds readiness to the exact provided artifact version, separates readiness from Publication, and treats Schedule as explicit planner-controlled place/time placement rather than algorithm output or Capacity state.
+Cross-concept behaviors such as effective participation, Evaluation currentness, Coverage assessment, Publication eligibility, edit eligibility, and Dispatch audience resolution remain synchronizations/policies/projections rather than new concepts.
 
-002-F separates exact public exposure from mutable source/readiness state, performed operational Dispatch from templates/Feedback/provider mechanics, and retained internal Archive closure from public Publication or a broad Conference lifecycle.
+No hidden ProgramStatus/Workflow/SynchronizationManager concept was required.
 
-The complete state/action/invariant definitions live in the canonical concept nodes. Numbered phase records preserve decisions, rejected alternatives, deferred synchronization questions, and implementation-reconciliation observations.
+## Phase 003 — Implementation Reconciliation & Architecture Mapping — next
 
-No application/domain implementation changes are authorized by Phase 002 specification work.
+Phase 003 should reconcile the existing implementation against accepted Concept Design authority before application refactoring is authorized.
 
-## 002-G handoff focus
+1. **003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register**
+2. **003-B — Persistence, Identity, History & Migration Target Design**
+3. **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture**
+4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**
+5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation**
+6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**
+7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
 
-002-G should now consolidate, test, and classify cross-concept synchronization/application rules rather than reopening concept internals by default. Key handoff areas include:
-
-- Proposal/Revision initialization and edit availability;
-- Revision/Evaluation currentness;
-- Evaluation/Controlled Disclosure sequencing;
-- Feedback-triggered revision/notification;
-- Selection/Withdrawal/effective participation;
-- Selection/Capacity allocation;
-- Classification/Selection/Coverage Target composition;
-- version-sensitive Classification subject choice;
-- Selection→Deliverable and Deliverable→Publication;
-- Selection/Withdrawal→Schedule eligibility;
-- generated Schedule suggestions versus explicit acceptance;
-- Publication exact-material eligibility;
-- Dispatch audience resolution and send semantics;
-- Archive-driven mutation gating and its relationship to Publication/Dispatch.
-
-The output should prepare explicit implementation reconciliation while preserving concept independence.
+The initial reconciliation backlog is maintained in [002-G Implementation Reconciliation Register](evidence/002-G-implementation-reconciliation-register.md).
 
 ## Knowledge architecture
 
@@ -123,6 +120,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-Phase 002 formal specification does **not** authorize application/domain refactoring.
+Completion of Phase 002 does **not** itself authorize application/domain refactoring.
 
-Synchronization/composition design and explicit implementation reconciliation should determine what product code actually needs to change.
+Phase 003 must map and reconcile the current code against the canonical concepts and synchronization contract, identify concrete semantic gaps and migration needs, and explicitly authorize later implementation changes.
