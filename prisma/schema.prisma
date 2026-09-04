@@ -328,6 +328,9 @@ model SubmissionRevision {
   themeIds     String   @map("theme_ids")
   changedFields String  @map("changed_fields")
   changeNote   String?  @map("change_note")
+  commandKey   String?  @unique @map("command_key")
+  provenance   MigrationProvenance? @map("migration_provenance")
+  observedAt   DateTime? @map("migration_observed_at")
   createdAt    DateTime @default(now()) @map("created_at")
 
   submission Submission @relation("SubmissionRevisions", fields: [submissionId], references: [id], onDelete: Cascade)
@@ -432,6 +435,7 @@ model Score {
   submissionId     String   @map("submission_id")
   reviewerAccessId String   @map("reviewer_access_id")
   submissionRevisionId String? @map("submission_revision_id")
+  exactEvaluationKey String? @unique @map("exact_evaluation_key")
   value            Float
   notes            String?
   scoredAbstractVersion Int? @map("scored_abstract_version")
@@ -442,7 +446,7 @@ model Score {
   reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Cascade)
   submissionRevision SubmissionRevision? @relation(fields: [submissionRevisionId], references: [id], onDelete: Restrict)
 
-  @@unique([submissionId, reviewerAccessId])
+  @@index([submissionId, reviewerAccessId])
   @@index([submissionRevisionId, reviewerAccessId])
 }
 
