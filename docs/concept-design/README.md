@@ -6,8 +6,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 - **Concept model maturity:** v0 — formal concept specification complete; implementation reconciliation in progress
 - **Working branch:** `concept-design/v0-discovery`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A
-- **Next:** 003-B — Persistence, Identity, History & Migration Target Design
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); 003-A; 003-B
+- **Next:** 003-C — Synchronization, Transaction, Idempotency & Recovery Architecture
 
 ## Start here
 
@@ -17,8 +17,10 @@ For current normative design knowledge, begin with:
 - [Concept Catalog](knowledge/concepts/)
 - [MinneAnalytics v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md)
 - [Implementation Reconciliation](knowledge/reconciliation/)
-- [MinneAnalytics v0 Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
+- [v0 Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
 - [003-A Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
+- [v0 Persistence, Identity & History Target](knowledge/reconciliation/persistence-identity-history-target.md)
+- [v0 Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
 
 Canonical documentation behavior is governed by:
 
@@ -50,51 +52,19 @@ The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisi
 
 ## Phase 002 — Formal Concept Specification — complete
 
-Phase 002 formally specified all 17 concepts admitted by 001-G and then consolidated their reference identities, synchronizations, application policies, derived projections, and implementation-reconciliation handoff.
+Phase 002 formally specified all 17 concepts admitted by 001-G and consolidated their reference identities, synchronizations, application policies, derived projections, and implementation-reconciliation handoff.
 
 1. [002-A — Offer, Change & Temporal Availability](002-A-offer-change-and-temporal-availability.md) — **complete**
-   - [Proposal](knowledge/concepts/proposal.md)
-   - [Revision](knowledge/concepts/revision.md)
-   - [Availability Window](knowledge/concepts/availability-window.md)
 2. [002-B — Evaluation, Disclosure & Directed Response](002-B-evaluation-disclosure-and-directed-response.md) — **complete**
-   - [Evaluation](knowledge/concepts/evaluation.md)
-   - [Controlled Disclosure](knowledge/concepts/controlled-disclosure.md)
-   - [Feedback](knowledge/concepts/feedback.md)
 3. [002-C — Program Choice, Participation, Scarcity & Representation Intent](002-C-program-choice-participation-scarcity-and-representation-intent.md) — **complete**
-   - [Selection](knowledge/concepts/selection.md)
-   - [Withdrawal](knowledge/concepts/withdrawal.md)
-   - [Capacity](knowledge/concepts/capacity.md)
-   - [Coverage Target](knowledge/concepts/coverage-target.md)
 4. [002-D — Vocabulary & Classification](002-D-vocabulary-and-classification.md) — **complete**
-   - [Vocabulary](knowledge/concepts/vocabulary.md)
-   - [Classification](knowledge/concepts/classification.md)
 5. [002-E — Deliverable & Scheduling Execution](002-E-deliverable-and-scheduling-execution.md) — **complete**
-   - [Deliverable](knowledge/concepts/deliverable.md)
-   - [Schedule](knowledge/concepts/schedule.md)
 6. [002-F — Publication, Dispatch & Historical Closure](002-F-publication-dispatch-and-historical-closure.md) — **complete**
-   - [Publication](knowledge/concepts/publication.md)
-   - [Dispatch](knowledge/concepts/dispatch.md)
-   - [Archive](knowledge/concepts/archive.md)
 7. [002-G — Formal Specification Consolidation & Synchronization Handoff](002-G-formal-specification-consolidation-and-synchronization-handoff.md) — **complete**
 
-All 17 concepts are formally specified. All four Phase 001 provisional admissions—Availability Window, Controlled Disclosure, Coverage Target, and Dispatch—resolved positively.
+All 17 concepts are formally specified. The canonical Phase 002 gate is [002-G Formal Specification & Composition Gate](knowledge/decisions/002-g-formal-specification-and-composition-gate.md).
 
-The canonical Phase 002 gate is [002-G Formal Specification & Composition Gate](knowledge/decisions/002-g-formal-specification-and-composition-gate.md).
-
-## Phase 002 composition result
-
-Use the [v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md) rather than restating the full rules here.
-
-The key reference alignment is:
-
-- durable program/participation behavior → Proposal identity;
-- version-sensitive Evaluation and Classification → exact Revision identity;
-- Publication → exact immutable MaterialRef/Deliverable ArtifactVersion;
-- Dispatch dedupe → stable RecipientRef, not mutable endpoint.
-
-Cross-concept behaviors such as effective participation, Evaluation currentness, Coverage assessment, Publication eligibility, edit eligibility, and Dispatch audience resolution remain synchronizations/policies/projections rather than new concepts.
-
-No hidden ProgramStatus/Workflow/SynchronizationManager concept was required.
+Use the [v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md) rather than restating its cross-concept rules here.
 
 ## Phase 003 — Implementation Reconciliation & Architecture Mapping — in progress
 
@@ -103,16 +73,18 @@ Phase 003 reconciles the existing implementation against accepted Concept Design
 1. [003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) — **complete**
    - [Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
    - [Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
-2. **003-B — Persistence, Identity, History & Migration Target Design** — next
-3. **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture**
+2. [003-B — Persistence, Identity, History & Migration Target Design](003-B-persistence-identity-history-and-migration-target-design.md) — **complete**
+   - [Persistence, Identity & History Target](knowledge/reconciliation/persistence-identity-history-target.md)
+   - [Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
+3. **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture** — next
 4. **003-D — Authority, Lifecycle, Disclosure & Operational Policy Reconciliation**
 5. **003-E — Derived Views, API/UI State & Compatibility Reconciliation**
 6. **003-F — Data Migration, Backfill, Rollout & Reversibility Plan**
 7. **003-G — Implementation Reconciliation Consolidation & Execution Handoff**
 
-003-A maps all 17 concepts to the current implementation and establishes a baseline of 18 semantic gaps plus 4 cross-cutting policy gaps. The most important finding is that several existing physical aggregates are reusable, but mutable combined fields currently erase or fail to preserve independent conceptual histories.
+003-A established 18 semantic gaps plus 4 policy gaps. 003-B now defines which existing IDs survive, where durable history must be added, how exact Revision/Artifact references work, what remains a compatibility projection, and which legacy history can or cannot be honestly reconstructed.
 
-Detailed source-path evidence remains in the 003-A `evidence/` artifacts. Later work should begin from the canonical reconciliation nodes rather than restating that inventory.
+The target is deliberately **reuse-before-replace** and **expand-first**: existing aggregates may remain when they preserve the required semantics, and destructive cleanup is deferred until later compatibility/migration gates.
 
 ## Knowledge architecture
 
@@ -126,6 +98,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 ## Branch discipline
 
-003-A does **not** authorize application/domain refactoring.
+003-B still authorizes **no application/domain/schema refactoring**.
 
-003-B must now design persistence, reference identity, immutable history, compatibility projections, and migration-safe targets. Concrete application changes should be authorized only after the relevant Phase 003 design and migration work establishes a safe execution plan.
+003-C must next design synchronization transactions, idempotency, retry/convergence, compatibility write projection, and recovery semantics. Concrete application changes should be authorized only after the remaining Phase 003 design and migration work establishes a safe execution handoff.
