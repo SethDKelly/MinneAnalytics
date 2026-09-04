@@ -31,7 +31,7 @@ jobs:
       - run: npm run db:migration:verify
       - run: npx prisma validate
         env:
-          DATABASE_URL: file:./prisma/ci.db
+          DATABASE_URL: file:./ci-migrate.db
       - name: Apply fresh migration chain
         run: npx prisma migrate deploy
         env:
@@ -43,4 +43,4 @@ jobs:
       - run: npm run lint
       - run: npm run build
         env:
-          DATABASE_URL: file:./prisma/ci.db
+          DATABASE_URL: file:./ci-migrate.db
