@@ -59,6 +59,49 @@ enum EmailTemplateKey {
   CALL_FOR_FEEDBACK
 }
 
+enum MigrationProvenance {
+  NATIVE
+  BACKFILLED_HISTORICAL
+  BACKFILLED_CURRENT_STATE
+  LEGACY_UNKNOWN
+}
+
+enum SelectionDisposition {
+  SELECTED
+  RESERVE
+  NOT_SELECTED
+}
+
+enum TermAvailability {
+  AVAILABLE
+  RETIRED
+}
+
+enum DeliverableAssessmentDisposition {
+  CONCERN
+  READY
+}
+
+enum PublicationAvailability {
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum SyncWorkState {
+  PENDING
+  PROCESSING
+  COMPLETED
+  BLOCKED
+}
+
+enum DispatchAttemptState {
+  PREPARED
+  SUCCEEDED
+  FAILED
+  UNCERTAIN
+  BLOCKED
+}
+
 model Conference {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -81,15 +124,23 @@ model Conference {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  submissions    Submission[]
-  reviewerAccess ReviewerAccess[]
-  scheduleRooms  ScheduleRoom[]
-  scheduleSlots  ScheduleSlot[]
-  schedulePlacements SchedulePlacement[]
-  themes         Theme[]
-  emailBatches   ConferenceEmailBatch[]
-  attendees      ConferenceAttendee[]
-  emailSendRecords EmailSendRecord[]
+  submissions            Submission[]
+  reviewerAccess         ReviewerAccess[]
+  scheduleRooms          ScheduleRoom[]
+  scheduleSlots          ScheduleSlot[]
+  schedulePlacements     SchedulePlacement[]
+  themes                 Theme[]
+  emailBatches           ConferenceEmailBatch[]
+  attendees              ConferenceAttendee[]
+  emailSendRecords       EmailSendRecord[]
+  availabilityWindows    AvailabilityWindow[]
+  selectionDecisions     SelectionDecision[]
+  capacityPools          CapacityPool[]
+  coverageTargets        CoverageTarget[]
+  controlledDisclosures  ControlledDisclosure[]
+  publications           Publication[]
+  archiveRecord          ArchiveRecord?
+  dispatchAttempts       DispatchAttempt[]
 }
 
 enum SlotType {
@@ -113,9 +164,13 @@ model Theme {
   targetMin    Int      @default(0) @map("target_min")
   targetMax    Int      @default(0) @map("target_max")
   sortOrder    Int      @default(0) @map("sort_order")
+  currentTermStateId String? @unique @map("current_term_state_id")
 
-  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
-  submissions  SubmissionTheme[]
+  conference       Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  submissions      SubmissionTheme[]
+  revisionTerms    RevisionTerm[]
+  termStates       TermState[] @relation("ThemeTermStates")
+  currentTermState TermState? @relation("CurrentThemeTermState", fields: [currentTermStateId], references: [id], onDelete: SetNull)
 
   @@unique([conferenceId, slug])
 }
@@ -188,6 +243,10 @@ model Submission {
   abstractVersionAcknowledgedAt DateTime? @map("abstract_version_acknowledged_at")
   lastPresenterEditAt DateTime? @map("last_presenter_edit_at")
 
+  currentRevisionId String? @unique @map("current_revision_id")
+  currentSelectionDecisionId String? @unique @map("current_selection_decision_id")
+  currentShareEligibilityChangeId String? @unique @map("current_share_eligibility_change_id")
+
   firstName     String  @map("first_name")
   lastName      String  @map("last_name")
   degrees       String  // JSON array
@@ -225,9 +284,19 @@ model Submission {
   deckFiles  DeckFile[]
   schedulePlacement SchedulePlacement?
   themes     SubmissionTheme[]
-  revisions  SubmissionRevision[]
+  revisions  SubmissionRevision[] @relation("SubmissionRevisions")
   presenterFeedback PresenterFeedback[]
   emailSendRecords EmailSendRecord[]
+  currentRevision SubmissionRevision? @relation("CurrentSubmissionRevision", fields: [currentRevisionId], references: [id], onDelete: SetNull)
+  selectionDecisions SelectionDecision[] @relation("SubmissionSelectionDecisions")
+  currentSelectionDecision SelectionDecision? @relation("CurrentSelectionDecision", fields: [currentSelectionDecisionId], references: [id], onDelete: SetNull)
+  withdrawal WithdrawalRecord? @relation("SubmissionWithdrawal")
+  capacityAllocations CapacityAllocation[]
+  deliverables DeliverableRequirement[]
+  controlledDisclosures ControlledDisclosure[]
+  shareEligibilityChanges ShareEligibilityChange[] @relation("SubmissionShareEligibilityHistory")
+  currentShareEligibilityChange ShareEligibilityChange? @relation("CurrentShareEligibilityChange", fields: [currentShareEligibilityChangeId], references: [id], onDelete: SetNull)
+  dispatchAttempts DispatchAttempt[]
 }
 
 model PresenterFeedback {
@@ -237,15 +306,20 @@ model PresenterFeedback {
   kind             PresenterFeedbackKind
   body             String
   abstractVersion  Int?     @map("abstract_version")
+  submissionRevisionId String? @map("submission_revision_id")
   createdAt        DateTime @default(now()) @map("created_at")
 
   submission     Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Cascade)
+  submissionRevision SubmissionRevision? @relation(fields: [submissionRevisionId], references: [id], onDelete: Restrict)
+
+  @@index([submissionRevisionId])
 }
 
 model SubmissionRevision {
   id           String   @id @default(cuid())
   submissionId String   @map("submission_id")
+  predecessorRevisionId String? @unique @map("predecessor_revision_id")
   version      Int
   title        String
   abstract     String
@@ -256,7 +330,14 @@ model SubmissionRevision {
   changeNote   String?  @map("change_note")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission Submission @relation("SubmissionRevisions", fields: [submissionId], references: [id], onDelete: Cascade)
+  currentForSubmission Submission? @relation("CurrentSubmissionRevision")
+  predecessorRevision SubmissionRevision? @relation("RevisionChain", fields: [predecessorRevisionId], references: [id], onDelete: SetNull)
+  successorRevision SubmissionRevision? @relation("RevisionChain")
+  revisionTerms RevisionTerm[]
+  scores Score[]
+  presenterFeedback PresenterFeedback[]
+  controlledDisclosures ControlledDisclosure[]
 
   @@unique([submissionId, version])
 }
@@ -274,6 +355,7 @@ model ReviewerAccess {
   scores     Score[]
   presenterFeedback PresenterFeedback[]
   emailBatches ConferenceEmailBatch[]
+  controlledDisclosures ControlledDisclosure[]
 }
 
 model EmailTemplate {
@@ -299,6 +381,7 @@ model ConferenceEmailBatch {
   conference Conference     @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
   sentBy     ReviewerAccess @relation(fields: [sentByReviewerAccessId], references: [id], onDelete: Cascade)
   records    EmailSendRecord[]
+  dispatchAttempts DispatchAttempt[]
 
   @@index([conferenceId, templateKey])
 }
@@ -312,12 +395,16 @@ model EmailSendRecord {
   submissionId String?          @map("submission_id")
   attendeeId   String?          @map("attendee_id")
   email        String
+  renderedSubject String?       @map("rendered_subject")
+  renderedBody String?          @map("rendered_body")
+  contentHash String?           @map("content_hash")
   sentAt       DateTime         @default(now()) @map("sent_at")
 
   batch        ConferenceEmailBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
   conference   Conference           @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
   submission   Submission?          @relation(fields: [submissionId], references: [id], onDelete: SetNull)
   attendee     ConferenceAttendee?  @relation(fields: [attendeeId], references: [id], onDelete: SetNull)
+  dispatchAttempt DispatchAttempt?
 
   @@unique([conferenceId, templateKey, round, submissionId])
   @@unique([conferenceId, templateKey, round, attendeeId])
@@ -335,6 +422,7 @@ model ConferenceAttendee {
 
   conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
   emailSendRecords EmailSendRecord[]
+  dispatchAttempts DispatchAttempt[]
 
   @@unique([conferenceId, email])
 }
@@ -343,6 +431,7 @@ model Score {
   id               String   @id @default(cuid())
   submissionId     String   @map("submission_id")
   reviewerAccessId String   @map("reviewer_access_id")
+  submissionRevisionId String? @map("submission_revision_id")
   value            Float
   notes            String?
   scoredAbstractVersion Int? @map("scored_abstract_version")
@@ -351,14 +440,19 @@ model Score {
 
   submission     Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Cascade)
+  submissionRevision SubmissionRevision? @relation(fields: [submissionRevisionId], references: [id], onDelete: Restrict)
 
   @@unique([submissionId, reviewerAccessId])
+  @@index([submissionRevisionId, reviewerAccessId])
 }
 
 model DeckFile {
   id           String   @id @default(cuid())
   submissionId String   @map("submission_id")
   publicId     String   @unique @default(cuid()) @map("public_id")
+  deliverableId String? @map("deliverable_id")
+  predecessorArtifactId String? @unique @map("predecessor_artifact_id")
+  currentAssessmentId String? @unique @map("current_assessment_id")
   version      Int
   filename     String
   storagePath  String   @map("storage_path")
@@ -367,4 +461,361 @@ model DeckFile {
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  deliverable DeliverableRequirement? @relation("DeliverableArtifacts", fields: [deliverableId], references: [id], onDelete: Restrict)
+  currentForDeliverable DeliverableRequirement? @relation("CurrentDeliverableArtifact")
+  predecessorArtifact DeckFile? @relation("ArtifactChain", fields: [predecessorArtifactId], references: [id], onDelete: SetNull)
+  successorArtifact DeckFile? @relation("ArtifactChain")
+  assessments DeliverableAssessment[] @relation("ArtifactAssessments")
+  currentAssessment DeliverableAssessment? @relation("CurrentArtifactAssessment", fields: [currentAssessmentId], references: [id], onDelete: SetNull)
+  publications Publication[]
+}
+
+model AvailabilityWindow {
+  id             String   @id @default(cuid())
+  conferenceId   String   @map("conference_id")
+  opportunityKey String   @map("opportunity_key")
+  opensAt        DateTime @map("opens_at")
+  closesAt       DateTime @map("closes_at")
+  provenance     MigrationProvenance @default(NATIVE)
+  observedAt     DateTime? @map("observed_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+
+  @@unique([conferenceId, opportunityKey])
+}
+
+model SelectionDecision {
+  id                    String   @id @default(cuid())
+  conferenceId          String   @map("conference_id")
+  submissionId          String   @map("submission_id")
+  disposition           SelectionDisposition?
+  decidedByRef          String?  @map("decided_by_ref")
+  decidedAt             DateTime? @map("decided_at")
+  predecessorDecisionId String?  @unique @map("predecessor_decision_id")
+  provenance            MigrationProvenance @default(NATIVE)
+  recordedAt            DateTime @default(now()) @map("recorded_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+  submission Submission @relation("SubmissionSelectionDecisions", fields: [submissionId], references: [id], onDelete: Restrict)
+  currentForSubmission Submission? @relation("CurrentSelectionDecision")
+  predecessorDecision SelectionDecision? @relation("SelectionDecisionChain", fields: [predecessorDecisionId], references: [id], onDelete: SetNull)
+  successorDecision SelectionDecision? @relation("SelectionDecisionChain")
+
+  @@index([conferenceId, submissionId])
+}
+
+model WithdrawalRecord {
+  id             String   @id @default(cuid())
+  submissionId   String   @unique @map("submission_id")
+  withdrawnByRef String?  @map("withdrawn_by_ref")
+  withdrawnAt    DateTime? @map("withdrawn_at")
+  provenance     MigrationProvenance @default(NATIVE)
+  recordedAt     DateTime @default(now()) @map("recorded_at")
+
+  submission Submission @relation("SubmissionWithdrawal", fields: [submissionId], references: [id], onDelete: Restrict)
+}
+
+model CapacityPool {
+  id           String @id @default(cuid())
+  conferenceId String @map("conference_id")
+  key          String
+  limitUnits   Int    @map("limit_units")
+  provenance   MigrationProvenance @default(NATIVE)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+  classRates CapacityClassRate[]
+  allocations CapacityAllocation[]
+
+  @@unique([conferenceId, key])
+}
+
+model CapacityClassRate {
+  poolId   String @map("pool_id")
+  classRef String @map("class_ref")
+  units    Int
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  pool CapacityPool @relation(fields: [poolId], references: [id], onDelete: Restrict)
+
+  @@id([poolId, classRef])
+}
+
+model CapacityAllocation {
+  id             String @id @default(cuid())
+  poolId         String @map("pool_id")
+  submissionId   String @map("submission_id")
+  classRef       String @map("class_ref")
+  unitsApplied   Int    @map("units_applied")
+  allocatedByRef String? @map("allocated_by_ref")
+  allocatedAt    DateTime? @map("allocated_at")
+  releasedByRef  String? @map("released_by_ref")
+  releasedAt     DateTime? @map("released_at")
+  provenance     MigrationProvenance @default(NATIVE)
+  recordedAt     DateTime @default(now()) @map("recorded_at")
+
+  pool CapacityPool @relation(fields: [poolId], references: [id], onDelete: Restrict)
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+
+  @@index([poolId, submissionId])
+  @@index([poolId, releasedAt])
+}
+
+model CoverageTarget {
+  id            String @id @default(cuid())
+  conferenceId  String @map("conference_id")
+  dimensionKey  String @map("dimension_key")
+  bucketRef     String @map("bucket_ref")
+  measureKey    String @map("measure_key")
+  lowerBound    Float? @map("lower_bound")
+  upperBound    Float? @map("upper_bound")
+  provenance    MigrationProvenance @default(NATIVE)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+
+  @@unique([conferenceId, dimensionKey, bucketRef, measureKey])
+}
+
+model TermState {
+  id                 String @id @default(cuid())
+  themeId            String @map("theme_id")
+  label              String
+  availability       TermAvailability
+  recordedByRef      String? @map("recorded_by_ref")
+  recordedAt         DateTime? @map("recorded_at")
+  predecessorStateId String? @unique @map("predecessor_state_id")
+  provenance         MigrationProvenance @default(NATIVE)
+  observedAt         DateTime? @map("observed_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  theme Theme @relation("ThemeTermStates", fields: [themeId], references: [id], onDelete: Restrict)
+  currentForTheme Theme? @relation("CurrentThemeTermState")
+  predecessorState TermState? @relation("TermStateChain", fields: [predecessorStateId], references: [id], onDelete: SetNull)
+  successorState TermState? @relation("TermStateChain")
+
+  @@index([themeId])
+}
+
+model RevisionTerm {
+  submissionRevisionId String @map("submission_revision_id")
+  themeId              String @map("theme_id")
+
+  submissionRevision SubmissionRevision @relation(fields: [submissionRevisionId], references: [id], onDelete: Restrict)
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Restrict)
+
+  @@id([submissionRevisionId, themeId])
+  @@index([themeId])
+}
+
+model DeliverableRequirement {
+  id                String @id @default(cuid())
+  submissionId      String @map("submission_id")
+  responsibleRef    String? @map("responsible_ref")
+  kindKey           String @map("kind_key")
+  currentArtifactId String? @unique @map("current_artifact_id")
+  provenance        MigrationProvenance @default(NATIVE)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  artifactVersions DeckFile[] @relation("DeliverableArtifacts")
+  currentArtifact DeckFile? @relation("CurrentDeliverableArtifact", fields: [currentArtifactId], references: [id], onDelete: SetNull)
+
+  @@unique([submissionId, kindKey])
+}
+
+model DeliverableAssessment {
+  id                      String @id @default(cuid())
+  artifactVersionId       String @map("artifact_version_id")
+  disposition             DeliverableAssessmentDisposition
+  detail                  String?
+  reviewedByRef           String? @map("reviewed_by_ref")
+  reviewedAt              DateTime? @map("reviewed_at")
+  predecessorAssessmentId String? @unique @map("predecessor_assessment_id")
+  provenance              MigrationProvenance @default(NATIVE)
+  recordedAt              DateTime @default(now()) @map("recorded_at")
+
+  artifactVersion DeckFile @relation("ArtifactAssessments", fields: [artifactVersionId], references: [id], onDelete: Restrict)
+  currentForArtifact DeckFile? @relation("CurrentArtifactAssessment")
+  predecessorAssessment DeliverableAssessment? @relation("DeliverableAssessmentChain", fields: [predecessorAssessmentId], references: [id], onDelete: SetNull)
+  successorAssessment DeliverableAssessment? @relation("DeliverableAssessmentChain")
+
+  @@index([artifactVersionId])
+}
+
+model ControlledDisclosure {
+  id                   String @id @default(cuid())
+  conferenceId         String @map("conference_id")
+  reviewerAccessId     String @map("reviewer_access_id")
+  submissionId         String @map("submission_id")
+  submissionRevisionId String? @map("submission_revision_id")
+  informationKey       String @map("information_key")
+  subjectKey           String @map("subject_key")
+  stagedAt             DateTime? @map("staged_at")
+  revealedByRef        String? @map("revealed_by_ref")
+  revealedAt           DateTime? @map("revealed_at")
+  provenance           MigrationProvenance @default(NATIVE)
+  recordedAt           DateTime @default(now()) @map("recorded_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+  reviewerAccess ReviewerAccess @relation(fields: [reviewerAccessId], references: [id], onDelete: Restrict)
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  submissionRevision SubmissionRevision? @relation(fields: [submissionRevisionId], references: [id], onDelete: Restrict)
+
+  @@unique([reviewerAccessId, submissionId, informationKey, subjectKey])
+  @@index([conferenceId, submissionRevisionId])
+}
+
+model Publication {
+  id               String @id @default(cuid())
+  conferenceId     String @map("conference_id")
+  deckFileId       String @map("deck_file_id")
+  publicSurfaceKey String @map("public_surface_key")
+  currentStateId   String? @unique @map("current_state_id")
+  provenance       MigrationProvenance @default(NATIVE)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+  deckFile DeckFile @relation(fields: [deckFileId], references: [id], onDelete: Restrict)
+  states PublicationState[] @relation("PublicationStates")
+  currentState PublicationState? @relation("CurrentPublicationState", fields: [currentStateId], references: [id], onDelete: SetNull)
+
+  @@unique([deckFileId, publicSurfaceKey])
+  @@index([conferenceId, publicSurfaceKey])
+}
+
+model PublicationState {
+  id                 String @id @default(cuid())
+  publicationId      String @map("publication_id")
+  availability       PublicationAvailability
+  recordedByRef      String? @map("recorded_by_ref")
+  recordedAt         DateTime? @map("recorded_at")
+  predecessorStateId String? @unique @map("predecessor_state_id")
+  provenance         MigrationProvenance @default(NATIVE)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  publication Publication @relation("PublicationStates", fields: [publicationId], references: [id], onDelete: Restrict)
+  currentForPublication Publication? @relation("CurrentPublicationState")
+  predecessorState PublicationState? @relation("PublicationStateChain", fields: [predecessorStateId], references: [id], onDelete: SetNull)
+  successorState PublicationState? @relation("PublicationStateChain")
+
+  @@index([publicationId])
+}
+
+model ShareEligibilityChange {
+  id                  String @id @default(cuid())
+  submissionId        String @map("submission_id")
+  eligible            Boolean
+  changedByRef        String? @map("changed_by_ref")
+  changedAt           DateTime? @map("changed_at")
+  predecessorChangeId String? @unique @map("predecessor_change_id")
+  provenance          MigrationProvenance @default(NATIVE)
+  recordedAt          DateTime @default(now()) @map("recorded_at")
+
+  submission Submission @relation("SubmissionShareEligibilityHistory", fields: [submissionId], references: [id], onDelete: Restrict)
+  currentForSubmission Submission? @relation("CurrentShareEligibilityChange")
+  predecessorChange ShareEligibilityChange? @relation("ShareEligibilityChain", fields: [predecessorChangeId], references: [id], onDelete: SetNull)
+  successorChange ShareEligibilityChange? @relation("ShareEligibilityChain")
+
+  @@index([submissionId])
+}
+
+model ArchiveRecord {
+  id            String @id @default(cuid())
+  conferenceId  String @unique @map("conference_id")
+  archivedByRef String? @map("archived_by_ref")
+  archivedAt    DateTime? @map("archived_at")
+  provenance    MigrationProvenance @default(NATIVE)
+  observedAt    DateTime? @map("observed_at")
+  recordedAt    DateTime @default(now()) @map("recorded_at")
+
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+}
+
+model SynchronizationWork {
+  id            String @id @default(cuid())
+  syncId        String @map("sync_id")
+  sourceRef     String @map("source_ref")
+  effectKey     String @map("effect_key")
+  state         SyncWorkState @default(PENDING)
+  attempts      Int @default(0)
+  lastAttemptAt DateTime? @map("last_attempt_at")
+  lastError     String? @map("last_error")
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+
+  @@unique([syncId, sourceRef, effectKey])
+  @@index([state, createdAt])
+}
+
+model DispatchAttempt {
+  id                 String @id @default(cuid())
+  batchId            String @map("batch_id")
+  conferenceId       String @map("conference_id")
+  templateKey        EmailTemplateKey @map("template_key")
+  round              Int
+  submissionId       String? @map("submission_id")
+  attendeeId         String? @map("attendee_id")
+  email              String
+  renderedSubject    String @map("rendered_subject")
+  renderedBody       String @map("rendered_body")
+  contentHash        String? @map("content_hash")
+  providerAttemptKey String @unique @map("provider_attempt_key")
+  state              DispatchAttemptState @default(PREPARED)
+  lastError          String? @map("last_error")
+  sendRecordId       String? @unique @map("send_record_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  resolvedAt         DateTime? @map("resolved_at")
+
+  batch ConferenceEmailBatch @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  conference Conference @relation(fields: [conferenceId], references: [id], onDelete: Restrict)
+  submission Submission? @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  attendee ConferenceAttendee? @relation(fields: [attendeeId], references: [id], onDelete: Restrict)
+  sendRecord EmailSendRecord? @relation(fields: [sendRecordId], references: [id], onDelete: SetNull)
+
+  @@index([conferenceId, templateKey, round])
+  @@index([state, createdAt])
+}
+
+model MigrationRun {
+  id                  String @id @default(cuid())
+  version             String
+  kind                String
+  environment         String
+  contextRef          String? @map("context_ref")
+  applicationCommit   String? @map("application_commit")
+  schemaVersion       String? @map("schema_version")
+  status              String
+  startedAt           DateTime @default(now()) @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  sourceCountsJson    String? @map("source_counts_json")
+  targetCountsJson    String? @map("target_counts_json")
+  provenanceCountsJson String? @map("provenance_counts_json")
+  issueCountsJson     String? @map("issue_counts_json")
+  invariantResultsJson String? @map("invariant_results_json")
+  paritySummaryJson   String? @map("parity_summary_json")
+  notes               String?
+
+  issues MigrationIssue[]
+
+  @@index([version, environment, startedAt])
+}
+
+model MigrationIssue {
+  id         String @id @default(cuid())
+  runId      String @map("run_id")
+  category   String
+  disposition String
+  contextRef String? @map("context_ref")
+  recordRef  String? @map("record_ref")
+  gapId      String? @map("gap_id")
+  detail     String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  run MigrationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, category, disposition])
 }
