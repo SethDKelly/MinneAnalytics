@@ -48,6 +48,8 @@ A concept owns only the behavior required to fulfill its focused purpose.
 
 Rules that depend on several independent concepts should normally be represented later as synchronizations/application composition. Examples from discovery include effective participation, evaluation freshness, coverage gaps, edit eligibility, publication eligibility, and dispatch-recipient eligibility.
 
+For the accepted MinneAnalytics v0 cross-concept rules, use the canonical [Synchronization & Application Composition](../synchronizations/) layer rather than restating those rules in concept nodes or phase indexes.
+
 # Implementation reconciliation
 
 OKF adoption does **not** authorize application refactoring.
