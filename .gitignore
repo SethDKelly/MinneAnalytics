@@ -32,6 +32,9 @@ yarn-error.log*
 /prisma/*.db-journal
 /uploads
 
+# local migration evidence / backup rehearsal output
+/artifacts/migrations/
+
 # typescript
 next-env.d.ts
 *.tsbuildinfo
