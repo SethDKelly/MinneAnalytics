@@ -1,7 +1,12 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
-* **Gate**: Completed Phase 001-G and admitted 17 concept candidates to Phase 002 formal specification, four provisionally.
+* **Specification**: Completed 002-A — Offer, Change & Temporal Availability.
+* **Specification**: Promoted Proposal to `maturity: specified` with durable offer state, `Offer` action, intrinsic invariants, and explicit exclusions from downstream lifecycle behavior.
+* **Specification**: Promoted Revision to `maturity: specified` with append-only linear history, `Initialize`/`Revise` actions, immutable revision provenance, and a unique current revision per tracked subject.
+* **Resolution**: Resolved Availability Window's Phase 001 provisional condition positively and promoted it to `maturity: specified`; window phase is derived from the half-open interval `[opensAt, closesAt)` rather than stored separately.
+* **Boundary**: Kept offer/edit eligibility, authority, evaluation freshness, event lifecycle, and exceptional override behavior outside the three concepts for later synchronization/application-policy design.
+* **Gate**: Completed Phase 001-G and admitted 17 concept candidates to Phase 002 formal specification, four provisionally at the gate.
 * **Creation**: Promoted the 001-G candidate set into canonical OKF concept nodes with purpose, operational principle, boundary, gate status, and provenance.
 * **Initialization**: Adopted Open Knowledge Format (OKF) v0.2 as the canonical Concept Design knowledge layer.
 * **Creation**: Established documentation-authority and Concept Design authority rules.
