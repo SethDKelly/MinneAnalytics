@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [dev]
+    branches: [dev, concept-design/v0-implementation]
 
 permissions:
   contents: read
