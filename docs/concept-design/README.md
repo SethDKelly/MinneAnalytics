@@ -7,8 +7,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation in progress
 - **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
 - **Working implementation branch:** `concept-design/v0-implementation`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A
-- **Next:** 004-B — Revision, Classification, Evaluation & Feedback Canonicalization
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C
+- **Next:** 004-D — Availability, Archive, Authority & Disclosure Policy Implementation
 
 ## Start here
 
@@ -57,7 +57,7 @@ Application code, migrations, tests, and implementation documentation describe c
 3. [001-C — Problem, Actor-Need & Purpose Inventory](001-C-problem-actor-need-and-purpose-inventory.md)
 4. [001-D — Candidate Concept Discovery & Boundary Hypotheses](001-D-candidate-concept-discovery-and-boundary-hypotheses.md)
 5. [001-E — Concept Criteria, Independence & Genericity Review](001-E-concept-criteria-independence-and-genericity-review.md)
-6. [001-F — Operational Principle Development](001-F-operational-principle-development.md)
+6. [001-F — Operational Principle Development](001-F-operational-principles.md)
 7. [001-G — Discovery Consolidation & Concept Candidate Gate](001-G-discovery-consolidation-and-concept-candidate-gate.md)
 
 The canonical Phase 001 gate is [001-G Discovery Gate Decision](knowledge/decisions/001-g-discovery-gate.md).
@@ -99,19 +99,18 @@ All 18 semantic gaps and 4 policy gaps have target architecture, migration/cutov
 Phase 004 executes the accepted reconciliation architecture. The authoritative package order and constraints are in the [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md).
 
 1. [004-A — Migration Discipline, Baseline & Additive Schema Foundation](004-A-migration-discipline-baseline-and-additive-schema-foundation.md) — **complete**
-   - created `concept-design/v0-implementation` from the exact 003-G gate commit;
-   - established checked-in Prisma baseline + additive migration history;
-   - added target persistence/recovery/migration-evidence schema without semantic cutover;
-   - added default-off rollout gates, baseline reports, SQLite backup/restore rehearsal tooling, and implementation-branch CI migration validation.
-2. **004-B — Revision, Classification, Evaluation & Feedback Canonicalization** — next
-3. **004-C — Selection, Withdrawal, Capacity & Deliverable Canonicalization**
-4. **004-D — Availability, Archive, Authority & Disclosure Policy Implementation**
+   - established checked-in Prisma migration history, additive target schema, migration evidence, rollout gates, backup/restore rehearsal tooling, and CI migration validation without moving semantic authority.
+2. [004-B — Revision, Classification, Evaluation & Feedback Canonicalization](004-B-revision-classification-evaluation-and-feedback-canonicalization.md) — **complete**
+   - established exact Revision/current-head authority, exact Revision Classification, non-erasing Revision-bound Evaluation history, exact abstract Feedback references, and Vocabulary TermState history with truthful backfill and CI evidence.
+3. [004-C — Selection, Withdrawal, Capacity & Deliverable Canonicalization](004-C-selection-withdrawal-capacity-and-deliverable-canonicalization.md) — **complete**
+   - established immutable Selection Decision history, independent monotonic Withdrawal, hard finite Capacity allocation/release, exact ArtifactVersion readiness Assessment, TX-A participation entry, TX-B convergent exit cleanup, and compatibility projections.
+4. **004-D — Availability, Archive, Authority & Disclosure Policy Implementation** — next
 5. **004-E — Publication, Public Access, Schedule & Dispatch Hardening**
 6. **004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement**
 7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate**
 8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review**
 
-004-A creates the implementation substrate only. No SG/SG-P item is considered closed merely because a target table/reference now exists; semantic writers, reads, backfill, legacy-authority retirement, and runtime evidence remain package-specific obligations.
+Completed package records establish bounded runtime implementation evidence. They do not by themselves mark their SG/SG-P items globally `verified-closed`; semantic read/consumer migration, legacy-authority retirement, rollback floors, migration validation, and final closure accounting remain assigned to later Phase 004 packages.
 
 Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
 
