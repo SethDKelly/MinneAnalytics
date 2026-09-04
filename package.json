@@ -23,6 +23,8 @@
     "db:004-b:vocabulary-backfill": "tsx scripts/migrations/backfill-004-b-vocabulary.ts",
     "db:004-b:verify": "tsx scripts/migrations/verify-004-b.ts",
     "db:004-b:vocabulary-verify": "tsx scripts/migrations/verify-004-b-vocabulary.ts",
+    "db:004-c:backfill": "tsx scripts/migrations/backfill-004-c.ts",
+    "db:004-c:verify": "tsx scripts/migrations/verify-004-c.ts",
     "db:backup": "node scripts/migrations/sqlite-backup.mjs",
     "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
     "postinstall": "prisma generate"
