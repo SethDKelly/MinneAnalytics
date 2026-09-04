@@ -1,6 +1,13 @@
 # Concept Design Knowledge Update Log
 
 ## 2026-09-03
+* **Reconciliation**: Completed 003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register.
+* **Ownership**: Added the canonical MinneAnalytics v0 Implementation Ownership Map for all 17 concepts, distinguishing semantic ownership from physical table/module boundaries and explicitly permitting useful implementation aggregates to remain where they preserve independent histories and invariants.
+* **Gap baseline**: Established 18 semantic gaps and 4 cross-cutting policy gaps with stable IDs, priority, recoverability class, and later Phase 003 ownership.
+* **Refinement**: Sharpened Evaluation reconciliation from a freshness/reference issue into a historical-overwrite defect: the current one-Score-per-reviewer/submission upsert can erase a prior Revision-specific Evaluation.
+* **Refinement**: Sharpened Controlled Disclosure reconciliation by identifying the absence of durable participant/context/information staging and monotonic reveal history; current identity reveal is only console-logged and aggregate visibility is dynamically recomputed.
+* **Migration evidence**: Classified target data as deterministically backfillable, partially backfillable, forward-only where history was never retained, or policy-only; historical provenance must not be manufactured.
+* **Handoff**: Advanced Phase 003 to 003-B — Persistence, Identity, History & Migration Target Design. 003-A authorizes no product/domain runtime refactoring.
 * **Gate**: Completed 002-G — Formal Specification Consolidation & Synchronization Handoff; Phase 002 is complete.
 * **Decision**: Accepted all 17 Phase 001-G candidates as the v0 formally specified concept baseline; no provisional admissions remain.
 * **Composition**: Added canonical MinneAnalytics v0 reference alignment: durable operational behavior uses Proposal identity, version-sensitive Evaluation/Classification use exact Revision identity, Publication uses exact MaterialRef/ArtifactVersion, and Dispatch dedupe uses stable RecipientRef.
