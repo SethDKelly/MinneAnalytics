@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from "fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { getUploadDir } from "./config";
 
@@ -30,8 +31,8 @@ export async function saveDeckFile(
   const dir = path.join(getUploadDir(), submissionId);
   await mkdir(dir, { recursive: true });
   const ext = path.extname(file.name) || (file.type.includes("pdf") ? ".pdf" : ".pptx");
-  const filename = `deck-v${version}${ext}`;
-  const storagePath = path.join(dir, filename);
+  const storageName = `deck-v${version}-${randomUUID()}${ext}`;
+  const storagePath = path.join(dir, storageName);
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(storagePath, buffer);
   return {
@@ -40,4 +41,16 @@ export async function saveDeckFile(
     mimeType: file.type,
     sizeBytes: file.size,
   };
+}
+
+export async function removeSavedDeckFile(storagePath: string): Promise<void> {
+  try {
+    await unlink(storagePath);
+  } catch (error) {
+    const code =
+      typeof error === "object" && error && "code" in error
+        ? String((error as { code?: unknown }).code ?? "")
+        : "";
+    if (code !== "ENOENT") throw error;
+  }
 }
