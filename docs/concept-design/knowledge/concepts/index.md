@@ -14,11 +14,11 @@ These nodes are the canonical knowledge representation of the concepts admitted 
 * [Withdrawal](withdrawal.md) - Monotonic originator rescission fact independent of Selection history; specified in 002-C.
 * [Capacity](capacity.md) - Finite pool with class-sensitive allocation/release and a hard no-overallocation invariant; specified in 002-C.
 * [Coverage Target](coverage-target.md) - Desired representation bounds only; observed composition remains derived; specified in 002-C and no longer provisional.
+* [Vocabulary](vocabulary.md) - Stable reusable Term identities with append-only wording/availability history and contribute/correct/retire/restore lifecycle; specified in 002-D.
+* [Classification](classification.md) - Current SubjectRef↔TermRef association relation independent of term lifecycle and representation planning; specified in 002-D.
 
 # Admitted — awaiting formal specification
 
-* [Classification](classification.md) - Subject associations with reusable terms.
-* [Vocabulary](vocabulary.md) - Reusable term lifecycle, contribution, and stewardship.
 * [Deliverable](deliverable.md) - Required artifact provision and readiness.
 * [Schedule](schedule.md) - Place/time allocation with human-adjustable placements.
 * [Publication](publication.md) - Intentional public exposure of eligible material.
@@ -37,4 +37,5 @@ Authorization/delegation, Export/report definitions, cross-concept Audit Trail, 
 * [002-A — Offer, Change & Temporal Availability](../../002-A-offer-change-and-temporal-availability.md) formally specifies Proposal, Revision, and Availability Window.
 * [002-B — Evaluation, Disclosure & Directed Response](../../002-B-evaluation-disclosure-and-directed-response.md) formally specifies Evaluation, Controlled Disclosure, and Feedback.
 * [002-C — Program Choice, Participation, Scarcity & Representation Intent](../../002-C-program-choice-participation-scarcity-and-representation-intent.md) formally specifies Selection, Withdrawal, Capacity, and Coverage Target.
-* 002-D will formally specify Vocabulary and Classification.
+* [002-D — Vocabulary & Classification](../../002-D-vocabulary-and-classification.md) formally specifies Vocabulary and Classification.
+* 002-E will formally specify Deliverable and Schedule.
