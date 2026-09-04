@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import {
+  CanonicalRevisionUnavailableError,
+  recordCanonicalEvaluation,
+} from "@/lib/concept-design/revision-evaluation";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { canScore, getReviewerByToken } from "@/lib/reviewer";
 import { roundScore } from "@/lib/scoring-scale";
@@ -35,25 +40,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Submission not found" }, { status: 404 });
   }
 
-  const version = submission.abstractVersion;
+  const value = roundScore(parsed.data.value);
+  const notes = parsed.data.notes ?? null;
 
+  if (isImplementationGateEnabled("revisionEvaluationWrites")) {
+    try {
+      const result = await recordCanonicalEvaluation({
+        submissionId: submission.id,
+        reviewerAccessId: reviewer.id,
+        value,
+        notes,
+      });
+      return NextResponse.json({
+        ok: true,
+        evaluationId: result.evaluation.id,
+        submissionRevisionId: result.revisionId,
+        scoredAbstractVersion: result.revisionVersion,
+      });
+    } catch (error) {
+      if (error instanceof CanonicalRevisionUnavailableError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+  }
+
+  const version = submission.abstractVersion;
   await prisma.score.upsert({
     where: {
       submissionId_reviewerAccessId: {
-        submissionId: parsed.data.submissionId,
+        submissionId: submission.id,
         reviewerAccessId: reviewer.id,
       },
     },
     create: {
-      submissionId: parsed.data.submissionId,
+      submissionId: submission.id,
       reviewerAccessId: reviewer.id,
-      value: roundScore(parsed.data.value),
-      notes: parsed.data.notes ?? null,
+      value,
+      notes,
       scoredAbstractVersion: version,
     },
     update: {
-      value: roundScore(parsed.data.value),
-      notes: parsed.data.notes ?? null,
+      value,
+      notes,
       scoredAbstractVersion: version,
     },
   });
