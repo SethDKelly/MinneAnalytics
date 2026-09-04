@@ -56,15 +56,26 @@ These remain policy-reconciliation questions rather than new concepts:
 
 # Current target-design status
 
-Phase 003 architecture has now supplied target designs for several gaps without closing their implementation obligations:
+Phase 003 architecture has now supplied target designs without closing implementation obligations.
 
-* **SG-005** — persistence target established in 003-B; staging/reveal, exact information-key, blind-mode transition, and legacy-cohort policy are defined by [003-D Disclosure, Sharing & Publication Policy Baseline](disclosure-publication-policy-baseline.md). Runtime/migration verification remains open.
-* **SG-008 / SG-009** — exact-material Publication persistence was designed in 003-B and exact eligibility/public-token policy was designed in 003-D. Runtime/public-access migration remains open.
-* **SG-013** — distinct Window persistence was designed in 003-B; manual suspension and lifecycle/edit policy were designed in 003-D. API/UI compatibility and migration remain open.
-* **SG-017** — 003-C separates Feedback from notification Dispatch; 003-D separates Feedback from edit permission by requiring an explicit scoped revision exception. Legacy `abstractReviewStatus` compatibility remains 003-E work.
-* **SG-P01 through SG-P04** — target policy is now defined by [003-D Authority, Lifecycle & Operational Policy Target](authority-lifecycle-operational-policy-target.md) and the disclosure/publication baseline. These gaps remain implementation-open until route/API/UI cutover and migration verification.
+* **SG-001** — exact Revision-specific Evaluation persistence was designed in 003-B; 003-E preserves `Needs score`/`Needs rescore` only as derived queues over exact Evaluation applicability.
+* **SG-002 / SG-003** — Selection/Withdrawal history and execution were designed in 003-B/003-C; 003-E defines the lossy `programStatus` compatibility projection and requires semantic UI/API separation.
+* **SG-004** — durable Capacity authority and atomic entry were designed in 003-B/003-C; 003-E requires Capacity to present as a hard constraint distinct from advisory Coverage views.
+* **SG-005** — persistence and staging/reveal policy were designed in 003-B/003-D; 003-E defines explicit protected-information read states instead of blank/null concealment signals.
+* **SG-006** — exact Revision↔Term Classification was designed in 003-B; 003-E permits `SubmissionTheme` only as a current-Revision compatibility projection.
+* **SG-007** — exact ArtifactVersion Assessment persistence was designed in 003-B; 003-E replaces native `deckStatus` authority with exact-artifact readiness and keeps `REVIEWED` only as legacy residue.
+* **SG-008 / SG-009** — exact Publication persistence and eligibility/public-token policy were designed in 003-B/003-D; 003-E defines exact-material public listing/fetch semantics and immediate suppression during cleanup convergence.
+* **SG-010** — monotonic Archive target was designed in 003-B/003-D; 003-E makes `ConferenceStatus` a compatibility mode/projection and avoids using `readOnly` as authorization.
+* **SG-011** — Vocabulary state history was designed in 003-B; 003-E requires UI/API to consume current term state without making legacy Theme fields new authority.
+* **SG-012** — current Revision ownership was designed in 003-B; 003-E permits current Submission content as repairable denormalized projection and keeps integer version as display ordinal.
+* **SG-013** — distinct Window persistence plus suspension/lifecycle policy were designed in 003-B/003-D; 003-E defines Window phase + suspension + reasoned availability views.
+* **SG-014** — 003-C defined non-mutating generation + accepted apply; 003-E defines the generated-proposal/current-Schedule interface split and stale-base conflict behavior.
+* **SG-015 / SG-016** — 003-B/003-C defined exact message evidence, rounds, and uncertainty; 003-E defines the preview/round/already-sent/blocked interface semantics and rejects same-round resend overrides as target behavior.
+* **SG-017** — 003-C separates Feedback from Dispatch and 003-D separates Feedback from edit authority; 003-E makes `abstractReviewStatus` legacy-only with no invented replacement lifecycle.
+* **SG-018** — target Coverage authority was designed earlier; 003-E requires advisory Coverage presentation to remain distinct from hard Capacity enforcement.
+* **SG-P01 through SG-P04** — target policy was defined in 003-D and target interface/error/action representation is now defined in 003-E.
 
-A gap is not considered closed merely because its target architecture or policy has been documented.
+All of these gaps remain **implementation-open** until 003-F defines migration/backfill/cutover and runtime verification. A documented target is not the same as a completed implementation.
 
 # Deferred signals retained
 
@@ -75,14 +86,14 @@ The accepted model still does not promote:
 * cross-concept Audit Trail;
 * saved/versioned Export or Report definitions.
 
-Existing role helpers, attendee/VIP fields, logs, and export endpoints must not silently promote these during reconciliation.
+Existing role helpers, attendee/VIP fields, logs, exports, compatibility statuses, and UI work queues must not silently promote these during reconciliation.
 
 # Phase ownership
 
 * **003-B** owns persistence/reference/history target decisions for SG-001–SG-013 where structural state is involved.
 * **003-C** owns synchronization, transaction, idempotency, and recovery consequences, especially SG-003, SG-004, SG-014, SG-016, and publication/withdrawal cleanup.
-* **003-D** has now target-designed SG-005 and SG-P01–SG-P04 policy/lifecycle/disclosure implications plus policy portions of SG-008, SG-009, SG-013, and SG-017.
-* **003-E** owns compatibility projections and API/UI interpretation of combined current statuses/queues/policy outcomes.
-* **003-F** owns migration/backfill/rollout treatment and runtime verification for accepted target changes.
+* **003-D** owns authority/lifecycle/disclosure/publication policy and target-designed SG-005/SG-P01–SG-P04 plus policy portions of SG-008, SG-009, SG-013, and SG-017.
+* **003-E** now owns compatibility projections and API/UI interpretation of combined statuses, queues, protected information, exact public material, and operation state.
+* **003-F** owns executable migration/backfill/rollout treatment, parity validation, write/read cutover, rollback, and runtime verification for accepted target changes.
 
-No gap in this baseline independently authorizes runtime refactoring before its target and migration implications are designed.
+No gap in this baseline independently authorizes runtime refactoring before the Phase 003 migration and execution-handoff gates are complete.
