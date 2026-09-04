@@ -29,17 +29,24 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 
 # Implementation reconciliation
 
-* [Implementation Reconciliation](reconciliation/) - Canonical entrypoint for mapping the accepted design to the current implementation.
-* [MinneAnalytics v0 Implementation Ownership Map](reconciliation/minneanalytics-v0-implementation-ownership.md) - Semantic ownership of current models, fields, routes, helpers, policy mechanisms, and projections across all 17 concepts.
-* [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Prioritized implementation-reconciliation gaps, recoverability classes, and later Phase 003 ownership.
+* [Implementation Reconciliation](reconciliation/) - Canonical implementation-mapping and target-architecture entrypoint.
+* [v0 Implementation Ownership Map](reconciliation/minneanalytics-v0-implementation-ownership.md) - Current semantic ownership across implementation structures.
+* [003-A Semantic Gap Baseline](reconciliation/semantic-gap-baseline.md) - Stable prioritized semantic/policy gap IDs.
+* [v0 Persistence, Identity & History Target](reconciliation/persistence-identity-history-target.md) - Stable identity reuse, required durable histories, exact references, and compatibility projections.
+* [v0 Migration Target Baseline](reconciliation/migration-target-baseline.md) - Recoverability, provenance, expand-first coexistence, rollback, and validation constraints.
 
 # Current maturity
 
 **Phase 002 formal specification is complete. Phase 003 implementation reconciliation is in progress.**
 
-[003-A — Concept-to-Implementation Ownership Map & Semantic Gap Register](../003-A-concept-to-implementation-ownership-map-and-semantic-gap-register.md) is complete. All 17 concepts have an implementation mapping, and the current reconciliation baseline contains 18 semantic gaps plus 4 cross-cutting policy gaps.
+Completed reconciliation groups:
 
-The next activity is **003-B — Persistence, Identity, History & Migration Target Design**. Product/domain code changes remain unauthorized until Phase 003 has designed target persistence/reference/history and migration-safe implementation changes.
+- **003-A** — implementation ownership and semantic-gap mapping;
+- **003-B** — persistence, identity, history, and migration target design.
+
+Next: **003-C — Synchronization, Transaction, Idempotency & Recovery Architecture**.
+
+Product/domain/schema changes remain unauthorized until the remaining Phase 003 design groups establish safe synchronization, policy, compatibility, migration, and execution handoff.
 
 # Historical design record
 
