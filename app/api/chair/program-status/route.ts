@@ -4,6 +4,14 @@ import { prisma } from "@/lib/db";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  CapacityConfigurationError,
+  CapacityUnavailableError,
+  recordCanonicalSelection,
+  selectionDispositionFromProgramStatus,
+  SelectionHeadConflictError,
+} from "@/lib/concept-design/selection-participation-deliverable";
 import { getConferenceThemesForAdmin } from "@/lib/themes";
 import { getConferenceSubmissions } from "@/lib/conference-data";
 import {
@@ -46,7 +54,11 @@ export async function POST(request: Request) {
 
   const submission = await prisma.submission.findFirst({
     where: { id: submissionId, conferenceId: reviewer.conferenceId },
-    include: { themes: { select: { themeId: true } } },
+    include: {
+      themes: { select: { themeId: true } },
+      currentSelectionDecision: true,
+      withdrawal: true,
+    },
   });
   if (!submission) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -75,21 +87,96 @@ export async function POST(request: Request) {
     }
   }
 
-  if (status === "APPROVED" && !canApprove(reviewer.role)) {
-    return NextResponse.json(
-      { error: "Only MinneAnalytics board members can approve talks" },
-      { status: 403 }
-    );
+  const canonicalWrites = isImplementationGateEnabled("selectionParticipationWrites");
+
+  if (canonicalWrites) {
+    const currentDisposition = submission.currentSelectionDecision?.disposition ?? null;
+    if (
+      status === "APPROVED" &&
+      currentDisposition !== null &&
+      currentDisposition !== "RESERVE" &&
+      currentDisposition !== "SELECTED"
+    ) {
+      return NextResponse.json(
+        { error: "Can only approve from undecided or reserve consideration" },
+        { status: 400 }
+      );
+    }
+    if (
+      status === "APPROVED" &&
+      submission.withdrawal &&
+      currentDisposition !== "SELECTED"
+    ) {
+      return NextResponse.json(
+        { error: "A withdrawn submission cannot re-enter participation" },
+        { status: 409 }
+      );
+    }
+
+    const headerKey = request.headers.get("Idempotency-Key")?.trim();
+    const bodyKey = String(body.commandKey ?? "").trim();
+    const commandKey = headerKey || bodyKey || null;
+
+    try {
+      const result = await recordCanonicalSelection({
+        conferenceId: reviewer.conferenceId,
+        submissionId,
+        disposition: selectionDispositionFromProgramStatus(status),
+        actorRef: `reviewer:${reviewer.id}`,
+        commandKey,
+      });
+
+      if (status === "APPROVED" || status === "DECLINED") {
+        await autoPopulateDemoScores(
+          submissionId,
+          reviewer.conferenceId,
+          status
+        );
+      }
+
+      if (status === "APPROVED" && !submission.withdrawal && !result.replayed) {
+        emailAbstractApproved({
+          email: submission.email,
+          presenterName: `${submission.firstName} ${submission.lastName}`,
+          title: submission.title,
+          presenterPortalUrl:
+            "Use the presenter portal link from your original submission confirmation email.",
+        });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        decisionId: result.decision?.id ?? null,
+        replayed: result.replayed,
+        cleanupPending: result.cleanupPending,
+      });
+    } catch (error) {
+      if (error instanceof CapacityUnavailableError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      if (error instanceof CapacityConfigurationError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      if (error instanceof SelectionHeadConflictError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
   }
 
   const fromBackup = submission.programStatus === "BACKUP" && status === "APPROVED";
   const fromPending = submission.programStatus === "PENDING" && status === "APPROVED";
 
-  if (
-    status === "APPROVED" &&
-    !fromBackup &&
-    !fromPending
-  ) {
+  if (status === "APPROVED" && !fromBackup && !fromPending) {
     return NextResponse.json(
       { error: "Can only approve from Pending or Backup" },
       { status: 400 }
