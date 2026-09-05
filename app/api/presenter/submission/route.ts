@@ -6,6 +6,7 @@ import {
   RevisionCommandConflictError,
   StaleRevisionHeadError,
 } from "@/lib/concept-design/revision-evaluation";
+import { getRevisionEligibility } from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { getSubmissionByPresenterToken } from "@/lib/presenter-auth";
@@ -33,17 +34,37 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (!canPresenterEditSubmission(submission)) {
-    return NextResponse.json(
-      { error: "This submission cannot be edited in its current status" },
-      { status: 403 }
-    );
-  }
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!isImplementationGateEnabled("revisionEvaluationWrites")) {
+      return NextResponse.json(
+        {
+          error: "004-D revision policy requires canonical Revision writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+    const eligibility = await getRevisionEligibility(submission);
+    if (!eligibility.allowed) {
+      return NextResponse.json(
+        { error: eligibility.message, code: eligibility.code },
+        { status: 403 }
+      );
+    }
+  } else {
+    if (!canPresenterEditSubmission(submission)) {
+      return NextResponse.json(
+        { error: "This submission cannot be edited in its current status" },
+        { status: 403 }
+      );
+    }
 
-  try {
-    await assertConferenceAcceptsMutations(submission.conferenceId);
-  } catch {
-    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    try {
+      await assertConferenceAcceptsMutations(submission.conferenceId);
+    } catch {
+      return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    }
   }
 
   let resolvedThemeIds: string[];
