@@ -4,11 +4,11 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation in progress
+- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation approaching Phase 004 exit review
 - **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
 - **Working implementation branch:** `concept-design/v0-implementation`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C; 004-D; 004-E; 004-F
-- **Next:** 004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C; 004-D; 004-E; 004-F; 004-G
+- **Next:** 004-H — Phase 004 Consolidation & v0 Implementation Exit Review
 
 ## Start here
 
@@ -92,7 +92,7 @@ Phase 003 reconciled the existing implementation against the accepted Concept De
 
 The canonical Phase 003 gate is [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md).
 
-All 18 semantic gaps and 4 policy gaps have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. They remain implementation-open until verified by Phase 004 evidence.
+All 18 semantic gaps and 4 policy gaps have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. Final verified-closure accounting remains owned by 004-H.
 
 ## Phase 004 — v0 Implementation Execution & Migration — in progress
 
@@ -110,12 +110,13 @@ Phase 004 executes the accepted reconciliation architecture. The authoritative p
    - established exact ArtifactVersion Publication history and public-token authorization, share-policy provenance and SYNC-008 cleanup, non-mutating Schedule proposals with expected-base atomic apply, and exact Dispatch message/round/attempt evidence with uncertain-outcome protection.
 6. [004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement](004-F-semantic-read-models-api-ui-cutover-and-compatibility-retirement.md) — **complete**
    - moved first-party presenter/reviewer/organizer/Schedule/Dispatch/public-availability/export consumers to canonical semantic reads, introduced exact Revision-aware evaluation applicability and explicit protected-information states, replaced first-party generic Selection/Deliverable status mutations with action-oriented endpoints, and proved authority cutover under deliberate compatibility drift.
-7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate** — next
-8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review**
+7. [004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate](004-G-migration-validation-rollback-rehearsal-and-legacy-cleanup-gate.md) — **complete**
+   - replaced persistent `db push` startup with checked-in migration/bootstrap execution, rehearsed fresh and recognized legacy database paths including backup/restore before baseline adoption, hard-locked writer rollback floors, proved one-way compatibility repair and semantic-read rollback, validated quiescent single-task SQLite deployment and production image packaging, and concluded that legacy authority should be retired without destructive schema contraction.
+8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review** — next
 
-Completed package records establish bounded runtime implementation evidence. They do not by themselves mark their SG/SG-P items globally `verified-closed`; cross-environment migration validation, rollback rehearsal, residual-consumer inventory, destructive-cleanup eligibility, and final closure accounting remain assigned to 004-G/004-H.
+Completed package records establish bounded runtime implementation evidence. 004-G has now supplied the cross-environment migration, rollback, residual-consumer, and cleanup-gate evidence required before final closure accounting. 004-H remains responsible for the consolidated SG/SG-P closure register and the Phase 004/v0 implementation exit decision.
 
-Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
+No destructive compatibility cleanup was authorized by 004-G. Retained compatibility projections are subordinate rollback/external-compatibility surfaces, not semantic authorities.
 
 ## Knowledge architecture
 
