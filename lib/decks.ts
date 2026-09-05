@@ -6,54 +6,62 @@ import {
   getExactPublicDeckArchive,
   loadExactDeckFileForPublic,
 } from "./concept-design/publication-public-access";
+import {
+  deliverableReadinessLabel,
+  getSemanticConferenceSubmissions,
+  type DeliverableReadiness,
+} from "./concept-design/semantic-reads";
 
 export type DeckQueueItem = {
   submissionId: string;
   title: string;
   presenters: string;
   organization: string;
-  deckStatus: string | null;
-  deckShareable: boolean;
+  readiness: DeliverableReadiness;
+  readinessLabel: string;
+  shareEligible: boolean;
+  publicationAvailability: "published" | "unpublished";
   vipRegistered: boolean;
   deckFileId: string | null;
   deckPublicId: string | null;
   deckFilename: string | null;
   deckVersion: number | null;
   deckMimeType: string | null;
+  // Compatibility aliases retained for old external/client shapes during 004-F.
+  deckStatus: string | null;
+  deckShareable: boolean;
 };
 
 export async function getDeckQueue(conferenceId: string): Promise<DeckQueueItem[]> {
-  const subs = await prisma.submission.findMany({
-    where: {
-      conferenceId,
-      programStatus: "APPROVED",
-    },
-    include: {
-      deckFiles: { orderBy: { version: "desc" }, take: 1 },
-    },
-    orderBy: { title: "asc" },
-  });
-
-  return subs.map((s) => {
-    const file = s.deckFiles[0];
-    const presenters = s.hasCoPresenter && s.coPresenterName
-      ? `${s.firstName} ${s.lastName} & ${s.coPresenterName}`
-      : `${s.firstName} ${s.lastName}`;
-    return {
-      submissionId: s.id,
-      title: s.title,
-      presenters,
-      organization: s.organization,
-      deckStatus: s.deckStatus,
-      deckShareable: s.deckShareable,
-      vipRegistered: s.vipRegistered,
-      deckFileId: file?.id ?? null,
-      deckPublicId: file?.publicId ?? null,
-      deckFilename: file?.filename ?? null,
-      deckVersion: file?.version ?? null,
-      deckMimeType: file?.mimeType ?? null,
-    };
-  });
+  const submissions = await getSemanticConferenceSubmissions(conferenceId);
+  return submissions
+    .filter((submission) => submission.semantic.participation.effective)
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .map((submission) => {
+      const artifact = submission.deliverables[0]?.currentArtifact ?? null;
+      const presenters =
+        submission.hasCoPresenter && submission.coPresenterName
+          ? `${submission.firstName} ${submission.lastName} & ${submission.coPresenterName}`
+          : `${submission.firstName} ${submission.lastName}`;
+      return {
+        submissionId: submission.id,
+        title: submission.title,
+        presenters,
+        organization: submission.organization,
+        readiness: submission.semantic.deliverable.readiness,
+        readinessLabel: deliverableReadinessLabel(submission.semantic.deliverable.readiness),
+        shareEligible: submission.semantic.sharing.eligible,
+        publicationAvailability: submission.semantic.publication.availability,
+        vipRegistered: submission.vipRegistered,
+        deckFileId: artifact?.id ?? null,
+        deckPublicId: artifact?.publicId ?? null,
+        deckFilename: artifact?.filename ?? null,
+        deckVersion: artifact?.version ?? null,
+        deckMimeType: artifact?.mimeType ?? null,
+        deckStatus: submission.deckStatus,
+        deckShareable: submission.semantic.sharing.eligible,
+      };
+    });
 }
 
 export type PublicDeckItem = {
@@ -75,14 +83,16 @@ export async function getPublicDeckArchive(conferenceSlug: string) {
     };
   }
 
-  const conference = exact.conference ?? await prisma.conference.findUnique({
-    where: { slug: conferenceSlug },
-  });
+  // Read rollback is permitted only for conferences that have never crossed the
+  // irreversible PublicationPolicyCutover floor established by 004-E.
+  const conference =
+    exact.conference ??
+    (await prisma.conference.findUnique({ where: { slug: conferenceSlug } }));
   if (!conference?.decksPublished) {
     return { conference: null, decks: [] as PublicDeckItem[] };
   }
 
-  const subs = await prisma.submission.findMany({
+  const submissions = await prisma.submission.findMany({
     where: {
       conferenceId: conference.id,
       programStatus: "APPROVED",
@@ -90,28 +100,26 @@ export async function getPublicDeckArchive(conferenceSlug: string) {
       deckShareable: true,
       deckFiles: { some: {} },
     },
-    include: {
-      deckFiles: { orderBy: { version: "desc" }, take: 1 },
-    },
+    include: { deckFiles: { orderBy: { version: "desc" }, take: 1 } },
     orderBy: { title: "asc" },
   });
 
-  const decks: PublicDeckItem[] = subs
-    .filter((s) => s.deckFiles[0])
-    .map((s) => {
-      const f = s.deckFiles[0]!;
+  const decks: PublicDeckItem[] = submissions
+    .filter((submission) => submission.deckFiles[0])
+    .map((submission) => {
+      const file = submission.deckFiles[0]!;
       const presenters =
-        s.hasCoPresenter && s.coPresenterName
-          ? `${s.firstName} ${s.lastName} & ${s.coPresenterName}`
-          : `${s.firstName} ${s.lastName}`;
+        submission.hasCoPresenter && submission.coPresenterName
+          ? `${submission.firstName} ${submission.lastName} & ${submission.coPresenterName}`
+          : `${submission.firstName} ${submission.lastName}`;
       return {
-        publicId: f.publicId,
-        title: s.title,
+        publicId: file.publicId,
+        title: submission.title,
         presenters,
-        organization: s.organization,
-        filename: f.filename,
-        mimeType: f.mimeType,
-        uploadedAt: f.uploadedAt.toISOString(),
+        organization: submission.organization,
+        filename: file.filename,
+        mimeType: file.mimeType,
+        uploadedAt: file.uploadedAt.toISOString(),
       };
     });
 
@@ -123,10 +131,7 @@ export async function loadDeckFileForCommittee(
   conferenceId: string
 ) {
   return prisma.deckFile.findFirst({
-    where: {
-      id: deckFileId,
-      submission: { conferenceId },
-    },
+    where: { id: deckFileId, submission: { conferenceId } },
     include: { submission: true },
   });
 }
@@ -135,12 +140,12 @@ export async function loadDeckFileForPublic(publicId: string) {
   const exact = await loadExactDeckFileForPublic(publicId);
   if (exact.exactMode) return exact.file;
 
-  const file = exact.file ?? await prisma.deckFile.findUnique({
-    where: { publicId },
-    include: {
-      submission: { include: { conference: true } },
-    },
-  });
+  const file =
+    exact.file ??
+    (await prisma.deckFile.findUnique({
+      where: { publicId },
+      include: { submission: { include: { conference: true } } },
+    }));
   if (!file) return null;
   const { submission } = file;
   if (
