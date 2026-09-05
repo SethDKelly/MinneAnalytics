@@ -31,7 +31,7 @@ export {
 export async function getReviewerByToken(token: string) {
   const access = await prisma.reviewerAccess.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { conference: true },
+    include: { conference: { include: { archiveRecord: true } } },
   });
   if (!access) return null;
   if (access.expiresAt && access.expiresAt < new Date()) return null;
