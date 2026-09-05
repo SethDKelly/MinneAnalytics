@@ -69,6 +69,17 @@ jobs:
           MINNE_V0_WRITE_PUBLICATION: "true"
           MINNE_V0_WRITE_SCHEDULE: "true"
           MINNE_V0_WRITE_DISPATCH: "true"
+      - name: Verify 004-F semantic reads and first-party cutover
+        run: npm run db:004-f:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_WRITE_REVISION_EVALUATION: "true"
+          MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
+          MINNE_V0_WRITE_LIFECYCLE_DISCLOSURE: "true"
+          MINNE_V0_WRITE_PUBLICATION: "true"
+          MINNE_V0_WRITE_SCHEDULE: "true"
+          MINNE_V0_WRITE_DISPATCH: "true"
+          MINNE_V0_SEMANTIC_READS: "true"
       - name: Rehearse existing database adoption and semantic backfills
         run: |
           cp prisma/prisma/dev.db prisma/ci-existing.db
@@ -86,3 +97,10 @@ jobs:
       - run: npm run build
         env:
           DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_WRITE_REVISION_EVALUATION: "true"
+          MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
+          MINNE_V0_WRITE_LIFECYCLE_DISCLOSURE: "true"
+          MINNE_V0_WRITE_PUBLICATION: "true"
+          MINNE_V0_WRITE_SCHEDULE: "true"
+          MINNE_V0_WRITE_DISPATCH: "true"
+          MINNE_V0_SEMANTIC_READS: "true"
