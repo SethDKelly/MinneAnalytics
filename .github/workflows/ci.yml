@@ -95,6 +95,10 @@ jobs:
         env:
           DATABASE_URL: file:./ci-migrate.db
           MINNE_V0_SEMANTIC_READS: "true"
+      - name: Exercise 004-G bounded compatibility repair command
+        run: npm run db:004-g:repair-compatibility -- --apply --all
+        env:
+          DATABASE_URL: file:./ci-migrate.db
       - name: Rehearse fresh deployment bootstrap
         run: npm run db:migration:deploy-bootstrap
         env:
