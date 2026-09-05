@@ -2,16 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AbstractReviewStatusBadge,
-  DeckStatusBadge,
-  ProgramStatusBadge,
-} from "./StatusBadge";
+import type { SelectionDisposition } from "@prisma/client";
+import type { DeliverableReadiness } from "@/lib/concept-design/semantic-reads";
 import { PresenterFeedbackList } from "./PresenterFeedbackList";
 import { PresenterSubmissionEditor } from "./PresenterSubmissionEditor";
-import { PROGRAM_STATUS_LABELS, DECK_STATUS_LABELS } from "@/lib/constants";
 import { formatDegrees } from "@/lib/degrees";
-
 import type { ThemePickOption } from "./ThemeMultiSelect";
 
 type Props = {
@@ -19,15 +14,23 @@ type Props = {
   conferenceSlug: string;
   submission: {
     title: string;
-    programStatus: string;
-    abstractReviewStatus: string;
-    abstractVersion: number;
-    deckStatus: string | null;
+    currentRevisionRef: string | null;
+    revisionOrdinal: number;
+    selection: { disposition: SelectionDisposition | null; label: string };
+    participation: { effective: boolean; withdrawn: boolean; label: string };
+    deliverable: {
+      readiness: DeliverableReadiness;
+      label: string;
+      artifactRef: string | null;
+      filename: string | null;
+      version: number | null;
+    };
     degrees: string;
     conferenceName: string;
-    deckFilename: string | null;
-    deckVersion: number | null;
     canEdit: boolean;
+    editReasonCode: string;
+    editReason: string;
+    canUploadDeck: boolean;
     abstract: string;
     bio: string;
     technicalLevel: number;
@@ -40,10 +43,21 @@ type Props = {
     kind: "ABSTRACT" | "GENERAL";
     body: string;
     reviewerLabel: string;
-    abstractVersion: number | null;
+    subjectRevisionRef: string | null;
+    subjectRevisionVersion: number | null;
     createdAt: string;
   }[];
 };
+
+function stateClass(value: string) {
+  if (value === "Selected" || value === "Participating" || value === "Ready") {
+    return "bg-green-100 text-green-900";
+  }
+  if (value === "Withdrawn" || value === "Not selected" || value === "Changes requested") {
+    return "bg-red-100 text-red-900";
+  }
+  return "bg-gray-100 text-gray-800";
+}
 
 export function PresenterPortal({
   token,
@@ -57,9 +71,7 @@ export function PresenterPortal({
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  const canUpload = submission.programStatus === "APPROVED";
-  const isWithdrawn = submission.programStatus === "WITHDRAWN";
+  const isWithdrawn = submission.participation.withdrawn;
 
   async function withdraw() {
     setLoading(true);
@@ -69,17 +81,17 @@ export function PresenterPortal({
       body: JSON.stringify({ token }),
     });
     setLoading(false);
-    if (res.ok) {
-      router.refresh();
-    } else {
-      setMessage("Withdraw failed");
+    if (res.ok) router.refresh();
+    else {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data.error ?? "Withdraw failed");
     }
   }
 
-  async function uploadDeck(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function uploadDeck(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setMessage(null);
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(event.currentTarget);
     form.set("token", token);
     setLoading(true);
     const res = await fetch("/api/presenter/deck", { method: "POST", body: form });
@@ -101,24 +113,27 @@ export function PresenterPortal({
       <div className="card mt-6 space-y-3">
         <h2 className="text-xl font-bold">{submission.title}</h2>
         <p className="text-sm text-gray-600">Degrees: {formatDegrees(submission.degrees)}</p>
-        <p className="text-xs text-gray-500">Submission version v{submission.abstractVersion}</p>
-        <div className="flex flex-wrap gap-3">
+        <p className="text-xs text-gray-500">
+          Revision v{submission.revisionOrdinal}
+          {submission.currentRevisionRef ? ` · ${submission.currentRevisionRef}` : ""}
+        </p>
+        <div className="flex flex-wrap gap-3 text-xs">
           <div>
-            <span className="text-xs text-gray-500">Program status</span>
-            <div className="mt-1">
-              <ProgramStatusBadge status={submission.programStatus} />
+            <span className="text-gray-500">Selection</span>
+            <div className={`mt-1 rounded px-2 py-1 font-semibold ${stateClass(submission.selection.label)}`}>
+              {submission.selection.label}
             </div>
           </div>
           <div>
-            <span className="text-xs text-gray-500">Abstract review</span>
-            <div className="mt-1">
-              <AbstractReviewStatusBadge status={submission.abstractReviewStatus} />
+            <span className="text-gray-500">Participation</span>
+            <div className={`mt-1 rounded px-2 py-1 font-semibold ${stateClass(submission.participation.label)}`}>
+              {submission.participation.label}
             </div>
           </div>
           <div>
-            <span className="text-xs text-gray-500">Deck status</span>
-            <div className="mt-1">
-              <DeckStatusBadge status={submission.deckStatus} />
+            <span className="text-gray-500">Deck</span>
+            <div className={`mt-1 rounded px-2 py-1 font-semibold ${stateClass(submission.deliverable.label)}`}>
+              {submission.deliverable.label}
             </div>
           </div>
         </div>
@@ -128,7 +143,18 @@ export function PresenterPortal({
         <p className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm">{message}</p>
       )}
 
-      {feedback.length > 0 && !isWithdrawn && <PresenterFeedbackList feedback={feedback} />}
+      {feedback.length > 0 && !isWithdrawn && (
+        <PresenterFeedbackList
+          feedback={feedback.map((row) => ({
+            id: row.id,
+            kind: row.kind,
+            body: row.body,
+            reviewerLabel: row.reviewerLabel,
+            abstractVersion: row.subjectRevisionVersion,
+            createdAt: row.createdAt,
+          }))}
+        />
+      )}
 
       {submission.canEdit && !isWithdrawn && (
         <PresenterSubmissionEditor
@@ -142,17 +168,24 @@ export function PresenterPortal({
             bio: submission.bio,
             technicalLevel: submission.technicalLevel,
             themeIds: submission.themeIds,
-            abstractVersion: submission.abstractVersion,
+            abstractVersion: submission.revisionOrdinal,
           }}
         />
+      )}
+
+      {!submission.canEdit && !isWithdrawn && submission.editReason && (
+        <p className="mt-6 rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+          Abstract editing is unavailable: {submission.editReason}
+          <span className="ml-1 text-xs text-gray-500">({submission.editReasonCode})</span>
+        </p>
       )}
 
       {!isWithdrawn && (
         <section className="card mt-6">
           <h3 className="font-bold text-minne-navy">Withdraw talk</h3>
           <p className="mt-2 text-sm text-gray-700">
-            You may withdraw at any time, including after approval. This removes your talk from
-            active program consideration.
+            Withdrawal is independent from the committee&apos;s Selection decision. It ends your
+            current participation without erasing that decision history.
           </p>
           {!confirmWithdraw ? (
             <button
@@ -166,16 +199,11 @@ export function PresenterPortal({
             <div className="mt-4 space-y-2">
               <p className="text-sm font-semibold text-red-800">
                 Confirm withdrawal?
-                {submission.programStatus === "APPROVED" &&
-                  " Your talk is currently approved."}
+                {submission.selection.disposition === "SELECTED" &&
+                  " Your talk is currently selected."}
               </p>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="btn-danger"
-                  disabled={loading}
-                  onClick={withdraw}
-                >
+                <button type="button" className="btn-danger" disabled={loading} onClick={withdraw}>
                   Yes, withdraw
                 </button>
                 <button
@@ -193,24 +221,26 @@ export function PresenterPortal({
 
       {isWithdrawn && (
         <p className="mt-6 text-sm text-gray-600">
-          Status: {PROGRAM_STATUS_LABELS.WITHDRAWN}. Contact the program committee if you need
-          assistance.
+          Participation: Withdrawn. Contact the program committee if you need assistance.
         </p>
       )}
 
-      {canUpload && !isWithdrawn && (
+      {submission.canUploadDeck && !isWithdrawn && (
         <section className="card mt-6">
           <h3 className="font-bold text-minne-navy">Slide deck</h3>
           <p className="mt-2 text-sm text-gray-700">
-            After abstract approval, upload your presentation (PDF or PowerPoint). Deck workflow:{" "}
-            {Object.values(DECK_STATUS_LABELS).join(" → ")}.
+            Uploading a replacement creates a new ArtifactVersion. Review readiness applies to the
+            exact current file and does not carry forward automatically.
           </p>
-          {submission.deckFilename && (
+          {submission.deliverable.filename && (
             <p className="mt-2 text-sm">
-              Current file: <strong>{submission.deckFilename}</strong>
-              {submission.deckVersion ? ` (v${submission.deckVersion})` : ""}
+              Current file: <strong>{submission.deliverable.filename}</strong>
+              {submission.deliverable.version ? ` (v${submission.deliverable.version})` : ""}
             </p>
           )}
+          <p className="mt-1 text-xs text-gray-500">
+            Current deck state: {submission.deliverable.label}
+          </p>
           <form onSubmit={uploadDeck} className="mt-4">
             <input
               type="file"
@@ -226,10 +256,10 @@ export function PresenterPortal({
         </section>
       )}
 
-      {submission.programStatus === "PENDING" && submission.canEdit && (
+      {submission.selection.disposition === null && submission.canEdit && !isWithdrawn && (
         <p className="mt-6 text-sm text-gray-600">
-          Your abstract is pending committee review. You may update your submission above until
-          a decision is made. Upload a deck after approval.
+          No committee Selection decision has been recorded yet. You may update the current
+          Revision while the application edit policy allows it.
         </p>
       )}
     </div>
