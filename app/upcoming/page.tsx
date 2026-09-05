@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPublicConferences } from "@/lib/conference-queries";
-import { getSubmissionWindowState } from "@/lib/submission-window";
+import { observeOfferAvailability } from "@/lib/concept-design/lifecycle-disclosure-policy";
 
 export default async function UpcomingPage() {
   const conferences = await getPublicConferences();
@@ -9,31 +9,35 @@ export default async function UpcomingPage() {
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-3xl font-bold text-minne-navy">Events</h1>
       <p className="mt-2 text-gray-700">
-        Call for presentations and post-event slide libraries are managed per conference.
+        Proposal availability and post-event slide Publications are managed per conference.
       </p>
       <ul className="mt-8 space-y-6">
-        {conferences.map((ev) => {
-          const window = getSubmissionWindowState(ev);
+        {conferences.map((conference) => {
+          const archived = Boolean(conference.archiveRecord);
+          const availability = observeOfferAvailability(
+            conference,
+            conference.availabilityWindows[0] ?? null
+          );
           return (
-            <li key={ev.slug} className="card">
-              <h2 className="text-xl font-bold text-minne-navy">{ev.name}</h2>
+            <li key={conference.slug} className="card">
+              <h2 className="text-xl font-bold text-minne-navy">{conference.name}</h2>
               <p className="text-sm text-gray-600">
-                {ev.status === "ARCHIVED" ? "Archived" : "Active"}
-                {!window.open && ev.status === "ACTIVE" && (
-                  <span className="ml-2 text-amber-800">· Submissions closed</span>
+                {archived ? "Archived" : "Active"}
+                {!archived && !availability.open && (
+                  <span className="ml-2 text-amber-800">· {availability.message}</span>
                 )}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
-                {ev.status === "ACTIVE" && window.open && (
+                {!archived && availability.open && (
                   <Link
-                    href={`/submit/${ev.slug}`}
+                    href={`/submit/${conference.slug}`}
                     className="btn-primary text-white no-underline"
                   >
                     Submit a talk
                   </Link>
                 )}
-                {ev.decksPublished && (
-                  <Link href={`/archive/${ev.slug}`} className="btn-secondary">
+                {conference.decksPublished && (
+                  <Link href={`/archive/${conference.slug}`} className="btn-secondary">
                     Slide deck archive
                   </Link>
                 )}
