@@ -89,7 +89,6 @@ export async function repairConferenceCompatibilityProjections(
       if (themeIds.length > 0) {
         await tx.submissionTheme.createMany({
           data: themeIds.map((themeId) => ({ submissionId: submission.id, themeId })),
-          skipDuplicates: true,
         });
       }
     });
