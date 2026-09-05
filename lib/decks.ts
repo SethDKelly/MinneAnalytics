@@ -2,6 +2,10 @@ import { prisma } from "./db";
 import { readFile } from "fs/promises";
 import path from "path";
 import { getDataDir } from "./config";
+import {
+  getExactPublicDeckArchive,
+  loadExactDeckFileForPublic,
+} from "./concept-design/publication-public-access";
 
 export type DeckQueueItem = {
   submissionId: string;
@@ -63,7 +67,15 @@ export type PublicDeckItem = {
 };
 
 export async function getPublicDeckArchive(conferenceSlug: string) {
-  const conference = await prisma.conference.findUnique({
+  const exact = await getExactPublicDeckArchive(conferenceSlug);
+  if (exact.exactMode) {
+    return {
+      conference: exact.conference,
+      decks: exact.decks as PublicDeckItem[],
+    };
+  }
+
+  const conference = exact.conference ?? await prisma.conference.findUnique({
     where: { slug: conferenceSlug },
   });
   if (!conference?.decksPublished) {
@@ -120,7 +132,10 @@ export async function loadDeckFileForCommittee(
 }
 
 export async function loadDeckFileForPublic(publicId: string) {
-  const file = await prisma.deckFile.findUnique({
+  const exact = await loadExactDeckFileForPublic(publicId);
+  if (exact.exactMode) return exact.file;
+
+  const file = exact.file ?? await prisma.deckFile.findUnique({
     where: { publicId },
     include: {
       submission: { include: { conference: true } },
