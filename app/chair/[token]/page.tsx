@@ -42,67 +42,60 @@ export default async function ChairPage({
 }) {
   const { token } = await params;
   const { archive: archiveSlug } = await searchParams;
-
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canAccessCommitteeDashboard(reviewer.role)) {
-    notFound();
-  }
+  if (!reviewer || !canAccessCommitteeDashboard(reviewer.role)) notFound();
 
   let viewConferenceId = reviewer.conferenceId;
   let viewConferenceName = reviewer.conference.name;
-  let readOnly = reviewer.conference.status !== "ACTIVE";
+  let readOnly =
+    Boolean(reviewer.conference.archiveRecord) || reviewer.conference.status !== "ACTIVE";
 
   if (archiveSlug && canViewHistoricalCommittee(reviewer.role)) {
     const archived = await prisma.conference.findFirst({
-      where: { slug: archiveSlug, status: "ARCHIVED" },
+      where: { slug: archiveSlug, archiveRecord: { isNot: null } },
     });
     if (archived) {
       viewConferenceId = archived.id;
       viewConferenceName = archived.name;
       readOnly = true;
     }
-  } else if (reviewer.conference.status !== "ACTIVE") {
-    readOnly = true;
   }
 
-  const [subs, capacity, deckQueue, themes, archivedList] = await Promise.all([
-    getConferenceSubmissions(viewConferenceId),
-    getCapacityForConference(viewConferenceId),
-    getDeckQueue(viewConferenceId),
-    getConferenceThemesForAdmin(viewConferenceId),
-    canViewHistoricalCommittee(reviewer.role)
-      ? getArchivedConferences()
-      : Promise.resolve([]),
-  ]);
-
-  const viewConf = await prisma.conference.findUniqueOrThrow({
-    where: { id: viewConferenceId },
-  });
-  const blindReviewEnabled = isBlindReviewEnabled(viewConf);
+  const [submissions, capacity, deckQueue, themes, archivedList, viewConference] =
+    await Promise.all([
+      getConferenceSubmissions(viewConferenceId),
+      getCapacityForConference(viewConferenceId),
+      getDeckQueue(viewConferenceId),
+      getConferenceThemesForAdmin(viewConferenceId),
+      canViewHistoricalCommittee(reviewer.role)
+        ? getArchivedConferences()
+        : Promise.resolve([]),
+      prisma.conference.findUniqueOrThrow({ where: { id: viewConferenceId } }),
+    ]);
+  const blindReviewEnabled = isBlindReviewEnabled(viewConference);
 
   const accessList = await prisma.reviewerAccess.findMany({
     where: { conferenceId: viewConferenceId },
     select: { id: true, label: true, role: true },
   });
-  const committeeSize = accessList.filter((a) => canScore(a.role)).length;
-
-  const active = subs.filter((s) => s.programStatus !== "WITHDRAWN");
-  const listItems = active.map((s) => toListItem(s, reviewer.id));
+  const committeeSize = accessList.filter((access) => canScore(access.role)).length;
+  const active = submissions.filter((submission) => !submission.semantic.withdrawal.withdrawn);
+  const listItems = active.map((submission) => toListItem(submission, reviewer.id));
 
   const buildItem = (item: (typeof listItems)[0]) => {
-    const full = subs.find((s) => s.id === item.id)!;
-    const latestRev = full.revisions[0];
+    const full = submissions.find((submission) => submission.id === item.id)!;
+    const latestRevision = full.revisions[0];
     const revisionSummary = computeScoreVersionSummary(
       full,
-      full.scores,
+      full.evaluationHistory,
       committeeSize,
-      latestRev ? parseChangedFields(latestRev.changedFields) : []
+      latestRevision ? parseChangedFields(latestRevision.changedFields) : []
     );
     return buildChairProgramItem(
       item,
       full,
       themeNamesForSubmission(full.themes),
-      full.themes.map((t) => t.themeId),
+      full.themes.map((theme) => theme.themeId),
       blindReviewEnabled,
       revisionSummary
     );
@@ -120,45 +113,42 @@ export default async function ChairPage({
 
   const themeStats = computeThemeStats(
     themes,
-    subs.map((s) => ({
-      programStatus: s.programStatus,
-      themes: s.themes.map((t) => ({ themeId: t.themeId })),
+    submissions.map((submission) => ({
+      programStatus: submission.programStatus,
+      themes: submission.themes.map((theme) => ({ themeId: theme.themeId })),
     }))
   );
-
-  const approved = subs.filter((s) => s.programStatus === "APPROVED");
-  const technicalityRows = computeTechnicalityBalance(approved);
-
-  const heatmapSubmissions = subs
-    .filter((s) => s.programStatus !== "WITHDRAWN")
-    .map((s) => ({
-      programStatus: s.programStatus,
-      technicalLevel: s.technicalLevel,
-      themes: s.themes.map((t) => ({ themeId: t.themeId })),
-    }));
+  const participating = submissions.filter(
+    (submission) => submission.semantic.participation.effective
+  );
+  const technicalityRows = computeTechnicalityBalance(participating);
+  const heatmapSubmissions = active.map((submission) => ({
+    programStatus: submission.programStatus,
+    technicalLevel: submission.technicalLevel,
+    themes: submission.themes.map((theme) => ({ themeId: theme.themeId })),
+  }));
   const themeStatusHeatmap = computeThemeStatusHeatmap(themes, heatmapSubmissions);
   const technicalityThemeHeatmap = computeTechnicalityThemeHeatmap(
     themes,
-    heatmapSubmissions.filter((s) => s.programStatus === "APPROVED")
+    heatmapSubmissions.filter((submission) => submission.programStatus === "APPROVED")
   );
 
   const labelById = Object.fromEntries(
-    accessList.map((a) => [a.id, a.label ?? a.role])
+    accessList.map((access) => [access.id, access.label ?? access.role])
   );
-
   const allScores: Record<
     string,
     { reviewer: string; value: number; notes: string | null }[]
   > = {};
-  for (const sub of subs) {
-    allScores[sub.id] = sub.scores.map((sc) => ({
-      reviewer: labelById[sc.reviewerAccessId] ?? "Reviewer",
-      value: sc.value,
-      notes: sc.notes,
+  for (const submission of submissions) {
+    allScores[submission.id] = submission.scores.map((score) => ({
+      reviewer: labelById[score.reviewerAccessId] ?? "Reviewer",
+      value: score.value,
+      notes: score.notes,
     }));
   }
 
-  const conf = await prisma.conference.findUniqueOrThrow({
+  const ownConference = await prisma.conference.findUniqueOrThrow({
     where: { id: reviewer.conferenceId },
   });
 
@@ -178,24 +168,27 @@ export default async function ChairPage({
       capacity={capacity}
       allScores={allScores}
       deckQueue={deckQueue}
-      conferenceSlug={conf.slug}
+      conferenceSlug={ownConference.slug}
       conferenceName={viewConferenceName}
       conferenceStatus={reviewer.conference.status}
-      decksPublished={conf.decksPublished}
-      decksPublishedAt={conf.decksPublishedAt?.toISOString() ?? null}
+      decksPublished={ownConference.decksPublished}
+      decksPublishedAt={ownConference.decksPublishedAt?.toISOString() ?? null}
       themeStats={themeStats}
       themeStatusHeatmap={themeStatusHeatmap}
       technicalityThemeHeatmap={technicalityThemeHeatmap}
       technicalityRows={technicalityRows}
-      approvedCount={approved.length}
+      approvedCount={participating.length}
       readOnly={readOnly}
-      archivedConferences={archivedList.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        submissionCount: c._count.submissions,
+      archivedConferences={archivedList.map((conference) => ({
+        slug: conference.slug,
+        name: conference.name,
+        submissionCount: conference._count.submissions,
       }))}
       viewingArchiveSlug={archiveSlug ?? null}
-      themes={themes.map((t) => ({ id: t.id, name: formatThemeDisplayName(t) }))}
+      themes={themes.map((theme) => ({
+        id: theme.id,
+        name: formatThemeDisplayName(theme),
+      }))}
     />
   );
 }
