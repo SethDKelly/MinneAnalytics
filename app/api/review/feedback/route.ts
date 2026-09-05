@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import {
+  ApplicationPolicyError,
+  assertLiveOperationalContext,
+  hasApplicationCapability,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { emailPresenterFeedback } from "@/lib/email-stub";
@@ -17,21 +22,45 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(parsed.data.token);
-  if (!reviewer || !canScore(reviewer.role)) {
+  if (!reviewer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    await assertConferenceAcceptsMutations(reviewer.conferenceId);
-  } catch {
-    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!hasApplicationCapability(reviewer.role, "GIVE_FEEDBACK")) {
+      return NextResponse.json(
+        { error: "Feedback is not permitted", code: "CAPABILITY_DENIED" },
+        { status: 403 }
+      );
+    }
+    try {
+      assertLiveOperationalContext(reviewer.conference);
+    } catch (error) {
+      if (error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+  } else {
+    if (!canScore(reviewer.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+      await assertConferenceAcceptsMutations(reviewer.conferenceId);
+    } catch {
+      return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    }
   }
 
   const submission = await prisma.submission.findFirst({
     where: {
       id: parsed.data.submissionId,
       conferenceId: reviewer.conferenceId,
-      programStatus: { not: "WITHDRAWN" },
+      ...(lifecycleWrites ? { withdrawal: null } : { programStatus: { not: "WITHDRAWN" } }),
     },
   });
   if (!submission) {
@@ -100,5 +129,6 @@ export async function POST(request: Request) {
     feedbackId: feedback.id,
     submissionRevisionId: feedback.submissionRevisionId,
     abstractReviewStatus: nextStatus,
+    revisionExceptionGranted: false,
   });
 }
