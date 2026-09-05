@@ -207,7 +207,7 @@ resource "aws_ecs_task_definition" "app" {
       { name = "DATABASE_URL", value = "file:/data/prisma/dev.db" },
       { name = "UPLOAD_DIR", value = "/data/uploads" },
       { name = "SEED_ON_START", value = var.seed_on_start ? "true" : "false" },
-      { name = "MINNE_ALLOW_LEGACY_BASELINE_ADOPTION", value = "true" },
+      { name = "MINNE_ALLOW_LEGACY_BASELINE_ADOPTION", value = var.allow_legacy_baseline_adoption ? "true" : "false" },
       { name = "MINNE_RUN_SEMANTIC_BACKFILLS", value = "true" },
       { name = "MINNE_V0_WRITE_REVISION_EVALUATION", value = "true" },
       { name = "MINNE_V0_WRITE_SELECTION_PARTICIPATION", value = "true" },
