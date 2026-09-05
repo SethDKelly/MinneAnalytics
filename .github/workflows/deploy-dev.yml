@@ -13,6 +13,14 @@ on:
         options:
           - "false"
           - "true"
+      allow_legacy_baseline_adoption:
+        description: One-time authorization to adopt a recognized pre-004-A database after backup/restore rehearsal
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   id-token: write
@@ -73,9 +81,11 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: |
           SEED="${{ github.event.inputs.seed_on_start || 'false' }}"
+          ADOPT="${{ github.event.inputs.allow_legacy_baseline_adoption || 'false' }}"
           terraform apply -auto-approve \
             -var="container_image=${{ steps.image.outputs.uri }}" \
-            -var="seed_on_start=${SEED}"
+            -var="seed_on_start=${SEED}" \
+            -var="allow_legacy_baseline_adoption=${ADOPT}"
 
       - name: Verify ECS service stability
         run: |
@@ -92,4 +102,5 @@ jobs:
             echo "Image: ${{ steps.image.outputs.uri }}"
             echo "Migration path: checked-in Prisma migrations + semantic backfills at container bootstrap"
             echo "SQLite replacement policy: old task stops before new task starts"
+            echo "Legacy baseline adoption: ${{ github.event.inputs.allow_legacy_baseline_adoption || 'false' }}"
           } >> "$GITHUB_STEP_SUMMARY"
