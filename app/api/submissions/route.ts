@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { establishInitialRevision } from "@/lib/concept-design/revision-evaluation";
+import {
+  observeOfferAvailability,
+  PROPOSAL_OFFER_WINDOW_KEY,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { serializeDegrees } from "@/lib/degrees";
@@ -84,14 +88,34 @@ export async function POST(request: Request) {
 
     const conference = await prisma.conference.findUnique({
       where: { slug: parsed.data.conferenceSlug },
+      include: {
+        archiveRecord: true,
+        availabilityWindows: {
+          where: { opportunityKey: PROPOSAL_OFFER_WINDOW_KEY },
+          take: 1,
+        },
+      },
     });
     if (!conference) {
       return NextResponse.json({ error: "Conference not found" }, { status: 404 });
     }
 
-    const window = getSubmissionWindowState(conference);
-    if (!window.open) {
-      return NextResponse.json({ error: window.message }, { status: 403 });
+    if (isImplementationGateEnabled("lifecycleDisclosureWrites")) {
+      const availability = observeOfferAvailability(
+        conference,
+        conference.availabilityWindows[0] ?? null
+      );
+      if (!availability.open) {
+        return NextResponse.json(
+          { error: availability.message, code: availability.code },
+          { status: 403 }
+        );
+      }
+    } else {
+      const window = getSubmissionWindowState(conference);
+      if (!window.open) {
+        return NextResponse.json({ error: window.message }, { status: 403 });
+      }
     }
 
     let resolvedThemeIds: string[];
