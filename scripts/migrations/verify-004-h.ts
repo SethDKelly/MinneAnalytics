@@ -7,6 +7,7 @@ import {
 import { hasApplicationCapability } from "../../lib/concept-design/lifecycle-disclosure-policy";
 import { establishInitialRevision } from "../../lib/concept-design/revision-evaluation";
 import { establishInitialTermState } from "../../lib/concept-design/vocabulary";
+import { getConferenceThemesForAdmin } from "../../lib/themes";
 import { generateToken, hashToken } from "../../lib/tokens";
 import { POST as recordFeedback } from "../../app/api/review/feedback/route";
 
@@ -145,6 +146,13 @@ async function main() {
   assert(advisory?.basis === "coverage-target", "Coverage warning must use canonical CoverageTarget");
   assert(advisory?.upperBound === 1, "Coverage upper bound must survive compatibility drift");
   assert(advisory?.observed === 1, "Coverage observation must use effective participation");
+  const organizerThemes = await getConferenceThemesForAdmin(conference.id);
+  const organizerTheme = organizerThemes.find((row) => row.id === theme.id);
+  assert(organizerTheme?.targetMax === 1, "organizer theme view must overlay canonical CoverageTarget bounds");
+  assert(
+    organizerTheme?.currentTermState?.availability === "AVAILABLE",
+    "organizer Vocabulary view must use current TermState"
+  );
 
   const reviewerToken = generateToken();
   const reviewer = await prisma.reviewerAccess.create({
@@ -227,6 +235,7 @@ async function main() {
           basis: advisory?.basis ?? null,
           observed: advisory?.observed ?? null,
           upperBound: advisory?.upperBound ?? null,
+          organizerViewUsesCanonicalTarget: organizerTheme?.targetMax === 1,
           compatibilityProjectionDeliberatelyDrifted: true,
         },
         feedbackSeparation: {
