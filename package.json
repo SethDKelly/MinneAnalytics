@@ -27,6 +27,8 @@
     "db:004-c:verify": "tsx scripts/migrations/verify-004-c.ts",
     "db:004-d:backfill": "tsx scripts/migrations/backfill-004-d.ts",
     "db:004-d:verify": "tsx scripts/migrations/verify-004-d.ts",
+    "db:004-e:backfill": "tsx scripts/migrations/backfill-004-e.ts",
+    "db:004-e:verify": "tsx scripts/migrations/verify-004-e.ts",
     "db:backup": "node scripts/migrations/sqlite-backup.mjs",
     "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
     "postinstall": "prisma generate"
