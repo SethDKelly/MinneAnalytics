@@ -3,16 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  AbstractReviewStatusBadge,
-  ProgramStatusBadge,
-  SponsorSessionBadge,
-} from "./StatusBadge";
+import { SponsorSessionBadge } from "./StatusBadge";
 import { BlindIdentityBlock } from "./BlindIdentityBlock";
 import { RescoreIndicator } from "./RescoreIndicator";
 import { RevisionBadge } from "./RevisionBadge";
 import { SubmissionRevisionHistory } from "./SubmissionRevisionHistory";
-import { scoreNeedsRescore } from "@/lib/rescoring";
 import { ReviewFeedbackForm } from "./ReviewFeedbackForm";
 import type { ReviewSubmissionItem } from "@/lib/review-blind";
 import type { ReviewerRole } from "@prisma/client";
@@ -25,6 +20,7 @@ import {
   formatScore,
   roundScore,
 } from "@/lib/scoring-scale";
+import { participationLabel, selectionLabel } from "@/lib/concept-design/semantic-reads";
 
 type Props = {
   token: string;
@@ -71,36 +67,36 @@ export function ReviewPanel({
     <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="text-3xl font-bold text-minne-navy">Abstract review</h1>
       <p className="mt-1 text-gray-700">
-        {label} · {roleDisplayName(role)} — score each talk once on a 0.0–1.0 scale (0.1
-        increments). After a presenter revision, talks reappear in{" "}
-        <strong>Needs rescore</strong> until you save a score at the current abstract version.
+        {label} · {roleDisplayName(role)} — each Evaluation is bound to the exact current
+        Revision. A later Revision returns the talk to <strong>Needs rescore</strong> without
+        overwriting the earlier Evaluation.
       </p>
       <p className="mt-2 text-sm">
         <Link href={`/chair/${token}`} className="text-minne-navy underline">
           Open program dashboard
         </Link>
         {isBoard(role)
-          ? " to approve talks and review decks."
-          : " to review committee rankings and slide decks (approval is board-only)."}
+          ? " to make Selection decisions and review Deliverables."
+          : " to review committee results and Deliverables."}
       </p>
       <p className="mt-2 text-sm text-gray-600">
-        {needsScore.length} awaiting your score · {needsRescore.length} need rescore ·{" "}
-        {scored.length} scored at current version · {total} total
+        {needsScore.length} never evaluated · {needsRescore.length} need evaluation for the
+        current Revision · {scored.length} current · {total} total
       </p>
       {blindReviewEnabled && (
         <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-          Blind review is on: presenter name, organization, and email are hidden by default.
-          Committee averages stay hidden until you save your own score. Use{" "}
-          <strong>Reveal identity</strong> only when you need to check conflicts of interest.
+          Blind review is on. Presenter identity is an explicitly concealed information state;
+          committee aggregates remain concealed until you have an Evaluation for this exact
+          Revision. Reveal identity only when needed for conflict checking.
         </p>
       )}
 
       <ReviewSection
         blindReviewEnabled={blindReviewEnabled}
-        title="Needs your score"
-        description="Sorted by submission date (newest first)"
+        title="Needs your evaluation"
+        description="No Evaluation by you exists for this Proposal"
         items={needsScore}
-        emptyMessage="You have scored every submission in the queue."
+        emptyMessage="Every active Proposal has an Evaluation by you."
         expanded={expanded}
         setExpanded={setExpanded}
         saving={saving}
@@ -113,7 +109,7 @@ export function ReviewPanel({
         <ReviewSection
           blindReviewEnabled={blindReviewEnabled}
           title="Needs rescore"
-          description="Presenter revised the abstract — save a new score for the current version"
+          description="Your retained Evaluation is for a prior Revision or has legacy-unknown subject identity"
           items={needsRescore}
           emptyMessage=""
           expanded={expanded}
@@ -128,10 +124,10 @@ export function ReviewPanel({
       )}
 
       <ReviewSection
-        title="Scored at current version"
-        description="Your score matches the latest abstract version"
+        title="Current evaluations"
+        description="Your Evaluation subject matches the exact current Revision"
         items={scored}
-        emptyMessage="No scores saved yet. Completed talks will appear here."
+        emptyMessage="No current Evaluations saved yet."
         expanded={expanded}
         setExpanded={setExpanded}
         saving={saving}
@@ -202,6 +198,14 @@ function ReviewSection({
   );
 }
 
+function SemanticPill({ label }: { label: string }) {
+  return (
+    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-800">
+      {label}
+    </span>
+  );
+}
+
 function TalkReviewCard({
   token,
   blindReviewEnabled,
@@ -225,8 +229,8 @@ function TalkReviewCard({
 }) {
   const outdated =
     rescoreMode ||
-    (item.myScore != null &&
-      scoreNeedsRescore(item.myScore, item.abstractVersion));
+    item.myEvaluationState === "revision-changed" ||
+    item.myEvaluationState === "legacy-subject-unknown";
   const submitted = new Date(item.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -246,29 +250,22 @@ function TalkReviewCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-bold text-minne-navy">{item.title}</h3>
-            <RevisionBadge version={item.abstractVersion} />
+            <RevisionBadge version={item.semantic.revision.ordinal} />
             {item.isSponsorSession && <SponsorSessionBadge />}
-            {outdated && <RescoreIndicator version={item.abstractVersion} />}
+            {outdated && <RescoreIndicator version={item.semantic.revision.ordinal} />}
           </div>
-          {blindReviewEnabled && !item.identity ? (
-            <BlindIdentityBlock
-              token={token}
-              submissionId={item.id}
-              blindReviewEnabled
-            />
+          {item.identityState.state === "concealed" ? (
+            <BlindIdentityBlock token={token} submissionId={item.id} blindReviewEnabled />
           ) : (
             <p className="text-sm text-gray-600">
-              {item.identity
-                ? `${item.identity.firstName} ${item.identity.lastName} · ${item.identity.organization}`
-                : `${item.firstName} ${item.lastName} · ${item.organization}`}{" "}
-              · Technical: {item.technicalLevel} (
+              {item.identityState.value.firstName} {item.identityState.value.lastName} ·{" "}
+              {item.identityState.value.organization} · Technical: {item.technicalLevel} (
               {TECHNICAL_LABELS[item.technicalLevel]})
             </p>
           )}
-          {blindReviewEnabled && !item.identity && (
+          {item.identityState.state === "concealed" && (
             <p className="text-sm text-gray-600">
-              Technical: {item.technicalLevel} (
-              {TECHNICAL_LABELS[item.technicalLevel]})
+              Technical: {item.technicalLevel} ({TECHNICAL_LABELS[item.technicalLevel]})
             </p>
           )}
           <p className="mt-1 text-xs text-gray-500">Submitted {submitted}</p>
@@ -282,33 +279,30 @@ function TalkReviewCard({
                   : "bg-green-100 text-green-900"
               }`}
             >
-              Your score: {formatScore(item.myScore.value)}
-              {outdated && item.myScore.scoredAbstractVersion != null
-                ? ` (v${item.myScore.scoredAbstractVersion})`
-                : ""}
+              Your Evaluation: {formatScore(item.myScore.value)}
+              {outdated ? " · prior/unknown Revision subject" : " · current Revision"}
             </span>
           )}
-          <ProgramStatusBadge status={item.programStatus} />
-          <AbstractReviewStatusBadge status={item.abstractReviewStatus} />
+          <SemanticPill label={`Selection: ${selectionLabel(item.semantic.selection.disposition)}`} />
+          <SemanticPill label={`Participation: ${participationLabel(item.semantic.participation)}`} />
         </div>
       </div>
-      {item.aggregate ? (
+
+      {item.aggregateState.state === "visible" ? (
         <p className="mt-2 text-sm text-gray-700">
-          Committee aggregate:{" "}
-          <strong>avg {item.aggregate.average.toFixed(2)}</strong> ({item.aggregate.count}{" "}
-          scorer
-          {item.aggregate.count === 1 ? "" : "s"}, sum {item.aggregate.sum.toFixed(1)})
+          Current-Revision aggregate:{" "}
+          <strong>avg {item.aggregateState.value.average.toFixed(2)}</strong> ({
+            item.aggregateState.value.count
+          } evaluator{item.aggregateState.value.count === 1 ? "" : "s"}, sum{" "}
+          {item.aggregateState.value.sum.toFixed(1)})
         </p>
       ) : (
         <p className="mt-2 text-sm italic text-gray-600">
-          Committee aggregate hidden until you save your score for this talk.
+          Committee aggregate concealed until you record an Evaluation for this exact Revision.
         </p>
       )}
-      <button
-        type="button"
-        className="mt-2 text-sm text-minne-navy underline"
-        onClick={onToggle}
-      >
+
+      <button type="button" className="mt-2 text-sm text-minne-navy underline" onClick={onToggle}>
         {expanded ? "Hide" : outdated ? "Rescore" : showMyScore ? "Edit" : "Score"} talk
       </button>
       {expanded && item.abstract && (
@@ -326,12 +320,12 @@ function TalkReviewCard({
           <ReviewFeedbackForm
             token={token}
             submissionId={item.id}
-            abstractVersion={item.abstractVersion}
+            abstractVersion={item.semantic.revision.ordinal}
           />
           <SubmissionRevisionHistory
             token={token}
             submissionId={item.id}
-            currentVersion={item.abstractVersion}
+            currentVersion={item.semantic.revision.ordinal}
           />
         </>
       )}
@@ -357,10 +351,9 @@ function ScoreForm({
   );
   const [notes, setNotes] = useState(initialNotes);
   const [touched, setTouched] = useState(typeof initialValue === "number");
-
   const steps = Array.from(
     { length: (SCORE_MAX - SCORE_MIN) / SCORE_STEP + 1 },
-    (_, i) => roundScore(SCORE_MIN + i * SCORE_STEP)
+    (_, index) => roundScore(SCORE_MIN + index * SCORE_STEP)
   );
 
   return (
@@ -378,33 +371,33 @@ function ScoreForm({
         max={SCORE_MAX}
         step={SCORE_STEP}
         value={value}
-        onChange={(e) => {
-          setValue(roundScore(parseFloat(e.target.value)));
+        onChange={(event) => {
+          setValue(roundScore(parseFloat(event.target.value)));
           setTouched(true);
         }}
         className="mt-2 w-full accent-minne-navy"
       />
       <div className="mt-1 flex justify-between text-[10px] text-gray-500">
-        {steps.map((s) => (
-          <span key={s}>{formatScore(s)}</span>
+        {steps.map((step) => (
+          <span key={step}>{formatScore(step)}</span>
         ))}
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
-        {steps.map((s) => (
+        {steps.map((step) => (
           <button
-            key={s}
+            key={step}
             type="button"
             className={`rounded px-2 py-0.5 text-xs ${
-              value === s
+              value === step
                 ? "bg-minne-navy text-white"
                 : "border border-gray-300 bg-white text-gray-700"
             }`}
             onClick={() => {
-              setValue(s);
+              setValue(step);
               setTouched(true);
             }}
           >
-            {formatScore(s)}
+            {formatScore(step)}
           </button>
         ))}
       </div>
@@ -413,7 +406,7 @@ function ScoreForm({
         rows={2}
         placeholder="Private notes for the committee only (optional)"
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        onChange={(event) => setNotes(event.target.value)}
       />
       <button
         type="button"
@@ -421,7 +414,7 @@ function ScoreForm({
         disabled={!touched || saving}
         onClick={() => onSave(submissionId, value, notes)}
       >
-        {saving ? "Saving…" : "Save score"}
+        {saving ? "Saving…" : "Save evaluation"}
       </button>
     </div>
   );
