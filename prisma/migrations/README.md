@@ -2,11 +2,34 @@
 
 Phase 004-A establishes checked-in Prisma migrations as the persistent-environment schema authority. Later Phase 004 packages extend that history with bounded semantic-slice migrations and explicit data backfills.
 
+## Persistent deployment bootstrap
+
+Persistent runtime startup uses:
+
+```bash
+npm run db:migration:deploy-bootstrap
+```
+
+The container entrypoint invokes this command before starting Next.js. Persistent environments must not use `prisma db push` as a schema-deployment substitute.
+
+The bootstrap classifies the SQLite database before mutation:
+
+- **fresh database** — apply the full checked-in migration chain, optionally seed only if explicitly requested, then run semantic backfills;
+- **migration-managed database** — apply pending checked-in migrations and run semantic backfills;
+- **recognized pre-004-A database without `_prisma_migrations`** — require explicit legacy-baseline-adoption authorization, take and rehearse a restorable backup, resolve the exact baseline as applied, deploy later migrations, then run semantic backfills;
+- **unrecognized non-empty database** — fail closed.
+
+`MINNE_ALLOW_LEGACY_BASELINE_ADOPTION=true` is an exceptional one-time authorization, not a normal deployment default. AWS dev defaults it to false and exposes it only as an explicit manual deployment input.
+
+`SEED_ON_START=true` is permitted only when the bootstrap observed a truly fresh database. It fails closed for an existing persistent database.
+
 ## Existing databases
 
 A database created before 004-A already contains the schema represented by `20260904000000_baseline`. Do **not** replay that baseline DDL against the existing database.
 
-After taking and rehearsing a restorable backup, mark the baseline as applied:
+The preferred persistent adoption path is the deployment bootstrap above because it couples baseline adoption to backup/restore rehearsal and structural recognition.
+
+For controlled manual recovery/inspection, after taking and rehearsing a restorable backup, the equivalent baseline operation is:
 
 ```bash
 npx prisma migrate resolve --applied 20260904000000_baseline
@@ -44,6 +67,8 @@ npm run db:004-d:backfill -- --apply --environment <env>
 npm run db:004-e:backfill -- --apply --environment <env>
 ```
 
+The deployment bootstrap runs these same idempotent backfills by default after migration deployment.
+
 These backfills emit migration evidence and follow the reconciliation no-fabrication rules. Expected historical unknowns are retained explicitly; blocking defects prevent the affected semantic slice from being treated as cutover-ready.
 
 004-D specifically seeds only truthful Window/Archive state and establishes the disclosure cohort boundary without fabricating edit exceptions or protected-information history.
@@ -57,18 +82,57 @@ These backfills emit migration evidence and follow the reconciliation no-fabrica
 - validates existing Schedule placements against canonical effective participation without fabricating generator acceptance history;
 - records Publication cutover only after current-state reconciliation so public-token authorization cannot later fall back to mutable parent state.
 
-The CI existing-database rehearsal runs the complete migration chain and all semantic backfills in this order.
+CI rehearses both a fresh deployment bootstrap and the complete recognized legacy-database backup/adoption/migration/backfill path.
 
 ## Fresh databases
 
-Fresh persistent/test databases can apply the full checked-in history:
+Fresh persistent/test databases can apply the full checked-in history directly:
 
 ```bash
 npm run db:migrate:deploy
-npm run db:seed
 ```
 
-Dedicated 004-B/004-C/004-D/004-E verification commands exercise target-native semantics independently of application seed data.
+For a fresh deployed runtime, prefer `db:migration:deploy-bootstrap`; it owns the same migration chain and optional fresh-only seed behavior.
+
+Dedicated 004-B/004-C/004-D/004-E/004-F/004-G verification commands exercise target-native semantics independently of application seed data.
+
+## Controlled semantic-read rollback
+
+Canonical writers are no longer rollback switches after 004-G. Historical `MINNE_V0_WRITE_*` variables cannot reactivate legacy writer authority.
+
+If semantic reads must be rolled back temporarily:
+
+1. take the operational backup appropriate to the environment;
+2. repair retained compatibility projections from canonical truth:
+
+   ```bash
+   npm run db:004-g:repair-compatibility -- --apply --conference-id <id>
+   ```
+
+   or, after explicit all-scope review:
+
+   ```bash
+   npm run db:004-g:repair-compatibility -- --apply --all
+   ```
+
+3. validate parity and investigate defects/legacy-unknowns;
+4. set only:
+
+   ```text
+   MINNE_V0_SEMANTIC_READS=false
+   ```
+
+5. leave canonical writers enabled and exact Publication authorization intact.
+
+Projection repair is one-way canonical → compatibility. It must never reconstruct or overwrite canonical history from compatibility fields.
+
+## AWS dev SQLite deployment rule
+
+AWS dev currently runs a single ECS task with SQLite stored on EFS.
+
+The ECS replacement policy intentionally stops the old task before the replacement task begins bootstrap/migration. This accepts a brief deployment outage so schema/backfill work runs against a quiesced SQLite database.
+
+This migration posture does not authorize horizontally scaled multi-writer SQLite operation.
 
 ## Local disposable databases
 
@@ -78,4 +142,6 @@ Dedicated 004-B/004-C/004-D/004-E verification commands exercise target-native s
 
 The baseline DDL reflects the exact pre-004-A schema at the Phase 003-G implementation handoff. Subsequent Phase 004 migrations remain non-destructive with respect to legacy compatibility fields and retained history.
 
-Destructive removal of compatibility columns, enums, routes, or historical migration evidence remains prohibited until the explicit 004-G legacy-cleanup gate passes.
+004-G passes the legacy-authority cleanup gate **without** authorizing destructive schema contraction. Retained compatibility projections remain subordinate, repairable rollback/external-compatibility surfaces rather than semantic authorities.
+
+Physical removal of retained columns, enum residue, API compatibility routes, or migration evidence requires a later explicit compatibility/deprecation decision with evidence that their rollback and external-consumer value has expired.
