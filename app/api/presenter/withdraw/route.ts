@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import { processPublicationCleanupForSource } from "@/lib/concept-design/publication-public-access";
 import {
   presenterActorRef,
   recordCanonicalWithdrawal,
@@ -45,15 +46,20 @@ export async function POST(request: Request) {
   }
 
   if (isImplementationGateEnabled("selectionParticipationWrites")) {
+    const actorRef = presenterActorRef(submission.id);
     const result = await recordCanonicalWithdrawal({
       submissionId: submission.id,
-      actorRef: presenterActorRef(submission.id),
+      actorRef,
+    });
+    await processPublicationCleanupForSource(result.withdrawal.id, actorRef);
+    const cleanupPending = await prisma.synchronizationWork.count({
+      where: { sourceRef: result.withdrawal.id, state: { not: "COMPLETED" } },
     });
     return NextResponse.json({
       ok: true,
       withdrawalId: result.withdrawal.id,
       replayed: result.replayed,
-      cleanupPending: result.cleanupPending,
+      cleanupPending,
     });
   }
 
