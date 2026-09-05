@@ -135,7 +135,7 @@ async function main() {
   const historyBefore = {
     revisions: await prisma.submissionRevision.count({ where: { submissionId: submission.id } }),
     decisions: await prisma.selectionDecision.count({ where: { submissionId: submission.id } }),
-    assessments: await prisma.deliverableAssessment.count({ where: { deckFile: { submissionId: submission.id } } }),
+    assessments: await prisma.deliverableAssessment.count({ where: { artifactVersionId: artifact.id } }),
     sharing: await prisma.shareEligibilityChange.count({ where: { submissionId: submission.id } }),
   };
 
@@ -175,7 +175,7 @@ async function main() {
   const historyAfter = {
     revisions: await prisma.submissionRevision.count({ where: { submissionId: submission.id } }),
     decisions: await prisma.selectionDecision.count({ where: { submissionId: submission.id } }),
-    assessments: await prisma.deliverableAssessment.count({ where: { deckFile: { submissionId: submission.id } } }),
+    assessments: await prisma.deliverableAssessment.count({ where: { artifactVersionId: artifact.id } }),
     sharing: await prisma.shareEligibilityChange.count({ where: { submissionId: submission.id } }),
   };
   assert(JSON.stringify(historyAfter) === JSON.stringify(historyBefore), "projection repair must not create, erase, or rewrite canonical history");
