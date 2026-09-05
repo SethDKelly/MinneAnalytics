@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import type { AbstractReviewStatus } from "@prisma/client";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import {
+  ApplicationPolicyError,
+  grantRevisionException,
+  hasApplicationCapability,
+  revokeRevisionException,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
 
-const ACTIONS = ["acknowledge", "clear"] as const;
+const ACTIONS = [
+  "acknowledge",
+  "clear",
+  "request-revision",
+  "revoke-revision-exception",
+] as const;
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -17,7 +29,69 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canSetProgramStatus(reviewer.role)) {
+  if (!reviewer) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (
+    lifecycleWrites &&
+    (action === "request-revision" || action === "revoke-revision-exception")
+  ) {
+    if (!hasApplicationCapability(reviewer.role, "GIVE_FEEDBACK")) {
+      return NextResponse.json(
+        { error: "Revision exception authority is not available", code: "CAPABILITY_DENIED" },
+        { status: 403 }
+      );
+    }
+    if (!isImplementationGateEnabled("revisionEvaluationWrites")) {
+      return NextResponse.json(
+        {
+          error: "Revision exceptions require canonical Revision writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+
+    try {
+      if (action === "request-revision") {
+        const result = await grantRevisionException({
+          conferenceId: reviewer.conferenceId,
+          submissionId,
+          reviewerAccessId: reviewer.id,
+        });
+        await prisma.submission.update({
+          where: { id: submissionId },
+          data: { abstractReviewStatus: "FEEDBACK_PENDING" },
+        });
+        return NextResponse.json({
+          ok: true,
+          revisionException: {
+            revisionId: result.revisionId,
+            grantedAt: result.grantedAt,
+          },
+          abstractReviewStatus: "FEEDBACK_PENDING",
+        });
+      }
+
+      await revokeRevisionException({
+        conferenceId: reviewer.conferenceId,
+        submissionId,
+      });
+      return NextResponse.json({ ok: true, revisionException: null });
+    } catch (error) {
+      if (error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: error.code === "SUBMISSION_NOT_FOUND" ? 404 : 409 }
+        );
+      }
+      throw error;
+    }
+  }
+
+  if (!canSetProgramStatus(reviewer.role)) {
     return NextResponse.json({ error: "Board access required" }, { status: 403 });
   }
 
@@ -43,7 +117,7 @@ export async function POST(request: Request) {
       );
     }
     nextStatus = "ACKNOWLEDGED";
-  } else {
+  } else if (action === "clear") {
     if (submission.abstractReviewStatus !== "ACKNOWLEDGED") {
       return NextResponse.json(
         { error: "Only acknowledged submissions can be cleared to current" },
@@ -51,6 +125,14 @@ export async function POST(request: Request) {
       );
     }
     nextStatus = "CURRENT";
+  } else {
+    return NextResponse.json(
+      {
+        error: "Revision exceptions require the 004-D policy gate",
+        code: "POLICY_GATE_REQUIRED",
+      },
+      { status: 409 }
+    );
   }
 
   const updated = await prisma.submission.update({
