@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { SelectionDisposition } from "@prisma/client";
+import { themeSelectionCoverageAdvisory } from "@/lib/concept-design/coverage-targets";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
   ApplicationPolicyError,
@@ -14,12 +15,6 @@ import {
   SelectionHeadConflictError,
 } from "@/lib/concept-design/selection-participation-deliverable";
 import { prisma } from "@/lib/db";
-import { getConferenceSubmissions } from "@/lib/conference-data";
-import { getConferenceThemesForAdmin } from "@/lib/themes";
-import {
-  approvedThemeSaturationWarning,
-  computeThemeStats,
-} from "@/lib/theme-stats";
 import { getReviewerByToken } from "@/lib/reviewer";
 
 const DISPOSITIONS = new Set<SelectionDisposition>([
@@ -67,9 +62,19 @@ export async function POST(request: Request) {
 
   const submission = await prisma.submission.findFirst({
     where: { id: submissionId, conferenceId: reviewer.conferenceId },
-    include: { currentSelectionDecision: true, withdrawal: true, themes: true },
+    include: {
+      currentSelectionDecision: true,
+      withdrawal: true,
+      currentRevision: { include: { revisionTerms: true } },
+    },
   });
   if (!submission) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!submission.currentRevision) {
+    return NextResponse.json(
+      { error: "Canonical current Revision required", code: "CANONICAL_REVISION_REQUIRED" },
+      { status: 409 }
+    );
+  }
   if (submission.withdrawal && disposition === "SELECTED") {
     return NextResponse.json(
       { error: "A withdrawn Proposal cannot re-enter participation", code: "PARTICIPATION_WITHDRAWN" },
@@ -78,23 +83,19 @@ export async function POST(request: Request) {
   }
 
   if (disposition === "SELECTED" && !body.force) {
-    const [themes, submissions] = await Promise.all([
-      getConferenceThemesForAdmin(reviewer.conferenceId),
-      getConferenceSubmissions(reviewer.conferenceId),
-    ]);
-    const stats = computeThemeStats(
-      themes,
-      submissions.map((row) => ({
-        programStatus: row.programStatus,
-        themes: row.themes.map((theme) => ({ themeId: theme.themeId })),
-      }))
+    const advisory = await themeSelectionCoverageAdvisory(
+      reviewer.conferenceId,
+      submission.currentRevision.revisionTerms.map((term) => term.themeId)
     );
-    const warning = approvedThemeSaturationWarning(
-      stats,
-      submission.themes.map((theme) => theme.themeId)
-    );
-    if (warning) {
-      return NextResponse.json({ warning, requiresConfirm: true }, { status: 409 });
+    if (advisory) {
+      return NextResponse.json(
+        {
+          warning: advisory.message,
+          advisoryBasis: advisory.basis,
+          requiresConfirm: true,
+        },
+        { status: 409 }
+      );
     }
   }
 
