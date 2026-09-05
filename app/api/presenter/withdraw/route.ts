@@ -13,9 +13,35 @@ export async function POST(request: Request) {
 
   const submission = await prisma.submission.findUnique({
     where: { presenterTokenHash: hashToken(token) },
+    include: {
+      conference: { include: { archiveRecord: true } },
+      withdrawal: true,
+    },
   });
   if (!submission) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!isImplementationGateEnabled("selectionParticipationWrites")) {
+      return NextResponse.json(
+        {
+          error: "004-D Withdrawal policy requires canonical participation writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+    if (submission.conference.archiveRecord || submission.conference.status === "ARCHIVED") {
+      return NextResponse.json(
+        {
+          error: "Participation cannot be withdrawn after archive closure",
+          code: "CONTEXT_ARCHIVED",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   if (isImplementationGateEnabled("selectionParticipationWrites")) {
