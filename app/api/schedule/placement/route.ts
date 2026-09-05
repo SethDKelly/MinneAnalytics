@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { ApplicationPolicyError } from "@/lib/concept-design/lifecycle-disclosure-policy";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  applyCanonicalManualPlacement,
+  SchedulePolicyError,
+} from "@/lib/concept-design/schedule-authority";
 import { prisma } from "@/lib/db";
 import { getSchedulePlanner } from "@/lib/schedule/auth";
 
@@ -14,6 +20,26 @@ export async function PATCH(request: Request) {
   const planner = await getSchedulePlanner(token);
   if (!planner) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (isImplementationGateEnabled("scheduleWrites")) {
+    try {
+      await applyCanonicalManualPlacement({
+        conferenceId: planner.conferenceId,
+        placementId,
+        submissionId,
+      });
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      if (error instanceof SchedulePolicyError || error instanceof ApplicationPolicyError) {
+        const status = error.code.endsWith("NOT_FOUND") ? 404 : 409;
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status }
+        );
+      }
+      throw error;
+    }
   }
 
   const target = await prisma.schedulePlacement.findFirst({
