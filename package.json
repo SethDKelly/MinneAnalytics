@@ -33,6 +33,8 @@
     "db:004-f:verify": "tsx scripts/migrations/verify-004-f.ts",
     "db:004-g:repair-compatibility": "tsx scripts/migrations/repair-004-g-compatibility.ts",
     "db:004-g:verify": "tsx scripts/migrations/verify-004-g.ts",
+    "db:004-h:backfill": "tsx scripts/migrations/backfill-004-h.ts",
+    "db:004-h:verify": "tsx scripts/migrations/verify-004-h.ts",
     "db:backup": "node scripts/migrations/sqlite-backup.mjs",
     "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
     "postinstall": "prisma generate"
