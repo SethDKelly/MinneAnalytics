@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   const submission = await prisma.submission.findUnique({
     where: { presenterTokenHash: hashToken(token) },
     include: {
+      conference: { include: { archiveRecord: true } },
       deckFiles: { orderBy: { version: "desc" }, take: 1 },
       currentSelectionDecision: true,
       withdrawal: true,
@@ -32,6 +33,31 @@ export async function POST(request: Request) {
 
   if (!submission) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!isImplementationGateEnabled("selectionParticipationWrites")) {
+      return NextResponse.json(
+        {
+          error: "004-D Deliverable policy requires canonical participation writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+    if (
+      submission.conference.archiveRecord ||
+      submission.conference.status !== "ACTIVE"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Deck upload is only available during live operation",
+          code: submission.conference.archiveRecord ? "CONTEXT_ARCHIVED" : "CONTEXT_NOT_LIVE",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const canonicalWrites = isImplementationGateEnabled("selectionParticipationWrites");
