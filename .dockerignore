@@ -7,7 +7,7 @@ uploads
 .env
 .env.*
 !.env.example
-infra/.terraform
-infra/**/terraform.tfstate*
+**/.terraform
+**/terraform.tfstate*
 docs
 README.md
