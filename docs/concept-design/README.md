@@ -9,7 +9,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Implementation branch:** `concept-design/v0-implementation`
 - **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); Phase 004 (004-A through 004-H)
 - **v0 closure:** all 18 semantic gaps and 4 policy gaps are `verified-closed` in the supported runtime scope
-- **Next planning boundary:** post-v0 operational qualification/product hardening; no new runtime phase is pre-authorized by 004-H
+- **Phase 005:** subgroup structure planned for post-v0 operational qualification, security hardening and production readiness
+- **Next:** 005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control
 
 ## Start here
 
@@ -34,6 +35,7 @@ For current normative design knowledge, begin with:
 - [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md)
 - [v0 Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md)
 - [004-H v0 Implementation Exit Gate](knowledge/decisions/004-h-v0-implementation-exit-gate.md)
+- [Phase 005 subgroup structure](005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md)
 
 Canonical documentation behavior is governed by:
 
@@ -129,7 +131,28 @@ No destructive compatibility cleanup is required for Phase 004 closure. Retained
 
 Phase 004 completion is **not** a claim that the current live AWS EFS database has already been migrated or that MinneAnalytics has received production-release approval.
 
-Live deployment qualification, dependency/security triage, provider/integration qualification, performance/operations work, and future product backlog items belong to a separately planned post-v0 stage.
+Live deployment qualification, dependency/security triage, provider/integration qualification, performance/operations work, and future product backlog items belong to Phase 005 under the bounded subgroup plan below.
+
+## Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness — planned
+
+Phase 005 qualifies and hardens the accepted v0 under operational conditions. It does not reopen Phase 004 semantic closure and does not itself authorize product expansion, destructive cleanup, a database-topology migration, or production deployment.
+
+The governing subgroup plan is [Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness](005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md).
+
+1. **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control** — next
+2. **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification**
+3. **005-C — Deployment Artifact, Infrastructure, Configuration & Environment Readiness**
+4. **005-D — Live AWS/EFS Migration, Data Qualification, Backup/Restore & Rollback Exercise**
+5. **005-E — External Provider, Dispatch, Storage & Integration Boundary Qualification**
+6. **005-F — Observability, Diagnostics, Incident Response, Recovery & Operational Runbooks**
+7. **005-G — Performance, Load, Concurrency, Resilience & Scaling-Limit Validation**
+8. **005-H — Accessibility, Usability, Browser/Device & End-to-End Workflow Qualification**
+9. **005-I — Compatibility Retention, External Consumer Inventory, Deprecation Readiness & Product Backlog Admission**
+10. **005-J — Phase 005 Consolidation & Production-Readiness Exit Review**
+
+The intended primary dependency sequence is `005-A → 005-B → 005-C → 005-D → 005-E → 005-F → 005-G → 005-H → 005-I → 005-J`. Evidence gathering may overlap after 005-A, but authoritative decisions must respect the dependency rules recorded in the Phase 005 plan.
+
+No Phase 005 runtime/live-environment work is pre-authorized merely by this subdivision. 005-A must establish the qualification and change-control authority boundary first.
 
 ## Knowledge architecture
 
@@ -145,6 +168,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 The completed discovery/specification/reconciliation branch remains `concept-design/v0-discovery` at the 003-G baseline. The accepted v0 implementation is represented on `concept-design/v0-implementation`.
 
-The bounded runtime authorization granted by 003-G has now been consumed and closed by 004-H. No new runtime phase, destructive cleanup, or arbitrary refactor is automatically authorized by this completion.
+The bounded runtime authorization granted by 003-G has now been consumed and closed by 004-H. Phase 005 planning does not reactivate that authorization. Runtime, live-environment, security, provider, infrastructure or destructive-cleanup changes require the bounded authority established by the applicable Phase 005 subgroup.
 
 If future runtime evidence contradicts an accepted semantic target, amend the narrowest canonical owner intentionally rather than treating newer code as automatic authority.
