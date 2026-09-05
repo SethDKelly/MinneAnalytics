@@ -20,7 +20,6 @@ import {
   formatScore,
   roundScore,
 } from "@/lib/scoring-scale";
-import { participationLabel, selectionLabel } from "@/lib/concept-design/semantic-reads";
 
 type Props = {
   token: string;
@@ -31,6 +30,18 @@ type Props = {
   needsRescore: ReviewSubmissionItem[];
   scored: ReviewSubmissionItem[];
 };
+
+function selectionLabel(disposition: string | null): string {
+  if (disposition === "SELECTED") return "Selected";
+  if (disposition === "RESERVE") return "Reserve";
+  if (disposition === "NOT_SELECTED") return "Not selected";
+  return "Undecided";
+}
+
+function participationLabel(participation: { effective: boolean; reason: string }): string {
+  if (participation.reason === "withdrawn") return "Withdrawn";
+  return participation.effective ? "Participating" : "Not participating";
+}
 
 export function ReviewPanel({
   token,
@@ -92,7 +103,6 @@ export function ReviewPanel({
       )}
 
       <ReviewSection
-        blindReviewEnabled={blindReviewEnabled}
         title="Needs your evaluation"
         description="No Evaluation by you exists for this Proposal"
         items={needsScore}
@@ -107,7 +117,6 @@ export function ReviewPanel({
 
       {needsRescore.length > 0 && (
         <ReviewSection
-          blindReviewEnabled={blindReviewEnabled}
           title="Needs rescore"
           description="Your retained Evaluation is for a prior Revision or has legacy-unknown subject identity"
           items={needsRescore}
@@ -134,7 +143,6 @@ export function ReviewPanel({
         onSave={saveScore}
         showMyScore
         token={token}
-        blindReviewEnabled={blindReviewEnabled}
         className="mt-10 border-t border-gray-200 pt-8"
       />
     </div>
@@ -153,7 +161,6 @@ function ReviewSection({
   showMyScore,
   rescoreMode = false,
   token,
-  blindReviewEnabled,
   className = "mt-8",
 }: {
   title: string;
@@ -167,7 +174,6 @@ function ReviewSection({
   showMyScore: boolean;
   rescoreMode?: boolean;
   token: string;
-  blindReviewEnabled: boolean;
   className?: string;
 }) {
   return (
@@ -182,7 +188,6 @@ function ReviewSection({
             <TalkReviewCard
               key={item.id}
               token={token}
-              blindReviewEnabled={blindReviewEnabled}
               item={item}
               expanded={expanded === item.id}
               onToggle={() => setExpanded(expanded === item.id ? null : item.id)}
@@ -208,7 +213,6 @@ function SemanticPill({ label }: { label: string }) {
 
 function TalkReviewCard({
   token,
-  blindReviewEnabled,
   item,
   expanded,
   onToggle,
@@ -218,7 +222,6 @@ function TalkReviewCard({
   rescoreMode = false,
 }: {
   token: string;
-  blindReviewEnabled: boolean;
   item: ReviewSubmissionItem;
   expanded: boolean;
   onToggle: () => void;
@@ -283,8 +286,12 @@ function TalkReviewCard({
               {outdated ? " · prior/unknown Revision subject" : " · current Revision"}
             </span>
           )}
-          <SemanticPill label={`Selection: ${selectionLabel(item.semantic.selection.disposition)}`} />
-          <SemanticPill label={`Participation: ${participationLabel(item.semantic.participation)}`} />
+          <SemanticPill
+            label={`Selection: ${selectionLabel(item.semantic.selection.disposition)}`}
+          />
+          <SemanticPill
+            label={`Participation: ${participationLabel(item.semantic.participation)}`}
+          />
         </div>
       </div>
 
