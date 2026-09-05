@@ -79,6 +79,19 @@ export async function ensureScheduleGrid(conferenceId: string) {
   if (toCreate.length > 0) await prisma.schedulePlacement.createMany({ data: toCreate });
 }
 
+function projectScheduleTalk<T extends {
+  currentRevision: { title: string; technicalLevel: number } | null;
+  title: string;
+  technicalLevel: number;
+}>(submission: T) {
+  return {
+    ...submission,
+    title: submission.currentRevision?.title ?? submission.title,
+    technicalLevel:
+      submission.currentRevision?.technicalLevel ?? submission.technicalLevel,
+  };
+}
+
 export async function loadScheduleState(conferenceId: string) {
   await ensureScheduleGrid(conferenceId);
 
@@ -106,6 +119,7 @@ export async function loadScheduleState(conferenceId: string) {
             technicalLevel: true,
             isSoftSkill: true,
             degrees: true,
+            currentRevision: { select: { title: true, technicalLevel: true } },
           },
         },
         slot: true,
@@ -124,6 +138,7 @@ export async function loadScheduleState(conferenceId: string) {
         technicalLevel: true,
         isSoftSkill: true,
         degrees: true,
+        currentRevision: { select: { title: true, technicalLevel: true } },
         schedulePlacement: { select: { id: true } },
         currentSelectionDecision: { select: { disposition: true } },
         withdrawal: { select: { id: true } },
@@ -139,13 +154,45 @@ export async function loadScheduleState(conferenceId: string) {
   );
   const unscheduled = participating
     .filter((submission) => !submission.schedulePlacement)
-    .map(({ schedulePlacement: _placement, currentSelectionDecision: _selection, withdrawal: _withdrawal, ...rest }) => rest);
+    .map((submission) => {
+      const projected = projectScheduleTalk(submission);
+      return {
+        id: projected.id,
+        title: projected.title,
+        firstName: projected.firstName,
+        lastName: projected.lastName,
+        jobTitle: projected.jobTitle,
+        organization: projected.organization,
+        technicalLevel: projected.technicalLevel,
+        isSoftSkill: projected.isSoftSkill,
+        degrees: projected.degrees,
+      };
+    });
+  const projectedPlacements = placements.map((placement) => ({
+    ...placement,
+    submission: placement.submission
+      ? (() => {
+          const projected = projectScheduleTalk(placement.submission);
+          return {
+            id: projected.id,
+            title: projected.title,
+            firstName: projected.firstName,
+            lastName: projected.lastName,
+            jobTitle: projected.jobTitle,
+            organization: projected.organization,
+            technicalLevel: projected.technicalLevel,
+            isSoftSkill: projected.isSoftSkill,
+            degrees: projected.degrees,
+          };
+        })()
+      : null,
+  }));
 
   return {
     conference,
     rooms,
     slots,
-    placements,
+    placements: projectedPlacements,
     unscheduled,
     approvedCount: participating.length,
   };
