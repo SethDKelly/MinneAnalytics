@@ -4,11 +4,12 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 
 ## Current status
 
-- **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation approaching Phase 004 exit review
+- **Concept model maturity:** v0 — formal specification, implementation reconciliation, and bounded semantic implementation complete
 - **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
-- **Working implementation branch:** `concept-design/v0-implementation`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C; 004-D; 004-E; 004-F; 004-G
-- **Next:** 004-H — Phase 004 Consolidation & v0 Implementation Exit Review
+- **Implementation branch:** `concept-design/v0-implementation`
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); Phase 004 (004-A through 004-H)
+- **v0 closure:** all 18 semantic gaps and 4 policy gaps are `verified-closed` in the supported runtime scope
+- **Next planning boundary:** post-v0 operational qualification/product hardening; no new runtime phase is pre-authorized by 004-H
 
 ## Start here
 
@@ -19,7 +20,7 @@ For current normative design knowledge, begin with:
 - [MinneAnalytics v0 Synchronization & Composition Contract](knowledge/synchronizations/minneanalytics-v0.md)
 - [Implementation Reconciliation](knowledge/reconciliation/)
 - [v0 Implementation Ownership Map](knowledge/reconciliation/minneanalytics-v0-implementation-ownership.md)
-- [003-A Semantic Gap Baseline](knowledge/reconciliation/semantic-gap-baseline.md)
+- [v0 Semantic Gap Baseline & Closure Register](knowledge/reconciliation/semantic-gap-baseline.md)
 - [v0 Persistence, Identity & History Target](knowledge/reconciliation/persistence-identity-history-target.md)
 - [v0 Migration Target Baseline](knowledge/reconciliation/migration-target-baseline.md)
 - [v0 Synchronization, Transaction & Recovery Target](knowledge/reconciliation/synchronization-transaction-recovery-target.md)
@@ -32,7 +33,7 @@ For current normative design knowledge, begin with:
 - [v0 Backfill, Validation & Reversibility Baseline](knowledge/reconciliation/backfill-validation-reversibility-baseline.md)
 - [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md)
 - [v0 Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md)
-- [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md)
+- [004-H v0 Implementation Exit Gate](knowledge/decisions/004-h-v0-implementation-exit-gate.md)
 
 Canonical documentation behavior is governed by:
 
@@ -48,7 +49,7 @@ Numbered phase documents and `evidence/` artifacts are the **historical design/i
 
 Once knowledge is promoted into a canonical OKF node, later work should reference that node instead of reproducing the full rule or concept specification. Historical records are preserved rather than rewritten merely to match later wording.
 
-Application code, migrations, tests, and implementation documentation describe current realization; they do not override Concept Design authority.
+Application code, migrations, tests, and implementation documentation describe current realization; they do not automatically override Concept Design authority.
 
 ## Phase 001 — Discovery & Archaeology — complete
 
@@ -92,31 +93,43 @@ Phase 003 reconciled the existing implementation against the accepted Concept De
 
 The canonical Phase 003 gate is [003-G Implementation Reconciliation Gate](knowledge/decisions/003-g-implementation-reconciliation-gate.md).
 
-All 18 semantic gaps and 4 policy gaps have target architecture, migration/cutover paths, Phase 004 ownership, and runtime closure criteria. Final verified-closure accounting remains owned by 004-H.
+## Phase 004 — v0 Implementation Execution & Migration — complete
 
-## Phase 004 — v0 Implementation Execution & Migration — in progress
-
-Phase 004 executes the accepted reconciliation architecture. The authoritative package order and constraints are in the [v0 Implementation Execution Handoff](knowledge/reconciliation/implementation-execution-handoff.md).
+Phase 004 executed the accepted reconciliation architecture under the bounded authorization granted by 003-G.
 
 1. [004-A — Migration Discipline, Baseline & Additive Schema Foundation](004-A-migration-discipline-baseline-and-additive-schema-foundation.md) — **complete**
-   - established checked-in Prisma migration history, additive target schema, migration evidence, rollout gates, backup/restore rehearsal tooling, and CI migration validation without moving semantic authority.
+   - established checked-in Prisma migration history, additive target schema, migration evidence, rollout gates, backup/restore rehearsal tooling, and CI migration validation.
 2. [004-B — Revision, Classification, Evaluation & Feedback Canonicalization](004-B-revision-classification-evaluation-and-feedback-canonicalization.md) — **complete**
-   - established exact Revision/current-head authority, exact Revision Classification, non-erasing Revision-bound Evaluation history, exact abstract Feedback references, and Vocabulary TermState history with truthful backfill and CI evidence.
+   - established exact Revision/current-head authority, exact Revision Classification, non-erasing Revision-bound Evaluation history, exact abstract Feedback references, and Vocabulary TermState history.
 3. [004-C — Selection, Withdrawal, Capacity & Deliverable Canonicalization](004-C-selection-withdrawal-capacity-and-deliverable-canonicalization.md) — **complete**
-   - established immutable Selection Decision history, independent monotonic Withdrawal, hard finite Capacity allocation/release, exact ArtifactVersion readiness Assessment, TX-A participation entry, TX-B convergent exit cleanup, and compatibility projections.
+   - established immutable Selection Decision history, independent monotonic Withdrawal, hard finite Capacity allocation/release, exact ArtifactVersion readiness Assessment, atomic participation entry, and convergent exit cleanup.
 4. [004-D — Availability, Archive, Authority & Disclosure Policy Implementation](004-D-availability-archive-authority-and-disclosure-policy-implementation.md) — **complete**
-   - established canonical Proposal-offer Window + suspension policy, monotonic Archive closure, action-oriented capabilities at migrated commands, explicit exact-Revision edit exceptions, native Controlled Disclosure staging/reveal, blind-mode locking, and truthful legacy disclosure-cohort handling.
+   - established canonical Window/suspension policy, monotonic Archive closure, action-oriented capabilities, exact Revision edit exceptions, Controlled Disclosure staging/reveal, and blind-mode safety.
 5. [004-E — Publication, Public Access, Schedule & Dispatch Hardening](004-E-publication-public-access-schedule-and-dispatch-hardening.md) — **complete**
-   - established exact ArtifactVersion Publication history and public-token authorization, share-policy provenance and SYNC-008 cleanup, non-mutating Schedule proposals with expected-base atomic apply, and exact Dispatch message/round/attempt evidence with uncertain-outcome protection.
+   - established exact Publication/public-token authorization, share-policy provenance/cleanup, non-mutating Schedule proposals with expected-base apply, and exact Dispatch message/round/attempt evidence.
 6. [004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement](004-F-semantic-read-models-api-ui-cutover-and-compatibility-retirement.md) — **complete**
-   - moved first-party presenter/reviewer/organizer/Schedule/Dispatch/public-availability/export consumers to canonical semantic reads, introduced exact Revision-aware evaluation applicability and explicit protected-information states, replaced first-party generic Selection/Deliverable status mutations with action-oriented endpoints, and proved authority cutover under deliberate compatibility drift.
+   - moved first-party consumers to semantic reads/action-oriented commands and proved authority cutover under deliberate compatibility drift.
 7. [004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate](004-G-migration-validation-rollback-rehearsal-and-legacy-cleanup-gate.md) — **complete**
-   - replaced persistent `db push` startup with checked-in migration/bootstrap execution, rehearsed fresh and recognized legacy database paths including backup/restore before baseline adoption, hard-locked writer rollback floors, proved one-way compatibility repair and semantic-read rollback, validated quiescent single-task SQLite deployment and production image packaging, and concluded that legacy authority should be retired without destructive schema contraction.
-8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review** — next
+   - established migration-safe persistent startup, fresh/legacy bootstrap rehearsal, writer rollback floors, canonical→compatibility repair/read rollback, quiescent SQLite deployment behavior, and evidence-based compatibility retention.
+8. [004-H — Phase 004 Consolidation & v0 Implementation Exit Review](004-H-phase-004-consolidation-and-v0-implementation-exit-review.md) — **complete**
+   - re-audited all closure criteria, found and corrected residual Feedback coupling and Coverage/Vocabulary authority defects, added final Coverage reconciliation, and closed all 22 SG/SG-P items with runtime evidence.
 
-Completed package records establish bounded runtime implementation evidence. 004-G has now supplied the cross-environment migration, rollback, residual-consumer, and cleanup-gate evidence required before final closure accounting. 004-H remains responsible for the consolidated SG/SG-P closure register and the Phase 004/v0 implementation exit decision.
+The canonical Phase 004 gate is [004-H v0 Implementation Exit Gate](knowledge/decisions/004-h-v0-implementation-exit-gate.md).
 
-No destructive compatibility cleanup was authorized by 004-G. Retained compatibility projections are subordinate rollback/external-compatibility surfaces, not semantic authorities.
+Detailed final evidence:
+
+- [004-H Semantic Gap & Policy Closure Ledger](evidence/004-H-semantic-gap-and-policy-closure-ledger.md)
+- [004-H Residual Risk & Operational Handoff](evidence/004-H-residual-risk-and-operational-handoff.md)
+
+The final semantic/policy disposition is **22 `verified-closed`, 0 explicitly deferred, 0 blocked**.
+
+No destructive compatibility cleanup is required for Phase 004 closure. Retained compatibility projections remain subordinate rollback/external-compatibility surfaces, not semantic authorities.
+
+### Production-readiness boundary
+
+Phase 004 completion is **not** a claim that the current live AWS EFS database has already been migrated or that MinneAnalytics has received production-release approval.
+
+Live deployment qualification, dependency/security triage, provider/integration qualification, performance/operations work, and future product backlog items belong to a separately planned post-v0 stage.
 
 ## Knowledge architecture
 
@@ -128,10 +141,10 @@ The repository uses three complementary layers:
 
 Do not create a fourth prose layer that restates the same rules. Prefer links to the canonical owner.
 
-## Branch and implementation discipline
+## Branch and implementation discipline after v0 exit
 
-The completed discovery/specification/reconciliation branch remains `concept-design/v0-discovery` at the 003-G baseline. Runtime work proceeds on `concept-design/v0-implementation`.
+The completed discovery/specification/reconciliation branch remains `concept-design/v0-discovery` at the 003-G baseline. The accepted v0 implementation is represented on `concept-design/v0-implementation`.
 
-During Phase 004, code may change under the explicit 003-G authorization, but implementation must preserve canonical semantics, migration no-fabrication rules, one-way compatibility after write cutover, rollback floors, and the evidence/closure requirements in the [Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md).
+The bounded runtime authorization granted by 003-G has now been consumed and closed by 004-H. No new runtime phase, destructive cleanup, or arbitrary refactor is automatically authorized by this completion.
 
-If runtime evidence contradicts an accepted semantic target, stop the affected slice and amend the narrowest canonical owner intentionally rather than encoding an undocumented exception.
+If future runtime evidence contradicts an accepted semantic target, amend the narrowest canonical owner intentionally rather than treating newer code as automatic authority.
