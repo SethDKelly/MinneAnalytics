@@ -119,9 +119,7 @@ function deliverableReadiness(input: {
   return input.assessmentDisposition === "READY" ? "ready" : "concern";
 }
 
-export function deckStatusFromReadiness(
-  readiness: DeliverableReadiness
-): DeckStatus | null {
+export function deckStatusFromReadiness(readiness: DeliverableReadiness): DeckStatus | null {
   if (readiness === "ready") return "APPROVED";
   if (readiness === "concern") return "CONCERN";
   if (readiness === "awaiting-review") return "SUBMITTED";
@@ -198,15 +196,16 @@ export async function getSemanticConferenceSubmissions(conferenceId: string) {
       ? Boolean(submission.withdrawal)
       : submission.programStatus === "WITHDRAWN";
     const effective = disposition === "SELECTED" && !withdrawn;
-    const currentRevisionId = useCanonical
-      ? canonicalRevision?.id ?? null
-      : null;
+    const currentRevisionId = useCanonical ? canonicalRevision?.id ?? null : null;
     const ordinal = useCanonical
       ? canonicalRevision?.version ?? submission.abstractVersion
       : submission.abstractVersion;
+    const evaluationHistory = submission.scores;
     const currentScores = useCanonical && currentRevisionId
-      ? submission.scores.filter((score) => score.submissionRevisionId === currentRevisionId)
-      : submission.scores.filter((score) => score.scoredAbstractVersion === submission.abstractVersion);
+      ? evaluationHistory.filter((score) => score.submissionRevisionId === currentRevisionId)
+      : evaluationHistory.filter(
+          (score) => score.scoredAbstractVersion === submission.abstractVersion
+        );
     const deliverable = submission.deliverables[0] ?? null;
     const artifact = useCanonical ? deliverable?.currentArtifact ?? null : null;
     const assessment = artifact?.currentAssessment ?? null;
@@ -233,10 +232,7 @@ export async function getSemanticConferenceSubmissions(conferenceId: string) {
     const published = Boolean(
       useCanonical && publication?.currentState?.availability === "PUBLISHED"
     );
-    const projectedProgramStatus = programStatusFromCanonical({
-      disposition,
-      withdrawn,
-    });
+    const projectedProgramStatus = programStatusFromCanonical({ disposition, withdrawn });
     const projectedDeckStatus = deckStatusFromReadiness(readiness);
     const exactAggregate = aggregateScores(currentScores.map((score) => score.value));
     const semantic: SemanticSubmissionState = {
@@ -321,6 +317,7 @@ export async function getSemanticConferenceSubmissions(conferenceId: string) {
       deckShareable: sharingEligible,
       themes: canonicalThemes,
       scores: currentScores,
+      evaluationHistory,
       semantic,
       compatibility,
     };
@@ -342,7 +339,7 @@ export function evaluationApplicabilityForReviewer(
   notes: string | null;
 } {
   const currentRevisionRef = submission.semantic.revision.currentRevisionRef;
-  const evaluations = submission.scores.filter(
+  const evaluations = submission.evaluationHistory.filter(
     (score) => score.reviewerAccessId === reviewerAccessId
   );
   const exact = currentRevisionRef
