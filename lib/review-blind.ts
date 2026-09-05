@@ -2,6 +2,11 @@ import type { ScoreVersionSummary } from "./revision-history";
 import { viewerHasCurrentScore } from "./rescoring";
 import type { SubmissionListItem } from "./submissions";
 import { EMPTY_AGGREGATE } from "./scoring";
+import {
+  deliverableReadinessLabel,
+  participationLabel,
+  selectionLabel,
+} from "./concept-design/semantic-reads";
 
 export type PresenterIdentity = {
   firstName: string;
@@ -10,7 +15,24 @@ export type PresenterIdentity = {
   email: string;
 };
 
-export type ReviewSubmissionItem = Omit<SubmissionListItem, "aggregate"> & {
+export type ProtectedIdentityState =
+  | { state: "visible"; value: PresenterIdentity }
+  | { state: "concealed"; reason: "blind-review" };
+
+export type ProtectedAggregateState =
+  | {
+      state: "visible";
+      value: { count: number; sum: number; average: number };
+    }
+  | {
+      state: "concealed";
+      reason: "evaluation-required-for-current-revision";
+    };
+
+export type ReviewSubmissionItem = SubmissionListItem & {
+  identityState: ProtectedIdentityState;
+  aggregateState: ProtectedAggregateState;
+  // Transitional aliases for components not yet consuming the discriminated states.
   identity: PresenterIdentity | null;
   aggregate: { count: number; sum: number; average: number } | null;
 };
@@ -25,6 +47,11 @@ export type ChairProgramItem = SubmissionListItem & {
   committeeScoresVisible: boolean;
   presenterSubtitle: string;
   revisionSummary: ScoreVersionSummary;
+  semanticLabels: {
+    selection: string;
+    participation: string;
+    deliverable: string;
+  };
 };
 
 export function isBlindReviewEnabled(
@@ -37,26 +64,29 @@ export function maskReviewSubmissionItem(
   item: SubmissionListItem,
   blindEnabled: boolean
 ): ReviewSubmissionItem {
-  if (!blindEnabled) {
-    return {
-      ...item,
-      identity: {
-        firstName: item.firstName,
-        lastName: item.lastName,
-        organization: item.organization,
-        email: (item as SubmissionListItem & { email?: string }).email ?? "",
-      },
-      aggregate: item.aggregate,
-    };
-  }
+  const presenter: PresenterIdentity = {
+    firstName: item.firstName,
+    lastName: item.lastName,
+    organization: item.organization,
+    email: "",
+  };
+  const identityState: ProtectedIdentityState = blindEnabled
+    ? { state: "concealed", reason: "blind-review" }
+    : { state: "visible", value: presenter };
+  const aggregateState: ProtectedAggregateState =
+    !blindEnabled || viewerHasCurrentScore(item)
+      ? { state: "visible", value: item.aggregate }
+      : {
+          state: "concealed",
+          reason: "evaluation-required-for-current-revision",
+        };
 
   return {
     ...item,
-    firstName: "",
-    lastName: "",
-    organization: "",
-    identity: null,
-    aggregate: viewerHasCurrentScore(item) ? item.aggregate : null,
+    identityState,
+    aggregateState,
+    identity: identityState.state === "visible" ? identityState.value : null,
+    aggregate: aggregateState.state === "visible" ? aggregateState.value : null,
   };
 }
 
@@ -74,10 +104,12 @@ export function partitionChairProgramByOwnScore(items: SubmissionListItem[]): {
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   needsMyScore.sort(byNewest);
   scoredByMe.sort((a, b) => {
-    const aggA = a.aggregate ?? EMPTY_AGGREGATE;
-    const aggB = b.aggregate ?? EMPTY_AGGREGATE;
-    if (aggB.average !== aggA.average) return aggB.average - aggA.average;
-    if (aggB.sum !== aggA.sum) return aggB.sum - aggA.sum;
+    const aggregateA = a.aggregate ?? EMPTY_AGGREGATE;
+    const aggregateB = b.aggregate ?? EMPTY_AGGREGATE;
+    if (aggregateB.average !== aggregateA.average) {
+      return aggregateB.average - aggregateA.average;
+    }
+    if (aggregateB.sum !== aggregateA.sum) return aggregateB.sum - aggregateA.sum;
     return a.title.localeCompare(b.title);
   });
   return { needsMyScore, scoredByMe };
@@ -100,35 +132,35 @@ export function buildChairProgramItem(
   revisionSummary: ScoreVersionSummary
 ): ChairProgramItem {
   const committeeScoresVisible = !blindEnabled || viewerHasCurrentScore(item);
-  let presenterSubtitle: string;
-  if (committeeScoresVisible) {
-    presenterSubtitle = `${full.firstName} ${full.lastName} · ${full.organization} · ${full.email}`;
-  } else if (blindEnabled) {
-    presenterSubtitle =
-      "Presenter contact hidden — score this talk on the review page to see committee scores and presenter email.";
-  } else {
-    presenterSubtitle = `${full.firstName} ${full.lastName} · ${full.organization} · ${full.email}`;
-  }
+  const presenterSubtitle = committeeScoresVisible
+    ? `${full.firstName} ${full.lastName} · ${full.organization} · ${full.email}`
+    : "Presenter contact concealed by blind-review policy.";
 
   return {
     ...item,
     abstract: full.abstract,
     email: committeeScoresVisible ? full.email : null,
-    deckShareable: full.deckShareable,
+    deckShareable: item.semantic.sharing.eligible,
     vipRegistered: full.vipRegistered,
     themeNames,
     themeIds,
     committeeScoresVisible,
     presenterSubtitle,
     revisionSummary,
+    semanticLabels: {
+      selection: selectionLabel(item.semantic.selection.disposition),
+      participation: participationLabel(item.semantic.participation),
+      deliverable: deliverableReadinessLabel(item.semantic.deliverable.readiness),
+    },
   };
 }
 
+/** @deprecated 004-D replaced console-only reveal evidence with ControlledDisclosure. */
 export function logIdentityReveal(
   reviewerAccessId: string,
   submissionId: string
 ): void {
   console.log(
-    `[MinneAnalytics blind review] Identity revealed submission=${submissionId} by reviewer=${reviewerAccessId}`
+    `[MinneAnalytics blind review compatibility] reveal request submission=${submissionId} reviewer=${reviewerAccessId}`
   );
 }
