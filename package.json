@@ -31,6 +31,7 @@
     "db:004-e:backfill": "tsx scripts/migrations/backfill-004-e.ts",
     "db:004-e:verify": "tsx scripts/migrations/verify-004-e.ts",
     "db:004-f:verify": "tsx scripts/migrations/verify-004-f.ts",
+    "db:004-g:repair-compatibility": "tsx scripts/migrations/repair-004-g-compatibility.ts",
     "db:004-g:verify": "tsx scripts/migrations/verify-004-g.ts",
     "db:backup": "node scripts/migrations/sqlite-backup.mjs",
     "db:restore:rehearse": "node scripts/migrations/sqlite-restore-rehearsal.mjs",
