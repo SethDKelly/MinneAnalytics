@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
+import { themeSelectionCoverageAdvisory } from "@/lib/concept-design/coverage-targets";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
   ApplicationPolicyError,
@@ -11,9 +12,7 @@ import {
   hasApplicationCapability,
   reviewerActorRef,
 } from "@/lib/concept-design/lifecycle-disclosure-policy";
-import {
-  processPublicationCleanupForSource,
-} from "@/lib/concept-design/publication-public-access";
+import { processPublicationCleanupForSource } from "@/lib/concept-design/publication-public-access";
 import {
   CapacityConfigurationError,
   CapacityUnavailableError,
@@ -21,12 +20,6 @@ import {
   selectionDispositionFromProgramStatus,
   SelectionHeadConflictError,
 } from "@/lib/concept-design/selection-participation-deliverable";
-import { getConferenceThemesForAdmin } from "@/lib/themes";
-import { getConferenceSubmissions } from "@/lib/conference-data";
-import {
-  approvedThemeSaturationWarning,
-  computeThemeStats,
-} from "@/lib/theme-stats";
 import { canApprove, canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
 
 const ALLOWED: ProgramStatus[] = [
@@ -97,6 +90,7 @@ export async function POST(request: Request) {
     where: { id: submissionId, conferenceId: reviewer.conferenceId },
     include: {
       themes: { select: { themeId: true } },
+      currentRevision: { include: { revisionTerms: true } },
       currentSelectionDecision: true,
       withdrawal: true,
     },
@@ -105,30 +99,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const force = Boolean(body.force);
-
-  if (status === "APPROVED" && !force) {
-    const [themes, subs] = await Promise.all([
-      getConferenceThemesForAdmin(reviewer.conferenceId),
-      getConferenceSubmissions(reviewer.conferenceId),
-    ]);
-    const stats = computeThemeStats(
-      themes,
-      subs.map((s) => ({
-        programStatus: s.programStatus,
-        themes: s.themes.map((t) => ({ themeId: t.themeId })),
-      }))
+  const canonicalWrites = isImplementationGateEnabled("selectionParticipationWrites");
+  if (canonicalWrites && !submission.currentRevision) {
+    return NextResponse.json(
+      { error: "Canonical current Revision required", code: "CANONICAL_REVISION_REQUIRED" },
+      { status: 409 }
     );
-    const warning = approvedThemeSaturationWarning(
-      stats,
-      submission.themes.map((t) => t.themeId)
-    );
-    if (warning) {
-      return NextResponse.json({ warning, requiresConfirm: true }, { status: 409 });
-    }
   }
 
-  const canonicalWrites = isImplementationGateEnabled("selectionParticipationWrites");
+  const force = Boolean(body.force);
+  if (status === "APPROVED" && !force) {
+    const themeIds = canonicalWrites && submission.currentRevision
+      ? submission.currentRevision.revisionTerms.map((term) => term.themeId)
+      : submission.themes.map((term) => term.themeId);
+    const advisory = await themeSelectionCoverageAdvisory(
+      reviewer.conferenceId,
+      themeIds
+    );
+    if (advisory) {
+      return NextResponse.json(
+        {
+          warning: advisory.message,
+          advisoryBasis: advisory.basis,
+          requiresConfirm: true,
+        },
+        { status: 409 }
+      );
+    }
+  }
 
   if (canonicalWrites) {
     const currentDisposition = submission.currentSelectionDecision?.disposition ?? null;
