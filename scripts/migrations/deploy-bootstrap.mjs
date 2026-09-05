@@ -121,6 +121,7 @@ function runSemanticBackfills(outDir) {
     "scripts/migrations/backfill-004-c.ts",
     "scripts/migrations/backfill-004-d.ts",
     "scripts/migrations/backfill-004-e.ts",
+    "scripts/migrations/backfill-004-h.ts",
   ];
   for (const script of scripts) {
     run("npx", ["tsx", script, "--apply", "--environment", environment, "--out-dir", outDir]);
@@ -130,7 +131,7 @@ function runSemanticBackfills(outDir) {
 async function main() {
   const databasePath = resolveSqlitePath(process.env.DATABASE_URL);
   const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.dirname(databasePath);
-  const reportDir = path.join(dataDir, "migration-reports", "004-g");
+  const reportDir = path.join(dataDir, "migration-reports", "phase-004");
   await mkdir(path.dirname(databasePath), { recursive: true });
   await mkdir(reportDir, { recursive: true });
 
