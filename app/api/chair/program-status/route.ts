@@ -6,6 +6,12 @@ import { autoPopulateDemoScores } from "@/lib/demo-scores";
 import { emailAbstractApproved } from "@/lib/email-stub";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
+  ApplicationPolicyError,
+  assertLiveOperationalContext,
+  hasApplicationCapability,
+  reviewerActorRef,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
+import {
   CapacityConfigurationError,
   CapacityUnavailableError,
   recordCanonicalSelection,
@@ -38,18 +44,50 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canSetProgramStatus(reviewer.role)) {
+  if (!reviewer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (status === "APPROVED" && !canApprove(reviewer.role)) {
-    return NextResponse.json({ error: "Core approval required" }, { status: 403 });
-  }
-
-  try {
-    await assertConferenceAcceptsMutations(reviewer.conferenceId);
-  } catch {
-    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!hasApplicationCapability(reviewer.role, "DECIDE_SELECTION")) {
+      return NextResponse.json(
+        { error: "Selection decisions are not permitted", code: "CAPABILITY_DENIED" },
+        { status: 403 }
+      );
+    }
+    if (!isImplementationGateEnabled("selectionParticipationWrites")) {
+      return NextResponse.json(
+        {
+          error: "004-D Selection policy requires canonical participation writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+    try {
+      assertLiveOperationalContext(reviewer.conference);
+    } catch (error) {
+      if (error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+  } else {
+    if (!canSetProgramStatus(reviewer.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (status === "APPROVED" && !canApprove(reviewer.role)) {
+      return NextResponse.json({ error: "Core approval required" }, { status: 403 });
+    }
+    try {
+      await assertConferenceAcceptsMutations(reviewer.conferenceId);
+    } catch {
+      return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    }
   }
 
   const submission = await prisma.submission.findFirst({
@@ -122,7 +160,7 @@ export async function POST(request: Request) {
         conferenceId: reviewer.conferenceId,
         submissionId,
         disposition: selectionDispositionFromProgramStatus(status),
-        actorRef: `reviewer:${reviewer.id}`,
+        actorRef: reviewerActorRef(reviewer.id),
         commandKey,
       });
 
@@ -151,19 +189,11 @@ export async function POST(request: Request) {
         cleanupPending: result.cleanupPending,
       });
     } catch (error) {
-      if (error instanceof CapacityUnavailableError) {
-        return NextResponse.json(
-          { error: error.message, code: error.code },
-          { status: 409 }
-        );
-      }
-      if (error instanceof CapacityConfigurationError) {
-        return NextResponse.json(
-          { error: error.message, code: error.code },
-          { status: 409 }
-        );
-      }
-      if (error instanceof SelectionHeadConflictError) {
+      if (
+        error instanceof CapacityUnavailableError ||
+        error instanceof CapacityConfigurationError ||
+        error instanceof SelectionHeadConflictError
+      ) {
         return NextResponse.json(
           { error: error.message, code: error.code },
           { status: 409 }
