@@ -11,7 +11,7 @@ ENV DATABASE_URL=file:./build.db
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma migrate deploy && npm run build && rm -f prisma/build.db
+RUN mkdir -p public && npx prisma migrate deploy && npm run build && rm -f prisma/build.db
 
 FROM node:24-alpine AS runner
 WORKDIR /app
@@ -27,7 +27,7 @@ RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 RUN mkdir -p /data/prisma /data/uploads && chown -R nextjs:nodejs /data
 
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
