@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import { processPublicationCleanupForSource } from "@/lib/concept-design/publication-public-access";
 import {
   DeliverableHeadConflictError,
+  presenterActorRef,
   recordProvidedDeckArtifact,
 } from "@/lib/concept-design/selection-participation-deliverable";
 import { hashToken } from "@/lib/tokens";
@@ -100,7 +102,17 @@ export async function POST(request: Request) {
         mimeType: saved.mimeType,
         sizeBytes: saved.sizeBytes,
       });
-      return NextResponse.json({ ok: true, version: artifact.version });
+      const actorRef = presenterActorRef(submission.id);
+      await processPublicationCleanupForSource(artifact.id, actorRef);
+      const cleanupPending = await prisma.synchronizationWork.count({
+        where: { sourceRef: artifact.id, state: { not: "COMPLETED" } },
+      });
+      return NextResponse.json({
+        ok: true,
+        version: artifact.version,
+        artifactVersionId: artifact.id,
+        cleanupPending,
+      });
     }
 
     await prisma.deckFile.create({
