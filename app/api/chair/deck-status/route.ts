@@ -4,6 +4,12 @@ import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
 import { prisma } from "@/lib/db";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
+  ApplicationPolicyError,
+  assertLiveOperationalContext,
+  hasApplicationCapability,
+  reviewerActorRef,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
+import {
   DeliverableHeadConflictError,
   DeliverableUnavailableError,
   LegacyDeckStatusUnsupportedError,
@@ -25,14 +31,47 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canManageDeck(reviewer.role)) {
+  if (!reviewer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    await assertConferenceAcceptsMutations(reviewer.conferenceId);
-  } catch {
-    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!hasApplicationCapability(reviewer.role, "REVIEW_DELIVERABLE")) {
+      return NextResponse.json(
+        { error: "Deliverable review is not permitted", code: "CAPABILITY_DENIED" },
+        { status: 403 }
+      );
+    }
+    if (!isImplementationGateEnabled("selectionParticipationWrites")) {
+      return NextResponse.json(
+        {
+          error: "004-D Deliverable policy requires canonical participation writes",
+          code: "DEPENDENCY_GATE_REQUIRED",
+        },
+        { status: 409 }
+      );
+    }
+    try {
+      assertLiveOperationalContext(reviewer.conference);
+    } catch (error) {
+      if (error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+  } else {
+    if (!canManageDeck(reviewer.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+      await assertConferenceAcceptsMutations(reviewer.conferenceId);
+    } catch {
+      return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    }
   }
 
   const canonicalWrites = isImplementationGateEnabled("selectionParticipationWrites");
@@ -104,7 +143,7 @@ export async function POST(request: Request) {
         conferenceId: reviewer.conferenceId,
         submissionId,
         disposition,
-        reviewerRef: `reviewer:${reviewer.id}`,
+        reviewerRef: reviewerActorRef(reviewer.id),
         detail: body.detail == null ? null : String(body.detail),
         commandKey: headerKey || bodyKey || null,
       });
