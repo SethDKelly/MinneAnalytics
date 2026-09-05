@@ -26,8 +26,18 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
       - run: npm ci
       - run: npm run docs:validate
+      - name: Validate dev Terraform
+        working-directory: infra/dev
+        run: |
+          terraform fmt -check
+          terraform init -backend=false
+          terraform validate
       - run: npm run db:migration:verify
       - run: npx prisma validate
         env:
