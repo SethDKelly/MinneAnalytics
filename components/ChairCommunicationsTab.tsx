@@ -32,15 +32,12 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
   const [recipients, setRecipients] = useState<RecipientRow[]>([]);
   const [round, setRound] = useState(1);
   const [customIntro, setCustomIntro] = useState("");
-  const [includeAlreadyEmailed, setIncludeAlreadyEmailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(
-      `/api/chair/email-templates?token=${encodeURIComponent(token)}`
-    );
+    const res = await fetch(`/api/chair/email-templates?token=${encodeURIComponent(token)}`);
     setLoading(false);
     if (!res.ok) return;
     const data = await res.json();
@@ -51,41 +48,46 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
     loadTemplates();
   }, [loadTemplates]);
 
-  async function loadRecipients(key: EmailTemplateKey, r: number) {
+  async function loadRecipients(key: EmailTemplateKey, requestedRound: number) {
     const res = await fetch(
-      `/api/chair/email-templates/${key}/recipients?token=${encodeURIComponent(token)}&round=${r}&includeAlreadyEmailed=${includeAlreadyEmailed ? "1" : "0"}`
+      `/api/chair/email-templates/${key}/recipients?token=${encodeURIComponent(token)}&round=${requestedRound}`
     );
     const data = await res.json();
-    if (res.ok) setRecipients(data.recipients ?? []);
-    else setRecipients([]);
+    if (res.ok) setRecipients(data.semantic?.recipients?.map((recipient: { kind: string; id: string; endpoint: string; label: string }) => ({
+      kind: recipient.kind,
+      id: recipient.id,
+      email: recipient.endpoint,
+      label: recipient.label,
+    })) ?? data.recipients ?? []);
+    else {
+      setRecipients([]);
+      setError(data.error ?? "Could not resolve Dispatch audience");
+    }
   }
 
   async function openTemplate(key: EmailTemplateKey) {
-    setActiveKey(activeKey === key ? null : key);
+    const opening = activeKey !== key;
+    setActiveKey(opening ? key : null);
     setPreview(null);
     setError(null);
-    const row = templates.find((t) => t.templateKey === key);
-    const r = key === "DECLINE" ? row?.nextDeclineRound ?? 1 : 1;
-    setRound(r);
+    const row = templates.find((template) => template.templateKey === key);
+    const requestedRound = key === "DECLINE" ? row?.nextDeclineRound ?? 1 : 1;
+    setRound(requestedRound);
     setCustomIntro("");
-    if (activeKey !== key) {
-      await loadRecipients(key, r);
-    }
+    if (opening) await loadRecipients(key, requestedRound);
   }
 
   useEffect(() => {
     if (activeKey) loadRecipients(activeKey, round);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeAlreadyEmailed, round, activeKey]);
+  }, [round, activeKey]);
 
   async function runPreview(key: EmailTemplateKey) {
     setBusy("preview");
     setError(null);
     const params = new URLSearchParams({ token });
     if (customIntro) params.set("customIntro", customIntro);
-    const res = await fetch(
-      `/api/chair/email-templates/${key}/preview?${params}`
-    );
+    const res = await fetch(`/api/chair/email-templates/${key}/preview?${params}`);
     setBusy(null);
     const data = await res.json();
     if (!res.ok) {
@@ -98,7 +100,7 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
   async function runSend(key: EmailTemplateKey) {
     if (
       !confirm(
-        `Send "${key}" to ${recipients.length} recipient${recipients.length === 1 ? "" : "s"} for ${conferenceName}?`
+        `Send "${key}" round ${round} to ${recipients.length} recipient${recipients.length === 1 ? "" : "s"} for ${conferenceName}?`
       )
     ) {
       return;
@@ -110,9 +112,8 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         token,
-        round: key === "DECLINE" ? round : 1,
+        round,
         customIntro: key === "DECLINE" ? customIntro : undefined,
-        includeAlreadyEmailed,
       }),
     });
     setBusy(null);
@@ -122,7 +123,7 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
       return;
     }
     alert(
-      `Queued ${data.recipientCount} email${data.recipientCount === 1 ? "" : "s"} (stub logged to server console).`
+      `Performed ${data.recipientCount} Dispatch${data.recipientCount === 1 ? "" : "es"} in round ${round}. Same-round repeats are idempotent.`
     );
     await loadTemplates();
     router.refresh();
@@ -135,31 +136,33 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
 
   return (
     <section className="mt-6">
-      <h2 className="text-lg font-bold text-minne-navy">Email templates</h2>
+      <h2 className="text-lg font-bold text-minne-navy">Operational Dispatch</h2>
       <p className="mt-1 text-sm text-gray-600">
-        Global templates with per-conference send history. Delivery is stubbed to the dev
-        server console — check the terminal running <code className="text-xs">npm run dev</code>.
+        Audiences are resolved from current semantic state. Exact rendered messages and recipient
+        endpoints are prepared before provider handoff. Repeating contact intentionally requires a
+        new round; the same round never means “send it again anyway.”
       </p>
       {readOnly && (
         <p className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-          Read-only — cannot send while viewing an archived or inactive conference.
+          Historical view. Post-Archive Dispatch remains limited to purposes explicitly allowed by
+          lifecycle policy, such as the feedback request.
         </p>
       )}
 
       <ul className="mt-6 space-y-4">
-        {templates.map((t) => (
-          <li key={t.templateKey} className="card">
+        {templates.map((template) => (
+          <li key={template.templateKey} className="card">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="font-bold text-minne-navy">{t.name}</h3>
-                <p className="text-sm text-gray-600">{t.description}</p>
+                <h3 className="font-bold text-minne-navy">{template.name}</h3>
+                <p className="text-sm text-gray-600">{template.description}</p>
                 <p className="mt-1 text-xs text-gray-500">
-                  Last sent:{" "}
-                  {t.lastBatch ? (
+                  Last performed:{" "}
+                  {template.lastBatch ? (
                     <>
-                      {new Date(t.lastBatch.sentAt).toLocaleString()} (Round{" "}
-                      {t.lastBatch.round}, {t.lastBatch.recipientCount} recipients, by{" "}
-                      {t.lastBatch.sentByLabel})
+                      {new Date(template.lastBatch.sentAt).toLocaleString()} (Round{" "}
+                      {template.lastBatch.round}, {template.lastBatch.recipientCount} recipients,
+                      by {template.lastBatch.sentByLabel})
                     </>
                   ) : (
                     "—"
@@ -169,78 +172,75 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
               <button
                 type="button"
                 className="btn-secondary text-sm"
-                onClick={() => openTemplate(t.templateKey)}
+                onClick={() => openTemplate(template.templateKey)}
               >
-                {activeKey === t.templateKey ? "Close" : "Send / preview"}
+                {activeKey === template.templateKey ? "Close" : "Send / preview"}
               </button>
             </div>
 
-            {t.batches.length > 0 && (
+            {template.batches.length > 0 && (
               <details className="mt-3 text-xs">
                 <summary className="cursor-pointer text-minne-navy underline">
-                  Batch history ({t.batches.length})
+                  Batch history ({template.batches.length})
                 </summary>
                 <ul className="mt-2 space-y-1 text-gray-700">
-                  {t.batches.map((b) => (
-                    <li key={b.id}>
-                      Round {b.round} · {new Date(b.sentAt).toLocaleString()} ·{" "}
-                      {b.recipientCount} recipients · {b.sentByLabel}
+                  {template.batches.map((batch) => (
+                    <li key={batch.id}>
+                      Round {batch.round} · {new Date(batch.sentAt).toLocaleString()} ·{" "}
+                      {batch.recipientCount} recipients · {batch.sentByLabel}
                     </li>
                   ))}
                 </ul>
               </details>
             )}
 
-            {activeKey === t.templateKey && (
+            {activeKey === template.templateKey && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                {t.templateKey === "DECLINE" && (
-                  <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="form-label" htmlFor={`round-${t.templateKey}`}>
-                        Decline round
-                      </label>
-                      <input
-                        id={`round-${t.templateKey}`}
-                        type="number"
-                        min={1}
-                        className="form-input"
-                        value={round}
-                        onChange={(e) => setRound(Number(e.target.value) || 1)}
-                      />
+                <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="form-label" htmlFor={`round-${template.templateKey}`}>
+                      Dispatch round
+                    </label>
+                    <input
+                      id={`round-${template.templateKey}`}
+                      type="number"
+                      min={1}
+                      className="form-input"
+                      value={round}
+                      onChange={(event) => setRound(Number(event.target.value) || 1)}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Use the same round for retry/idempotent replay. Increment it only for an
+                      intentional repeat contact.
+                    </p>
+                    {template.templateKey === "DECLINE" && (
                       <p className="mt-1 text-xs text-gray-500">
-                        Suggested next: Round {t.nextDeclineRound}
+                        Suggested next decline round: {template.nextDeclineRound}
                       </p>
-                    </div>
+                    )}
+                  </div>
+                  {template.templateKey === "DECLINE" && (
                     <div className="sm:col-span-2">
-                      <label className="form-label" htmlFor={`intro-${t.templateKey}`}>
-                        Optional intro (prepended to decline body)
+                      <label className="form-label" htmlFor={`intro-${template.templateKey}`}>
+                        Optional intro
                       </label>
                       <textarea
-                        id={`intro-${t.templateKey}`}
+                        id={`intro-${template.templateKey}`}
                         className="form-input"
                         rows={2}
                         value={customIntro}
-                        onChange={(e) => setCustomIntro(e.target.value)}
+                        onChange={(event) => setCustomIntro(event.target.value)}
                       />
                     </div>
-                  </div>
-                )}
-
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={includeAlreadyEmailed}
-                    onChange={(e) => setIncludeAlreadyEmailed(e.target.checked)}
-                  />
-                  Include recipients already emailed for this template and round
-                </label>
+                  )}
+                </div>
 
                 <p className="mt-3 text-sm text-gray-700">
                   <strong>{recipients.length}</strong> eligible recipient
-                  {recipients.length === 1 ? "" : "s"}
+                  {recipients.length === 1 ? "" : "s"} in semantic round {round}
                   {recipients.length > 0 && recipients.length <= 8 && (
                     <span className="block text-xs text-gray-500">
-                      {recipients.map((r) => r.label).join(" · ")}
+                      {recipients.map((recipient) => recipient.label).join(" · ")}
                     </span>
                   )}
                 </p>
@@ -250,7 +250,7 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
                     type="button"
                     className="btn-secondary text-sm"
                     disabled={!!busy}
-                    onClick={() => runPreview(t.templateKey)}
+                    onClick={() => runPreview(template.templateKey)}
                   >
                     {busy === "preview" ? "Loading…" : "Preview sample"}
                   </button>
@@ -259,9 +259,9 @@ export function ChairCommunicationsTab({ token, readOnly, conferenceName }: Prop
                       type="button"
                       className="btn-primary text-sm"
                       disabled={!!busy || recipients.length === 0}
-                      onClick={() => runSend(t.templateKey)}
+                      onClick={() => runSend(template.templateKey)}
                     >
-                      {busy === "send" ? "Sending…" : `Send to ${recipients.length}`}
+                      {busy === "send" ? "Sending…" : `Send round ${round} to ${recipients.length}`}
                     </button>
                   )}
                 </div>
