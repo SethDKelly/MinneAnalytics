@@ -1,8 +1,12 @@
 import type { EmailTemplateKey } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { EMAIL_TEMPLATE_KEYS, resolveEmailRecipients } from "@/lib/email-templates";
-import { canSetProgramStatus, getReviewerByToken } from "@/lib/reviewer";
+import { EMAIL_TEMPLATE_KEYS } from "@/lib/email-templates";
+import {
+  DispatchPolicyError,
+  resolveCanonicalDispatchRecipients,
+} from "@/lib/concept-design/dispatch-authority";
+import { hasApplicationCapability } from "@/lib/concept-design/lifecycle-disclosure-policy";
+import { getReviewerByToken } from "@/lib/reviewer";
 
 export async function GET(
   request: Request,
@@ -17,30 +21,44 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token") ?? "";
   const round = Number(searchParams.get("round") ?? "1");
-  const includeAlreadyEmailed = searchParams.get("includeAlreadyEmailed") === "1";
-
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canSetProgramStatus(reviewer.role)) {
-    return NextResponse.json({ error: "Board access required" }, { status: 403 });
+  if (!reviewer || !hasApplicationCapability(reviewer.role, "DISPATCH_OPERATIONAL")) {
+    return NextResponse.json({ error: "Dispatch access required", code: "CAPABILITY_DENIED" }, { status: 403 });
   }
 
-  const conference = await prisma.conference.findUniqueOrThrow({
-    where: { id: reviewer.conferenceId },
-  });
-
-  const recipients = await resolveEmailRecipients(
-    conference,
-    templateKey,
-    round,
-    { includeAlreadyEmailed }
-  );
-
-  return NextResponse.json({
-    recipients: recipients.map((r) => ({
-      kind: r.kind,
-      id: r.kind === "submission" ? r.submissionId : r.attendeeId,
-      email: r.email,
-      label: r.label,
-    })),
-  });
+  try {
+    const { recipients } = await resolveCanonicalDispatchRecipients({
+      conferenceId: reviewer.conferenceId,
+      templateKey,
+      round,
+    });
+    return NextResponse.json({
+      semantic: {
+        purpose: templateKey,
+        round,
+        recipients: recipients.map((recipient) => ({
+          kind: recipient.kind,
+          recipientRef:
+            recipient.kind === "submission"
+              ? `submission:${recipient.submissionId}`
+              : `attendee:${recipient.attendeeId}`,
+          id: recipient.kind === "submission" ? recipient.submissionId : recipient.attendeeId,
+          endpoint: recipient.email,
+          label: recipient.label,
+        })),
+      },
+      // Transitional alias for the existing communications client shape.
+      recipients: recipients.map((recipient) => ({
+        kind: recipient.kind,
+        id: recipient.kind === "submission" ? recipient.submissionId : recipient.attendeeId,
+        email: recipient.email,
+        label: recipient.label,
+      })),
+    });
+  } catch (error) {
+    if (error instanceof DispatchPolicyError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });
+    }
+    throw error;
+  }
 }
