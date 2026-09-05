@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  generateCanonicalScheduleProposal,
+  SchedulePolicyError,
+} from "@/lib/concept-design/schedule-authority";
+import { ApplicationPolicyError } from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { prisma } from "@/lib/db";
 import { generateAssignments } from "@/lib/schedule/generate";
 import { ensureScheduleGrid } from "@/lib/schedule/grid";
@@ -15,6 +21,28 @@ export async function POST(request: Request) {
   }
 
   await ensureScheduleGrid(planner.conferenceId);
+
+  if (isImplementationGateEnabled("scheduleWrites")) {
+    try {
+      const proposal = await generateCanonicalScheduleProposal(planner.conferenceId);
+      return NextResponse.json({
+        ok: true,
+        proposal,
+        assigned: proposal.assignments.length,
+        unassigned: proposal.unassigned.length,
+        capacity: proposal.capacity,
+        requiresApply: true,
+      });
+    } catch (error) {
+      if (error instanceof SchedulePolicyError || error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+  }
 
   const [talks, slots, placements] = await Promise.all([
     prisma.submission.findMany({
