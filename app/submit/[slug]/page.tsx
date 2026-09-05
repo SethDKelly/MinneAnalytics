@@ -3,7 +3,7 @@ import { SubmissionForm } from "@/components/SubmissionForm";
 import { SubmitClosed } from "@/components/SubmitClosed";
 import { getSelectableThemes, themeOptionFromRow } from "@/lib/themes";
 import { prisma } from "@/lib/db";
-import { getSubmissionWindowState } from "@/lib/submission-window";
+import { getProposalOfferAvailability } from "@/lib/submission-window";
 
 export default async function SubmitPage({
   params,
@@ -11,18 +11,24 @@ export default async function SubmitPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const conference = await prisma.conference.findUnique({ where: { slug } });
+  const conference = await prisma.conference.findUnique({
+    where: { slug },
+    select: { id: true, name: true },
+  });
   if (!conference) notFound();
 
-  const window = getSubmissionWindowState(conference);
-  if (!window.open) {
+  const availability = await getProposalOfferAvailability(conference.id);
+  if (!availability) notFound();
+  if (!availability.state.open) {
     return (
-      <SubmitClosed conferenceName={conference.name} message={window.message} />
+      <SubmitClosed
+        conferenceName={conference.name}
+        message={availability.state.message}
+      />
     );
   }
 
   const themes = await getSelectableThemes(conference.id);
-
   return (
     <SubmissionForm
       conferenceSlug={slug}
