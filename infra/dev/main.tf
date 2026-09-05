@@ -254,6 +254,12 @@ resource "aws_ecs_service" "app" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  # SQLite is persisted on shared EFS. Stop the old single task before the new
+  # task starts its migration/bootstrap sequence so schema/backfill work runs
+  # against a quiesced database instead of overlapping live application writes.
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
+
   network_configuration {
     subnets          = data.aws_subnets.default.ids
     security_groups  = [aws_security_group.ecs.id]
