@@ -1,5 +1,19 @@
 # Concept Design Knowledge Update Log
 
+## 2026-09-04
+* **Planning**: Established Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness as ten dependency-safe subgroups 005-A through 005-J, explicitly separate from the already-closed Phase 004 semantic implementation.
+* **Gate**: Completed 005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control.
+* **Authority**: Established C0–C5 change classes; C0–C3 are bounded qualification/hardening classes while C4 semantic redesign and C5 product/topology/destructive-compatibility changes require explicit stop/admission/design authority.
+* **Environment scope**: Established ENV-L local/disposable, ENV-CI hermetic CI, ENV-Q approved non-production qualification environment, and ENV-P production; 005-A grants no default ENV-P mutation authority.
+* **Evidence**: Established E0–E4 evidence strength and SEC/DEPLOY/DATA/EXT/OPS/PERF/UX/COMPAT/SEM evidence domains; CI cannot be relabeled as live environment/provider evidence.
+* **Release vocabulary**: Distinguished semantic implementation accepted, build-valid, deployment-ready artifact, environment-qualified, operationally ready, immutable release candidate, production-ready, and production-released.
+* **Change control**: Required stop-and-amend when hardening would change accepted semantics, weaken rollback/security floors, invent migration truth, violate provider uncertainty/idempotency, introduce unsupported multi-writer SQLite, add hidden workflow/domain state through UX work, or destructively remove compatibility without evidence.
+* **Risk disposition**: Standardized `BLOCKER`, `ACCEPTED-RISK`, `OUT-OF-SCOPE`, and `BACKLOG`; accepted risk cannot waive a Concept Design invariant or security rollback floor.
+* **Evidence identity**: Required qualification evidence to bind to immutable commit/artifact/configuration identities; moving branch names alone are not release-candidate evidence.
+* **Authorization**: Authorized 005-B for bounded C0–C2 dependency/supply-chain/secrets/runtime-security qualification while preserving the complete Phase 004 semantic/migration regression gate.
+* **Boundary**: Did not authorize production deployment, semantic redesign, destructive compatibility cleanup, database/topology migration, production credential mutation, broad product-feature work, or restoration of legacy writer authority.
+* **Next**: 005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification.
+
 ## 2026-09-03
 * **Gate**: Completed 003-G — Implementation Reconciliation Consolidation & Execution Handoff; Phase 003 is complete.
 * **Authorization**: Authorized bounded Phase 004 runtime/schema implementation under the accepted persistence, execution, policy, interface, migration, rollback-floor, and closure-evidence constraints; this is not blanket refactoring authorization.
