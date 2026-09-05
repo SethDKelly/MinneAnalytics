@@ -29,7 +29,13 @@ variable "container_port" {
 }
 
 variable "seed_on_start" {
-  description = "Run prisma seed on container start (first deploy only)."
+  description = "Run prisma seed on container start for a fresh database only."
+  type        = bool
+  default     = false
+}
+
+variable "allow_legacy_baseline_adoption" {
+  description = "Explicit one-deployment authorization to baseline a recognized pre-004-A database after backup/restore rehearsal."
   type        = bool
   default     = false
 }
