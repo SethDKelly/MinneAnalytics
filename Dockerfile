@@ -11,7 +11,7 @@ ENV DATABASE_URL=file:./build.db
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma migrate deploy && npm run build
+RUN npx prisma migrate deploy && npm run build && rm -f prisma/build.db
 
 FROM node:24-alpine AS runner
 WORKDIR /app
