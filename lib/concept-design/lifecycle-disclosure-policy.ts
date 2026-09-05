@@ -29,7 +29,7 @@ export type ApplicationCapability =
   | "VIEW_HISTORICAL_CONTEXT";
 
 const ROLE_CAPABILITIES: Record<ReviewerRole, ReadonlySet<ApplicationCapability>> = {
-  ADMIN: new Set<ApplicationCapability>([
+  ADMIN: new Set([
     "MANAGE_CONTEXT_SETTINGS",
     "MANAGE_AVAILABILITY",
     "MANAGE_VOCABULARY",
@@ -37,7 +37,7 @@ const ROLE_CAPABILITIES: Record<ReviewerRole, ReadonlySet<ApplicationCapability>
     "ARCHIVE_CONTEXT",
     "VIEW_HISTORICAL_CONTEXT",
   ]),
-  BOARD: new Set<ApplicationCapability>([
+  BOARD: new Set([
     "RECORD_EVALUATION",
     "GIVE_FEEDBACK",
     "DECIDE_SELECTION",
@@ -50,7 +50,7 @@ const ROLE_CAPABILITIES: Record<ReviewerRole, ReadonlySet<ApplicationCapability>
     "EXPORT_CONTEXT_DATA",
     "VIEW_HISTORICAL_CONTEXT",
   ]),
-  CHAIR: new Set<ApplicationCapability>([
+  CHAIR: new Set([
     "RECORD_EVALUATION",
     "GIVE_FEEDBACK",
     "REVIEW_DELIVERABLE",
@@ -102,27 +102,26 @@ type AvailabilityConference = {
   archiveRecord?: { id: string } | null;
 };
 
-type AvailabilityWindowShape = {
-  opensAt: Date;
-  closesAt: Date;
-} | null;
+type AvailabilityWindowShape = { opensAt: Date; closesAt: Date } | null;
 
 export function observeOfferAvailability(
   conference: AvailabilityConference,
   window: AvailabilityWindowShape,
   now = new Date()
 ): AvailabilityState {
+  const phase = !window
+    ? "unconfigured"
+    : now < window.opensAt
+      ? "upcoming"
+      : now < window.closesAt
+        ? "open"
+        : "closed";
+
   if (conference.archiveRecord || conference.status === "ARCHIVED") {
     return {
       configured: Boolean(window),
       open: false,
-      phase: window
-        ? now < window.opensAt
-          ? "upcoming"
-          : now < window.closesAt
-            ? "open"
-            : "closed"
-        : "unconfigured",
+      phase,
       suspended: !conference.submissionsOpen,
       code: "CONTEXT_ARCHIVED",
       message: "This conference has been archived. Submissions are closed.",
@@ -132,13 +131,7 @@ export function observeOfferAvailability(
     return {
       configured: Boolean(window),
       open: false,
-      phase: window
-        ? now < window.opensAt
-          ? "upcoming"
-          : now < window.closesAt
-            ? "open"
-            : "closed"
-        : "unconfigured",
+      phase,
       suspended: !conference.submissionsOpen,
       code: "CONTEXT_SETUP",
       message: "This conference is not open for submissions yet.",
@@ -370,21 +363,69 @@ export async function applyConferencePolicyPatch(input: {
   });
 }
 
-type RevisionEligibilityInput = {
-  status: ConferenceStatus;
-  archiveRecord?: { id: string } | null;
-  currentRevisionId: string | null;
-  revisionExceptionRevisionId: string | null;
-  withdrawal?: { id: string } | null;
-  currentSelectionDecision?: { disposition: SelectionDisposition | null } | null;
-  availabilityWindows?: Array<{ opensAt: Date; closesAt: Date }>;
+type RevisionExceptionRow = {
+  submission_id: string;
+  revision_id: string;
+  granted_by_ref: string;
+  granted_at: Date | string;
 };
 
-export function revisionEligibility(
+type DisclosureCutoverRow = {
+  disclosure_cutover_at: Date | string;
+};
+
+async function getRevisionExceptionRow(
+  client: Prisma.TransactionClient | typeof prisma,
+  submissionId: string
+): Promise<RevisionExceptionRow | null> {
+  const rows = await client.$queryRawUnsafe<RevisionExceptionRow[]>(
+    'SELECT submission_id, revision_id, granted_by_ref, granted_at FROM "RevisionExceptionPolicy" WHERE submission_id = ? LIMIT 1',
+    submissionId
+  );
+  return rows[0] ?? null;
+}
+
+async function getDisclosureCutoverAt(
+  client: Prisma.TransactionClient | typeof prisma,
+  conferenceId: string
+): Promise<Date | null> {
+  const rows = await client.$queryRawUnsafe<DisclosureCutoverRow[]>(
+    'SELECT disclosure_cutover_at FROM "ConferencePolicyCutover" WHERE conference_id = ? LIMIT 1',
+    conferenceId
+  );
+  if (!rows[0]) return null;
+  return new Date(rows[0].disclosure_cutover_at);
+}
+
+export async function consumeRevisionException(
+  tx: Prisma.TransactionClient,
+  submissionId: string,
+  revisionId: string
+) {
+  await tx.$executeRawUnsafe(
+    'DELETE FROM "RevisionExceptionPolicy" WHERE submission_id = ? AND revision_id = ?',
+    submissionId,
+    revisionId
+  );
+}
+
+type RevisionEligibilityInput = {
+  conference: {
+    status: ConferenceStatus;
+    archiveRecord?: { id: string } | null;
+    availabilityWindows?: Array<{ opensAt: Date; closesAt: Date }>;
+  };
+  id: string;
+  currentRevisionId: string | null;
+  withdrawal?: { id: string } | null;
+  currentSelectionDecision?: { disposition: SelectionDisposition | null } | null;
+};
+
+export async function getRevisionEligibility(
   submission: RevisionEligibilityInput,
   now = new Date()
-): { allowed: boolean; exceptional: boolean; code: string; message: string } {
-  if (submission.archiveRecord || submission.status === "ARCHIVED") {
+): Promise<{ allowed: boolean; exceptional: boolean; code: string; message: string }> {
+  if (submission.conference.archiveRecord || submission.conference.status === "ARCHIVED") {
     return {
       allowed: false,
       exceptional: false,
@@ -392,7 +433,7 @@ export function revisionEligibility(
       message: "Archived submissions cannot be revised",
     };
   }
-  if (submission.status !== "ACTIVE") {
+  if (submission.conference.status !== "ACTIVE") {
     return {
       allowed: false,
       exceptional: false,
@@ -409,10 +450,12 @@ export function revisionEligibility(
     };
   }
 
-  const exceptionActive =
-    Boolean(submission.currentRevisionId) &&
-    submission.revisionExceptionRevisionId === submission.currentRevisionId;
-  if (exceptionActive) {
+  const exception = await getRevisionExceptionRow(prisma, submission.id);
+  if (
+    exception &&
+    submission.currentRevisionId &&
+    exception.revision_id === submission.currentRevisionId
+  ) {
     return { allowed: true, exceptional: true, code: "REVISION_EXCEPTION", message: "" };
   }
 
@@ -426,7 +469,7 @@ export function revisionEligibility(
     };
   }
 
-  const window = submission.availabilityWindows?.[0] ?? null;
+  const window = submission.conference.availabilityWindows?.[0] ?? null;
   if (!window) {
     return {
       allowed: false,
@@ -472,15 +515,16 @@ export async function grantRevisionException(input: {
     );
   }
 
-  return prisma.submission.update({
-    where: { id: submission.id },
-    data: {
-      revisionExceptionRevisionId: submission.currentRevisionId,
-      revisionExceptionGrantedByRef: reviewerActorRef(input.reviewerAccessId),
-      revisionExceptionGrantedAt: new Date(),
-      abstractReviewStatus: "FEEDBACK_PENDING",
-    },
-  });
+  const at = new Date();
+  const actorRef = reviewerActorRef(input.reviewerAccessId);
+  await prisma.$executeRawUnsafe(
+    'INSERT INTO "RevisionExceptionPolicy" (submission_id, revision_id, granted_by_ref, granted_at) VALUES (?, ?, ?, ?) ON CONFLICT(submission_id) DO UPDATE SET revision_id = excluded.revision_id, granted_by_ref = excluded.granted_by_ref, granted_at = excluded.granted_at',
+    submission.id,
+    submission.currentRevisionId,
+    actorRef,
+    at
+  );
+  return { submissionId: submission.id, revisionId: submission.currentRevisionId, actorRef, grantedAt: at };
 }
 
 export async function revokeRevisionException(input: {
@@ -495,14 +539,11 @@ export async function revokeRevisionException(input: {
     throw new ApplicationPolicyError("SUBMISSION_NOT_FOUND", "Submission not found");
   }
   assertLiveOperationalContext(submission.conference);
-  return prisma.submission.update({
-    where: { id: submission.id },
-    data: {
-      revisionExceptionRevisionId: null,
-      revisionExceptionGrantedByRef: null,
-      revisionExceptionGrantedAt: null,
-    },
-  });
+  await prisma.$executeRawUnsafe(
+    'DELETE FROM "RevisionExceptionPolicy" WHERE submission_id = ?',
+    submission.id
+  );
+  return { submissionId: submission.id, revoked: true };
 }
 
 function isLegacyIdentityCohort(input: {
@@ -535,7 +576,7 @@ export async function revealPresenterIdentity(input: {
   submissionId: string;
 }) {
   return prisma.$transaction(async (tx) => {
-    const [conference, reviewer, submission] = await Promise.all([
+    const [conference, reviewer, submission, cutoverAt] = await Promise.all([
       tx.conference.findUnique({
         where: { id: input.conferenceId },
         include: { archiveRecord: true },
@@ -545,6 +586,7 @@ export async function revealPresenterIdentity(input: {
         where: { id: input.submissionId },
         include: { withdrawal: true },
       }),
+      getDisclosureCutoverAt(tx, input.conferenceId),
     ]);
     if (!conference || !reviewer || !submission) {
       throw new ApplicationPolicyError("REVIEW_CONTEXT_NOT_FOUND", "Review context not found");
@@ -577,11 +619,10 @@ export async function revealPresenterIdentity(input: {
     if (existing?.revealedAt) {
       return { mode: "revealed" as const, disclosure: existing };
     }
-
     if (
       !existing &&
       isLegacyIdentityCohort({
-        cutoverAt: conference.disclosureCutoverAt,
+        cutoverAt,
         reviewerCreatedAt: reviewer.createdAt,
         submissionCreatedAt: submission.createdAt,
       })
@@ -619,11 +660,7 @@ export async function revealPresenterIdentity(input: {
 export async function revealPeerAggregateForEvaluation(
   tx: Prisma.TransactionClient,
   input: {
-    conference: {
-      id: string;
-      blindReviewEnabled: boolean;
-      disclosureCutoverAt: Date | null;
-    };
+    conference: { id: string; blindReviewEnabled: boolean };
     reviewer: { id: string; createdAt: Date };
     submissionId: string;
     revision: { id: string; createdAt: Date };
@@ -632,7 +669,7 @@ export async function revealPeerAggregateForEvaluation(
   if (!input.conference.blindReviewEnabled) {
     return { mode: "ordinary-visible" as const, disclosure: null };
   }
-
+  const cutoverAt = await getDisclosureCutoverAt(tx, input.conference.id);
   const subjectKey = `revision:${input.revision.id}`;
   const existing = await tx.controlledDisclosure.findUnique({
     where: {
@@ -650,7 +687,7 @@ export async function revealPeerAggregateForEvaluation(
   if (
     !existing &&
     isLegacyAggregateCohort({
-      cutoverAt: input.conference.disclosureCutoverAt,
+      cutoverAt,
       reviewerCreatedAt: input.reviewer.createdAt,
       revisionCreatedAt: input.revision.createdAt,
     })
