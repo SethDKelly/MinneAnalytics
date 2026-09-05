@@ -52,6 +52,13 @@ jobs:
         env:
           DATABASE_URL: file:./ci-migrate.db
           MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
+      - name: Verify 004-D lifecycle authority and disclosure semantics
+        run: npm run db:004-d:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_WRITE_REVISION_EVALUATION: "true"
+          MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
+          MINNE_V0_WRITE_LIFECYCLE_DISCLOSURE: "true"
       - name: Rehearse existing database adoption and semantic backfills
         run: |
           cp prisma/prisma/dev.db prisma/ci-existing.db
@@ -61,6 +68,7 @@ jobs:
           npm run db:004-b:vocabulary-backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-vocabulary
           npm run db:004-b:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-backfill
           npm run db:004-c:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-c-backfill
+          npm run db:004-d:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-d-backfill
         env:
           DATABASE_URL: file:./ci-existing.db
       - run: npm run lint
