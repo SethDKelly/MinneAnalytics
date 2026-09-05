@@ -29,7 +29,7 @@ export type ProtectedAggregateState =
       reason: "evaluation-required-for-current-revision";
     };
 
-export type ReviewSubmissionItem = SubmissionListItem & {
+export type ReviewSubmissionItem = Omit<SubmissionListItem, "aggregate"> & {
   identityState: ProtectedIdentityState;
   aggregateState: ProtectedAggregateState;
   // Transitional aliases for components not yet consuming the discriminated states.
