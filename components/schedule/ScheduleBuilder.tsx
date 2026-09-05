@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TalkCard, getTalkDragData } from "./TalkCard";
 import { VARIETY_COLORS, VARIETY_LABELS } from "@/lib/constants";
 import type { ScheduleState } from "@/lib/schedule/types";
+import type { ScheduleProposalAssignment } from "@/lib/concept-design/schedule-authority";
 import {
   isFullWidthSlotType,
   kickoffLabelForRoom,
@@ -16,6 +17,13 @@ type Props = {
   initial: ScheduleState;
 };
 
+type PendingProposal = {
+  baseFingerprint: string;
+  assignments: ScheduleProposalAssignment[];
+  unassigned: string[];
+  capacity: number;
+};
+
 export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
   const [state, setState] = useState<ScheduleState>({
     ...initial,
@@ -25,6 +33,7 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
     placements: initial.placements ?? [],
     unscheduled: initial.unscheduled ?? [],
   });
+  const [proposal, setProposal] = useState<PendingProposal | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -33,8 +42,8 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
     const res = await fetch(`/api/schedule?token=${encodeURIComponent(token)}`);
     if (res.ok) {
       const data = await res.json();
-      setState((prev) => ({
-        conferenceName: data.conferenceName ?? prev.conferenceName,
+      setState((previous) => ({
+        conferenceName: data.conferenceName ?? previous.conferenceName,
         rooms: data.rooms ?? [],
         slots: data.slots ?? [],
         placements: data.placements ?? [],
@@ -54,17 +63,59 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
     });
     setLoading(false);
     const data = await res.json();
-    if (res.ok) {
+    if (!res.ok) {
+      setProposal(null);
+      setMessage(data.error ?? "Generate failed");
+      return;
+    }
+    if (!data.proposal || data.requiresApply !== true) {
+      setProposal(null);
       setMessage(
-        `Generated ${data.assigned} placements (${data.unassigned} talks unassigned — ${data.capacity} session slots available).`
+        "This server is still using legacy mutating generation. Enable canonical Schedule writes before semantic UI cutover."
       );
       await refresh();
-    } else {
-      setMessage(data.error ?? "Generate failed");
+      return;
     }
+    setProposal(data.proposal as PendingProposal);
+    setMessage(
+      `Proposal ready: ${data.assigned} placements, ${data.unassigned} unassigned, ${data.capacity} session cells. The authoritative schedule has not changed.`
+    );
+  }
+
+  async function applyProposal() {
+    if (!proposal) return;
+    setLoading(true);
+    setMessage(null);
+    const res = await fetch("/api/schedule/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        expectedBaseFingerprint: proposal.baseFingerprint,
+        assignments: proposal.assignments,
+      }),
+    });
+    setLoading(false);
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.code === "SCHEDULE_STALE_BASE") {
+        setProposal(null);
+        await refresh();
+        setMessage(
+          "The authoritative schedule changed after this proposal was generated. The proposal was discarded; generate a fresh one."
+        );
+        return;
+      }
+      setMessage(data.error ?? "Could not apply schedule proposal");
+      return;
+    }
+    setProposal(null);
+    await refresh();
+    setMessage(`Applied ${data.applied} proposed placements atomically.`);
   }
 
   async function moveTalk(submissionId: string | null, placementId: string) {
+    setProposal(null);
     const res = await fetch("/api/schedule/placement", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -78,28 +129,28 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
   }
 
   function placementAt(slotId: string, roomId: string) {
-    return state.placements.find((p) => p.slotId === slotId && p.roomId === roomId);
+    return state.placements.find((placement) => placement.slotId === slotId && placement.roomId === roomId);
   }
 
-  function handleDropOnPlacement(placementId: string, e: React.DragEvent) {
-    e.preventDefault();
+  function handleDropOnPlacement(placementId: string, event: React.DragEvent) {
+    event.preventDefault();
     setDragOverId(null);
-    const talkId = getTalkDragData(e);
+    const talkId = getTalkDragData(event);
     if (talkId) moveTalk(talkId, placementId);
   }
 
-  function handleDropOnPool(e: React.DragEvent) {
-    e.preventDefault();
+  function handleDropOnPool(event: React.DragEvent) {
+    event.preventDefault();
     setDragOverId(null);
-    const talkId = getTalkDragData(e);
+    const talkId = getTalkDragData(event);
     if (!talkId) return;
-    const from = state.placements.find((p) => p.submission?.id === talkId);
+    const from = state.placements.find((placement) => placement.submission?.id === talkId);
     if (from) moveTalk(null, from.id);
   }
 
-  const sessionSlots = state.slots.filter((s) => s.slotType === "SESSION");
-  const scheduledCount = state.placements.filter((p) =>
-    sessionSlots.some((s) => s.id === p.slotId && p.submission)
+  const sessionSlots = state.slots.filter((slot) => slot.slotType === "SESSION");
+  const scheduledCount = state.placements.filter((placement) =>
+    sessionSlots.some((slot) => slot.id === placement.slotId && placement.submission)
   ).length;
 
   return (
@@ -118,19 +169,44 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
             </Link>
             <button
               type="button"
-              className="btn-primary"
+              className="btn-secondary"
               disabled={loading || state.approvedCount === 0}
               onClick={generate}
             >
-              {loading ? "Generating…" : "Generate schedule"}
+              {loading ? "Working…" : proposal ? "Regenerate proposal" : "Generate proposal"}
             </button>
+            {proposal && (
+              <>
+                <button type="button" className="btn-primary" disabled={loading} onClick={applyProposal}>
+                  Accept proposal
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={loading}
+                  onClick={() => {
+                    setProposal(null);
+                    setMessage("Generated proposal discarded; authoritative placements were unchanged.");
+                  }}
+                >
+                  Discard
+                </button>
+              </>
+            )}
           </div>
         </div>
+        {proposal && (
+          <div className="mx-auto mt-3 max-w-[1600px] rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950">
+            <strong>Generated proposal — not yet authoritative.</strong>{" "}
+            {proposal.assignments.length} proposed placements · {proposal.unassigned.length} unassigned.
+            Manual drag/drop changes discard this proposal because its expected base is no longer current.
+          </div>
+        )}
         {message && (
           <p className="mx-auto mt-3 max-w-[1600px] text-sm text-minne-navy">{message}</p>
         )}
         <p className="mx-auto mt-2 max-w-[1600px] text-xs text-gray-600">
-          {state.approvedCount} approved talks · {scheduledCount} scheduled ·{" "}
+          {state.approvedCount} participating talks · {scheduledCount} scheduled ·{" "}
           {state.unscheduled.length} in pool · 30-minute sessions · drag talks into grid cells or
           back to the pool
         </p>
@@ -139,8 +215,8 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
       <div className="mx-auto flex max-w-[1600px] gap-4 p-4">
         <aside
           className="w-64 shrink-0"
-          onDragOver={(e) => {
-            e.preventDefault();
+          onDragOver={(event) => {
+            event.preventDefault();
             setDragOverId("pool");
           }}
           onDragLeave={() => setDragOverId(null)}
@@ -159,24 +235,20 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
             </p>
             <div className="max-h-[70vh] space-y-2 overflow-y-auto">
               {state.unscheduled.length === 0 ? (
-                <p className="text-xs text-gray-500 italic">All approved talks are placed.</p>
+                <p className="text-xs text-gray-500 italic">All participating talks are placed.</p>
               ) : (
-                state.unscheduled.map((talk) => (
-                  <TalkCard key={talk.id} talk={talk} compact />
-                ))
+                state.unscheduled.map((talk) => <TalkCard key={talk.id} talk={talk} compact />)
               )}
             </div>
           </div>
 
           <div className="mt-4 rounded bg-white p-3 text-[10px] shadow-sm">
             <h3 className="mb-2 font-bold text-minne-navy">Variety legend</h3>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <div key={n} className="mb-1 flex items-center gap-2">
-                <span
-                  className={`inline-block h-3 w-8 rounded border ${VARIETY_COLORS[n]}`}
-                />
+            {[1, 2, 3, 4, 5].map((level) => (
+              <div key={level} className="mb-1 flex items-center gap-2">
+                <span className={`inline-block h-3 w-8 rounded border ${VARIETY_COLORS[level]}`} />
                 <span>
-                  {n}: {VARIETY_LABELS[n]}
+                  {level}: {VARIETY_LABELS[level]}
                 </span>
               </div>
             ))}
@@ -205,10 +277,7 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
                 if (isFullWidthSlotType(slot.slotType)) {
                   const isRegistration = slot.slotType === "REGISTRATION";
                   return (
-                    <tr
-                      key={slot.id}
-                      className={isRegistration ? "bg-slate-300" : "bg-gray-200"}
-                    >
+                    <tr key={slot.id} className={isRegistration ? "bg-slate-300" : "bg-gray-200"}>
                       <td
                         colSpan={state.rooms.length + 1}
                         className={`border px-3 py-2 text-center font-bold uppercase tracking-wide ${
@@ -230,14 +299,9 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
                       {state.rooms.map((room) => {
                         const label = kickoffLabelForRoom(room.name);
                         return (
-                          <td
-                            key={room.id}
-                            className="border bg-slate-50 p-2 text-center align-middle"
-                          >
+                          <td key={room.id} className="border bg-slate-50 p-2 text-center align-middle">
                             {label ? (
-                              <span className="text-sm font-bold text-minne-navy">
-                                {label}
-                              </span>
+                              <span className="text-sm font-bold text-minne-navy">{label}</span>
                             ) : (
                               <span className="text-gray-400">—</span>
                             )}
@@ -261,14 +325,16 @@ export function ScheduleBuilder({ token, plannerLabel, initial }: Props) {
                         <td
                           key={room.id}
                           className={`border align-top p-1 transition-colors ${
-                            isOver ? "bg-minne-navy/10 ring-2 ring-minne-navy ring-inset" : "bg-white"
+                            isOver
+                              ? "bg-minne-navy/10 ring-2 ring-minne-navy ring-inset"
+                              : "bg-white"
                           }`}
-                          onDragOver={(e) => {
-                            e.preventDefault();
+                          onDragOver={(event) => {
+                            event.preventDefault();
                             setDragOverId(placement.id);
                           }}
                           onDragLeave={() => setDragOverId(null)}
-                          onDrop={(e) => handleDropOnPlacement(placement.id, e)}
+                          onDrop={(event) => handleDropOnPlacement(placement.id, event)}
                         >
                           {placement.submission ? (
                             <TalkCard talk={placement.submission} compact />
