@@ -20,13 +20,13 @@ export async function POST(request: Request) {
   const body = await request.json();
   const token = String(body.token ?? "");
   const expectedBaseFingerprint = String(body.expectedBaseFingerprint ?? "").trim();
-  const assignments = Array.isArray(body.assignments)
-    ? body.assignments.map((row: unknown) => {
+  const assignments: ScheduleProposalAssignment[] = Array.isArray(body.assignments)
+    ? body.assignments.map((row: unknown): ScheduleProposalAssignment => {
         const value = row as Record<string, unknown>;
         return {
           placementId: String(value.placementId ?? ""),
           submissionId: String(value.submissionId ?? ""),
-        } satisfies ScheduleProposalAssignment;
+        };
       })
     : [];
 
