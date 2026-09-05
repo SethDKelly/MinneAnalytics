@@ -2,7 +2,7 @@ import type { Theme, ThemeSource } from "@prisma/client";
 import {
   EFFECTIVE_PARTICIPATION_COUNT_MEASURE,
   THEME_COVERAGE_DIMENSION,
-} from "@/lib/concept-design/coverage-targets";
+} from "@/lib/concept-design/coverage-target-contract";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
   establishInitialTermState,
@@ -51,7 +51,7 @@ export async function getConferenceThemesForAdmin(conferenceId: string) {
     return prisma.theme.findMany({
       where: { conferenceId },
       orderBy: [{ removedAt: "asc" }, { source: "asc" }, { sortOrder: "asc" }],
-      include: { _count: { select: { submissions: true } } },
+      include: { currentTermState: true, _count: { select: { submissions: true } } },
     });
   }
 
