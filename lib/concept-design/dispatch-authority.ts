@@ -8,6 +8,7 @@ import {
   renderEmail,
   type EmailRecipient,
 } from "@/lib/email-templates";
+import { getSemanticConferenceSubmissions } from "@/lib/concept-design/semantic-reads";
 
 export class DispatchPolicyError extends Error {
   readonly code: string;
@@ -46,7 +47,10 @@ function contentHash(email: string, subject: string, body: string) {
 }
 
 function assertDispatchLifecycle(
-  conference: { status: "DRAFT" | "ACTIVE" | "ARCHIVED"; archiveRecord: { id: string } | null },
+  conference: {
+    status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+    archiveRecord: { id: string } | null;
+  },
   templateKey: EmailTemplateKey
 ) {
   const archived = Boolean(conference.archiveRecord) || conference.status === "ARCHIVED";
@@ -88,7 +92,10 @@ export async function resolveCanonicalDispatchRecipients(input: {
   round: number;
 }) {
   if (!Number.isInteger(input.round) || input.round < 1) {
-    throw new DispatchPolicyError("DISPATCH_ROUND_INVALID", "Dispatch round must be a positive integer");
+    throw new DispatchPolicyError(
+      "DISPATCH_ROUND_INVALID",
+      "Dispatch round must be a positive integer"
+    );
   }
 
   const conference = await prisma.conference.findUnique({
@@ -121,35 +128,25 @@ export async function resolveCanonicalDispatchRecipients(input: {
     return { conference, recipients };
   }
 
-  const submissions = await prisma.submission.findMany({
-    where: { conferenceId: conference.id },
-    include: {
-      currentSelectionDecision: true,
-      withdrawal: true,
-      deliverables: {
-        where: { kindKey: "deck" },
-        include: { currentArtifact: { include: { currentAssessment: true } } },
-      },
-    },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-  });
-
+  const submissions = await getSemanticConferenceSubmissions(conference.id);
   for (const submission of submissions) {
     if (sent.submissions.has(submission.id)) continue;
-    const disposition = submission.currentSelectionDecision?.disposition ?? null;
-    const withdrawn = Boolean(submission.withdrawal);
+    const disposition = submission.semantic.selection.disposition;
+    const withdrawn = submission.semantic.withdrawal.withdrawn;
     let eligible = false;
 
-    if (input.templateKey === "CALL_FOR_DECK" || input.templateKey === "CALL_FOR_FEEDBACK") {
-      eligible = disposition === "SELECTED" && !withdrawn;
+    if (
+      input.templateKey === "CALL_FOR_DECK" ||
+      input.templateKey === "CALL_FOR_FEEDBACK"
+    ) {
+      eligible = submission.semantic.participation.effective;
     } else if (input.templateKey === "DECLINE") {
       eligible = disposition === "NOT_SELECTED" && !withdrawn;
     } else if (input.templateKey === "DECK_REMINDER") {
-      const deck = submission.deliverables[0]?.currentArtifact ?? null;
       eligible =
-        disposition === "SELECTED" &&
-        !withdrawn &&
-        (!deck || !deck.currentAssessment);
+        submission.semantic.participation.effective &&
+        (submission.semantic.deliverable.readiness === "not-provided" ||
+          submission.semantic.deliverable.readiness === "awaiting-review");
     }
 
     if (!eligible) continue;
@@ -158,10 +155,16 @@ export async function resolveCanonicalDispatchRecipients(input: {
       submissionId: submission.id,
       email: submission.email,
       label: `${submission.firstName} ${submission.lastName} — ${submission.title}`,
-      context: mergeContextForSubmission(conference, submission),
+      context: mergeContextForSubmission(conference, {
+        firstName: submission.firstName,
+        lastName: submission.lastName,
+        title: submission.title,
+        email: submission.email,
+      }),
     });
   }
 
+  recipients.sort((a, b) => a.label.localeCompare(b.label));
   return { conference, recipients };
 }
 
@@ -241,7 +244,11 @@ export async function sendCanonicalTemplateBatch(params: {
   });
 
   const existingAttempts = await prisma.dispatchAttempt.findMany({
-    where: { providerAttemptKey: { in: prepared.map((message) => message.providerAttemptKey) } },
+    where: {
+      providerAttemptKey: {
+        in: prepared.map((message) => message.providerAttemptKey),
+      },
+    },
   });
   const existingByKey = new Map(
     existingAttempts.map((attempt) => [attempt.providerAttemptKey, attempt])
@@ -275,7 +282,9 @@ export async function sendCanonicalTemplateBatch(params: {
                 ? message.recipient.submissionId
                 : null,
             attendeeId:
-              message.recipient.kind === "attendee" ? message.recipient.attendeeId : null,
+              message.recipient.kind === "attendee"
+                ? message.recipient.attendeeId
+                : null,
             email: message.email,
             renderedSubject: message.renderedSubject,
             renderedBody: message.renderedBody,
@@ -290,7 +299,11 @@ export async function sendCanonicalTemplateBatch(params: {
   }
 
   const attempts = await prisma.dispatchAttempt.findMany({
-    where: { providerAttemptKey: { in: prepared.map((message) => message.providerAttemptKey) } },
+    where: {
+      providerAttemptKey: {
+        in: prepared.map((message) => message.providerAttemptKey),
+      },
+    },
     orderBy: { createdAt: "asc" },
   });
 
@@ -330,7 +343,9 @@ export async function sendCanonicalTemplateBatch(params: {
     }
 
     await prisma.$transaction(async (tx) => {
-      const current = await tx.dispatchAttempt.findUnique({ where: { id: attempt.id } });
+      const current = await tx.dispatchAttempt.findUnique({
+        where: { id: attempt.id },
+      });
       if (!current || current.state === "SUCCEEDED") return;
       if (current.state === "UNCERTAIN" || current.state === "BLOCKED") {
         throw new DispatchPolicyError(
@@ -384,7 +399,9 @@ export async function sendCanonicalTemplateBatch(params: {
           resolvedAt: new Date(),
         },
       });
-      const count = await tx.emailSendRecord.count({ where: { batchId: current.batchId } });
+      const count = await tx.emailSendRecord.count({
+        where: { batchId: current.batchId },
+      });
       await tx.conferenceEmailBatch.update({
         where: { id: current.batchId },
         data: { recipientCount: count },
@@ -393,7 +410,6 @@ export async function sendCanonicalTemplateBatch(params: {
     recipientCount += 1;
   }
 
-  const batchId =
-    newBatchId || attempts[0]?.batchId || "";
+  const batchId = newBatchId || attempts[0]?.batchId || "";
   return { batchId, recipientCount, failedCount, blockedCount, replayed };
 }
