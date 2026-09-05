@@ -12,6 +12,9 @@ import {
   reviewerActorRef,
 } from "@/lib/concept-design/lifecycle-disclosure-policy";
 import {
+  processPublicationCleanupForSource,
+} from "@/lib/concept-design/publication-public-access";
+import {
   CapacityConfigurationError,
   CapacityUnavailableError,
   recordCanonicalSelection,
@@ -154,15 +157,24 @@ export async function POST(request: Request) {
     const headerKey = request.headers.get("Idempotency-Key")?.trim();
     const bodyKey = String(body.commandKey ?? "").trim();
     const commandKey = headerKey || bodyKey || null;
+    const actorRef = reviewerActorRef(reviewer.id);
 
     try {
       const result = await recordCanonicalSelection({
         conferenceId: reviewer.conferenceId,
         submissionId,
         disposition: selectionDispositionFromProgramStatus(status),
-        actorRef: reviewerActorRef(reviewer.id),
+        actorRef,
         commandKey,
       });
+
+      let cleanupPending = result.cleanupPending;
+      if (result.decision) {
+        await processPublicationCleanupForSource(result.decision.id, actorRef);
+        cleanupPending = await prisma.synchronizationWork.count({
+          where: { sourceRef: result.decision.id, state: { not: "COMPLETED" } },
+        });
+      }
 
       if (status === "APPROVED" || status === "DECLINED") {
         await autoPopulateDemoScores(
@@ -186,7 +198,7 @@ export async function POST(request: Request) {
         ok: true,
         decisionId: result.decision?.id ?? null,
         replayed: result.replayed,
-        cleanupPending: result.cleanupPending,
+        cleanupPending,
       });
     } catch (error) {
       if (
