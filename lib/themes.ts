@@ -1,4 +1,8 @@
 import type { Theme, ThemeSource } from "@prisma/client";
+import {
+  EFFECTIVE_PARTICIPATION_COUNT_MEASURE,
+  THEME_COVERAGE_DIMENSION,
+} from "@/lib/concept-design/coverage-targets";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import {
   establishInitialTermState,
@@ -51,19 +55,40 @@ export async function getConferenceThemesForAdmin(conferenceId: string) {
     });
   }
 
-  const themes = await prisma.theme.findMany({
-    where: { conferenceId },
-    orderBy: [{ source: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-    include: {
-      currentTermState: true,
-      _count: { select: { submissions: true } },
-    },
-  });
-  return themes.sort((a, b) => {
-    const aRetired = a.currentTermState?.availability === "RETIRED" ? 1 : 0;
-    const bRetired = b.currentTermState?.availability === "RETIRED" ? 1 : 0;
-    return aRetired - bRetired || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
-  });
+  const [themes, coverageTargets] = await Promise.all([
+    prisma.theme.findMany({
+      where: { conferenceId },
+      orderBy: [{ source: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+      include: {
+        currentTermState: true,
+        _count: { select: { submissions: true } },
+      },
+    }),
+    prisma.coverageTarget.findMany({
+      where: {
+        conferenceId,
+        dimensionKey: THEME_COVERAGE_DIMENSION,
+        measureKey: EFFECTIVE_PARTICIPATION_COUNT_MEASURE,
+      },
+    }),
+  ]);
+  const targetByTheme = new Map(
+    coverageTargets.map((target) => [target.bucketRef, target])
+  );
+  return themes
+    .map((theme) => {
+      const target = targetByTheme.get(theme.id);
+      return {
+        ...theme,
+        targetMin: target?.lowerBound ?? 0,
+        targetMax: target?.upperBound ?? 0,
+      };
+    })
+    .sort((a, b) => {
+      const aRetired = a.currentTermState?.availability === "RETIRED" ? 1 : 0;
+      const bRetired = b.currentTermState?.availability === "RETIRED" ? 1 : 0;
+      return aRetired - bRetired || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
+    });
 }
 
 /** Find existing theme by slug (case-insensitive) or create presenter-proposed theme. */
