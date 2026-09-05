@@ -75,6 +75,7 @@ async function loadSchedulableTalks(
       id: true,
       technicalLevel: true,
       isSoftSkill: true,
+      currentRevision: { select: { technicalLevel: true } },
       currentSelectionDecision: { select: { disposition: true } },
       withdrawal: { select: { id: true } },
     },
@@ -87,7 +88,8 @@ async function loadSchedulableTalks(
     )
     .map((submission) => ({
       id: submission.id,
-      technicalLevel: submission.technicalLevel,
+      technicalLevel:
+        submission.currentRevision?.technicalLevel ?? submission.technicalLevel,
       isSoftSkill: submission.isSoftSkill,
     }));
 }
@@ -104,7 +106,10 @@ export async function generateCanonicalScheduleProposal(conferenceId: string) {
     assertLiveOperationalContext(conference);
   } catch (error) {
     if (error instanceof Error && "code" in error) throw error;
-    throw new SchedulePolicyError("SCHEDULE_CONTEXT_NOT_LIVE", "Schedule generation requires live operation");
+    throw new SchedulePolicyError(
+      "SCHEDULE_CONTEXT_NOT_LIVE",
+      "Schedule generation requires live operation"
+    );
   }
 
   const [talks, placements] = await Promise.all([
