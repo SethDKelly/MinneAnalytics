@@ -8,87 +8,111 @@ export type ExportRow = {
   lastName: string;
   email: string;
   organization: string;
-  programStatus: string;
-  deckStatus: string | null;
-  deckShareable: boolean;
+  selectionDisposition: string;
+  withdrawn: boolean;
+  effectiveParticipation: boolean;
+  currentRevisionRef: string;
+  currentRevisionVersion: number;
+  deliverableReadiness: string;
+  artifactVersionRef: string;
+  sharingEligible: boolean;
+  publicationAvailability: string;
   vipRegistered: boolean;
   isSponsorSession: boolean;
   technicalLevel: number;
-  abstractVersion: number;
-  abstractReviewStatus: string;
   aggregateAverage: number;
   aggregateCount: number;
   degrees: string;
   themeNames: string;
-  themeSources: string;
   feedbackCount: number;
   feedbackSummary: string;
   emailSendsSummary: string;
   createdAt: string;
-  scoresSummary: string;
+  evaluationsSummary: string;
+  compatProgramStatus: string;
+  compatDeckStatus: string;
+  compatAbstractReviewStatus: string;
+  compatAbstractVersion: number;
+  compatDeckShareable: boolean;
 };
 
 function escapeCsv(value: string | number | boolean | null | undefined): string {
-  const s = value == null ? "" : String(value);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
+  const text = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
 }
 
 export function submissionsToCsv(rows: ExportRow[]): string {
   const headers = [
-    "id",
+    "proposal_ref",
     "title",
     "first_name",
     "last_name",
     "email",
     "organization",
-    "program_status",
-    "deck_status",
-    "deck_shareable",
+    "selection_disposition",
+    "withdrawn",
+    "effective_participation",
+    "current_revision_ref",
+    "current_revision_version",
+    "deliverable_readiness",
+    "artifact_version_ref",
+    "sharing_eligible",
+    "publication_availability",
     "vip_registered",
     "is_sponsor_session",
     "technical_level",
-    "abstract_version",
-    "abstract_review_status",
-    "avg_score_current_version",
-    "scorer_count_current_version",
+    "avg_evaluation_current_revision",
+    "evaluation_count_current_revision",
     "degrees",
-    "theme_names",
-    "theme_sources",
+    "theme_names_current_revision",
     "feedback_count",
     "feedback_summary",
-    "email_sends",
+    "dispatch_sends",
     "submitted_at",
-    "scores",
+    "evaluations",
+    "compat_program_status",
+    "compat_deck_status",
+    "compat_abstract_review_status",
+    "compat_abstract_version",
+    "compat_deck_shareable",
   ];
   const lines = [
     headers.join(","),
-    ...rows.map((r) =>
+    ...rows.map((row) =>
       [
-        r.id,
-        r.title,
-        r.firstName,
-        r.lastName,
-        r.email,
-        r.organization,
-        r.programStatus,
-        r.deckStatus ?? "",
-        r.deckShareable,
-        r.vipRegistered,
-        r.isSponsorSession,
-        r.technicalLevel,
-        r.abstractVersion,
-        r.abstractReviewStatus,
-        r.aggregateAverage.toFixed(2),
-        r.aggregateCount,
-        r.degrees,
-        r.themeNames,
-        r.themeSources,
-        r.feedbackCount,
-        r.feedbackSummary,
-        r.emailSendsSummary,
-        r.createdAt,
-        r.scoresSummary,
+        row.id,
+        row.title,
+        row.firstName,
+        row.lastName,
+        row.email,
+        row.organization,
+        row.selectionDisposition,
+        row.withdrawn,
+        row.effectiveParticipation,
+        row.currentRevisionRef,
+        row.currentRevisionVersion,
+        row.deliverableReadiness,
+        row.artifactVersionRef,
+        row.sharingEligible,
+        row.publicationAvailability,
+        row.vipRegistered,
+        row.isSponsorSession,
+        row.technicalLevel,
+        row.aggregateAverage.toFixed(2),
+        row.aggregateCount,
+        row.degrees,
+        row.themeNames,
+        row.feedbackCount,
+        row.feedbackSummary,
+        row.emailSendsSummary,
+        row.createdAt,
+        row.evaluationsSummary,
+        row.compatProgramStatus,
+        row.compatDeckStatus,
+        row.compatAbstractReviewStatus,
+        row.compatAbstractVersion,
+        row.compatDeckShareable,
       ]
         .map(escapeCsv)
         .join(",")
@@ -97,6 +121,33 @@ export function submissionsToCsv(rows: ExportRow[]): string {
   return lines.join("\r\n");
 }
 
+export function buildEvaluationsSummary(
+  evaluations: {
+    label: string;
+    value: number;
+    notes: string | null;
+    subjectRevisionRef: string | null;
+    currentRevisionRef: string | null;
+  }[]
+): string {
+  return evaluations
+    .map((evaluation) => {
+      const subject = evaluation.subjectRevisionRef
+        ? `@${evaluation.subjectRevisionRef}${
+            evaluation.currentRevisionRef &&
+            evaluation.subjectRevisionRef !== evaluation.currentRevisionRef
+              ? "!prior"
+              : ""
+          }`
+        : "@legacy-subject-unknown";
+      return `${evaluation.label}:${formatScore(evaluation.value)}${subject}${
+        evaluation.notes ? `(${evaluation.notes})` : ""
+      }`;
+    })
+    .join(" | ");
+}
+
+/** @deprecated 004-F export callers should use buildEvaluationsSummary. */
 export function buildScoresSummary(
   scores: {
     label: string;
@@ -107,12 +158,16 @@ export function buildScoresSummary(
   }[]
 ): string {
   return scores
-    .map((s) => {
-      const ver =
-        s.scoredAbstractVersion != null && s.abstractVersion != null
-          ? `@v${s.scoredAbstractVersion}${s.scoredAbstractVersion < s.abstractVersion ? "!" : ""}`
+    .map((score) => {
+      const version =
+        score.scoredAbstractVersion != null && score.abstractVersion != null
+          ? `@v${score.scoredAbstractVersion}${
+              score.scoredAbstractVersion < score.abstractVersion ? "!" : ""
+            }`
           : "";
-      return `${s.label}:${formatScore(s.value)}${ver}${s.notes ? `(${s.notes})` : ""}`;
+      return `${score.label}:${formatScore(score.value)}${version}${
+        score.notes ? `(${score.notes})` : ""
+      }`;
     })
     .join(" | ");
 }
