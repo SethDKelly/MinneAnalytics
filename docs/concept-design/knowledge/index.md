@@ -47,9 +47,17 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [v0 Implementation Execution Handoff](reconciliation/implementation-execution-handoff.md) - Historical Phase 004 package authorization, dependencies, execution constraints, and stop-and-amend rule.
 * [v0 Implementation Closure & Evidence Baseline](reconciliation/implementation-closure-evidence-baseline.md) - Runtime closure states, evidence requirements, high-risk verification, rollback-floor checks, and final closure reporting rules.
 
+# Phase 005 planning boundary
+
+The historical Phase 005 subgroup plan is [Post-v0 Operational Qualification, Security Hardening & Production Readiness](../005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md).
+
+It divides the next stage into ten dependency-aware groups from authority/evidence governance through security, deployment, live migration, provider qualification, operations, performance, accessibility/usability, compatibility/product admission, and a final production-readiness gate.
+
+The subdivision itself does **not** authorize runtime, live-environment, destructive-cleanup, provider, or production deployment changes. **005-A must establish the bounded authority and change-control rules first.**
+
 # Current maturity
 
-**Phase 001 discovery, Phase 002 formal specification, Phase 003 implementation reconciliation, and Phase 004 v0 implementation execution are complete.**
+**Phase 001 discovery, Phase 002 formal specification, Phase 003 implementation reconciliation, and Phase 004 v0 implementation execution are complete. Phase 005 is planned and has not yet begun execution.**
 
 All 17 concepts are formally specified.
 
@@ -57,9 +65,11 @@ All 18 semantic gaps and 4 policy gaps are **`verified-closed`** in the declared
 
 Implementation branch: `concept-design/v0-implementation` from the immutable 003-G design/reconciliation baseline `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`.
 
-The implementation exit does **not** claim that the current live AWS EFS database has already been migrated or that a production release has been approved. Live deployment qualification, dependency/security triage, provider qualification, and other post-v0 work must be planned separately.
+The implementation exit does **not** claim that the current live AWS EFS database has already been migrated or that a production release has been approved.
 
-The bounded runtime authorization granted by 003-G has been consumed by the completed Phase 004. No new runtime phase or destructive cleanup is automatically authorized by the 004-H exit gate.
+Next: **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control**.
+
+The bounded runtime authorization granted by 003-G was consumed by completed Phase 004 and is not reactivated by Phase 005 planning.
 
 # Historical design and implementation record
 
