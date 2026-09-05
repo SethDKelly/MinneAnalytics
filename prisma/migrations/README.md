@@ -25,9 +25,10 @@ Current ordered history:
 2. `20260904001000_add_reconciliation_foundation` — additive target structures and references;
 3. `20260904002000_revision_classification_evaluation_feedback` — 004-B exact Revision/Evaluation write constraints and metadata;
 4. `20260904003000_selection_withdrawal_capacity_deliverable` — 004-C active Capacity and ArtifactVersion concurrency constraints;
-5. `20260904004000_availability_archive_authority_disclosure` — 004-D application-policy cutover boundary and current explicit Revision-exception storage.
+5. `20260904004000_availability_archive_authority_disclosure` — 004-D application-policy cutover boundary and current explicit Revision-exception storage;
+6. `20260904005000_publication_schedule_dispatch_hardening` — 004-E exact-publication rollback floor, SYNC-008 source-transaction enqueue bridges, and Dispatch same-round semantic uniqueness.
 
-The 004-D policy tables are implementation state, not new Concept Design concepts. `ConferencePolicyCutover` classifies legacy disclosure relationships conservatively, and `RevisionExceptionPolicy` stores only a current explicit exception rather than an invented edit-permission history.
+The 004-D/004-E cutover tables are implementation policy/infrastructure rather than new Concept Design concepts. `PublicationPolicyCutover` marks the point after which a Conference may no longer fall back to mutable parent-state authorization for public deck tokens.
 
 Schema deployment does not by itself fabricate or reconstruct target history.
 
@@ -40,19 +41,23 @@ npm run db:004-b:vocabulary-backfill -- --apply --environment <env>
 npm run db:004-b:backfill -- --apply --environment <env>
 npm run db:004-c:backfill -- --apply --environment <env>
 npm run db:004-d:backfill -- --apply --environment <env>
+npm run db:004-e:backfill -- --apply --environment <env>
 ```
 
 These backfills emit migration evidence and follow the reconciliation no-fabrication rules. Expected historical unknowns are retained explicitly; blocking defects prevent the affected semantic slice from being treated as cutover-ready.
 
-004-D specifically:
+004-D specifically seeds only truthful Window/Archive state and establishes the disclosure cohort boundary without fabricating edit exceptions or protected-information history.
 
-- seeds a canonical Proposal-offer Availability Window only when both durable legacy bounds are valid;
-- seeds current Archive closure without substituting migration time for an unknown historical event time;
-- creates the disclosure cutover boundary only before native Controlled Disclosure history exists;
-- never derives a Revision exception merely from `FEEDBACK_PENDING`;
-- reports missing Window bounds for operator definition rather than inventing sentinels.
+004-E specifically:
 
-The CI existing-database rehearsal runs the complete migration chain and these backfills in the order above.
+- seeds `ShareEligibilityChange` only as a current policy observation from legacy `deckShareable`; actor/time and presenter consent are not invented;
+- when the legacy collection is currently published, seeds only the exact current ArtifactVersions whose canonical participation, sharing and READY evidence support present exposure;
+- never creates exact Publication history for superseded deck versions merely because their `publicId` exists;
+- leaves historical rendered Dispatch messages unknown when legacy SendRecords do not contain their exact content;
+- validates existing Schedule placements against canonical effective participation without fabricating generator acceptance history;
+- records Publication cutover only after current-state reconciliation so public-token authorization cannot later fall back to mutable parent state.
+
+The CI existing-database rehearsal runs the complete migration chain and all semantic backfills in this order.
 
 ## Fresh databases
 
@@ -63,7 +68,7 @@ npm run db:migrate:deploy
 npm run db:seed
 ```
 
-Dedicated 004-B/004-C/004-D verification commands exercise target-native semantics independently of application seed data.
+Dedicated 004-B/004-C/004-D/004-E verification commands exercise target-native semantics independently of application seed data.
 
 ## Local disposable databases
 
@@ -71,6 +76,6 @@ Dedicated 004-B/004-C/004-D verification commands exercise target-native semanti
 
 ## Baseline and cleanup boundary
 
-The baseline DDL reflects the exact pre-004-A schema at the Phase 003-G implementation handoff. Subsequent 004-B/004-C/004-D migrations remain non-destructive with respect to legacy compatibility fields and retained history.
+The baseline DDL reflects the exact pre-004-A schema at the Phase 003-G implementation handoff. Subsequent Phase 004 migrations remain non-destructive with respect to legacy compatibility fields and retained history.
 
 Destructive removal of compatibility columns, enums, routes, or historical migration evidence remains prohibited until the explicit 004-G legacy-cleanup gate passes.
