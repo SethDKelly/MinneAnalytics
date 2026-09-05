@@ -4,6 +4,11 @@ import {
   CanonicalRevisionUnavailableError,
   recordCanonicalEvaluation,
 } from "@/lib/concept-design/revision-evaluation";
+import {
+  ApplicationPolicyError,
+  assertLiveOperationalContext,
+  hasApplicationCapability,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
 import { canScore, getReviewerByToken } from "@/lib/reviewer";
@@ -19,21 +24,45 @@ export async function POST(request: Request) {
   }
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canScore(reviewer.role)) {
+  if (!reviewer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    await assertConferenceAcceptsMutations(reviewer.conferenceId);
-  } catch {
-    return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+  const lifecycleWrites = isImplementationGateEnabled("lifecycleDisclosureWrites");
+  if (lifecycleWrites) {
+    if (!hasApplicationCapability(reviewer.role, "RECORD_EVALUATION")) {
+      return NextResponse.json(
+        { error: "Evaluation is not permitted", code: "CAPABILITY_DENIED" },
+        { status: 403 }
+      );
+    }
+    try {
+      assertLiveOperationalContext(reviewer.conference);
+    } catch (error) {
+      if (error instanceof ApplicationPolicyError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+  } else {
+    if (!canScore(reviewer.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+      await assertConferenceAcceptsMutations(reviewer.conferenceId);
+    } catch {
+      return NextResponse.json({ error: "Conference is not active" }, { status: 403 });
+    }
   }
 
   const submission = await prisma.submission.findFirst({
     where: {
       id: parsed.data.submissionId,
       conferenceId: reviewer.conferenceId,
-      programStatus: { not: "WITHDRAWN" },
+      ...(lifecycleWrites ? { withdrawal: null } : { programStatus: { not: "WITHDRAWN" } }),
     },
   });
   if (!submission) {
@@ -50,12 +79,14 @@ export async function POST(request: Request) {
         reviewerAccessId: reviewer.id,
         value,
         notes,
+        revealPeerAggregate: lifecycleWrites,
       });
       return NextResponse.json({
         ok: true,
         evaluationId: result.evaluation.id,
         submissionRevisionId: result.revisionId,
         scoredAbstractVersion: result.revisionVersion,
+        disclosureState: result.disclosureMode,
       });
     } catch (error) {
       if (error instanceof CanonicalRevisionUnavailableError) {
@@ -66,6 +97,16 @@ export async function POST(request: Request) {
       }
       throw error;
     }
+  }
+
+  if (lifecycleWrites) {
+    return NextResponse.json(
+      {
+        error: "004-D Evaluation policy requires canonical Evaluation writes",
+        code: "DEPENDENCY_GATE_REQUIRED",
+      },
+      { status: 409 }
+    );
   }
 
   const legacyRows = await prisma.score.findMany({
