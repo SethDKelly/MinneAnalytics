@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       seed_on_start:
-        description: Run prisma seed on container start (first deploy only)
+        description: Run prisma seed on container start (fresh database only)
         required: false
         default: "false"
         type: choice
@@ -49,9 +49,9 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform init
 
-      - name: Terraform apply (bootstrap infra + ECR)
+      - name: Ensure ECR repository exists
         working-directory: ${{ env.TF_DIR }}
-        run: terraform apply -auto-approve -var="container_image=public.ecr.aws/docker/library/nginx:stable-alpine"
+        run: terraform apply -auto-approve -target=aws_ecr_repository.app
 
       - name: Login to ECR
         id: ecr
@@ -69,7 +69,7 @@ jobs:
           docker push "$IMAGE"
           echo "uri=$IMAGE" >> "$GITHUB_OUTPUT"
 
-      - name: Terraform apply (deploy image)
+      - name: Terraform apply (deploy application image)
         working-directory: ${{ env.TF_DIR }}
         run: |
           SEED="${{ github.event.inputs.seed_on_start || 'false' }}"
@@ -77,11 +77,10 @@ jobs:
             -var="container_image=${{ steps.image.outputs.uri }}" \
             -var="seed_on_start=${SEED}"
 
-      - name: Force ECS rollout
+      - name: Verify ECS service stability
         run: |
           CLUSTER=$(terraform -chdir=$TF_DIR output -raw ecs_cluster_name)
           SERVICE=$(terraform -chdir=$TF_DIR output -raw ecs_service_name)
-          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
           aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
 
       - name: Deployment summary
@@ -91,4 +90,6 @@ jobs:
             echo "## Dev deployment"
             echo "URL: $(terraform output -raw app_url)"
             echo "Image: ${{ steps.image.outputs.uri }}"
+            echo "Migration path: checked-in Prisma migrations + semantic backfills at container bootstrap"
+            echo "SQLite replacement policy: old task stops before new task starts"
           } >> "$GITHUB_STEP_SUMMARY"
