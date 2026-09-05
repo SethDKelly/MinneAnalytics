@@ -80,27 +80,33 @@ jobs:
           MINNE_V0_WRITE_SCHEDULE: "true"
           MINNE_V0_WRITE_DISPATCH: "true"
           MINNE_V0_SEMANTIC_READS: "true"
-      - name: Rehearse existing database adoption and semantic backfills
+      - name: Verify 004-G read rollback, projection repair and writer floors
+        run: npm run db:004-g:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_SEMANTIC_READS: "true"
+      - name: Rehearse fresh deployment bootstrap
+        run: npm run db:migration:deploy-bootstrap
+        env:
+          DATABASE_URL: file:./ci-deploy-fresh.db
+          DATA_DIR: /tmp/minne-ci-fresh
+          MIGRATION_ENVIRONMENT: ci-fresh-bootstrap
+          MINNE_RUN_SEMANTIC_BACKFILLS: "true"
+      - name: Rehearse existing database backup, adoption and semantic backfills
         run: |
           cp prisma/prisma/dev.db prisma/ci-existing.db
-          npx prisma migrate resolve --applied 20260904000000_baseline
-          npx prisma migrate deploy
-          npm run db:migration:report -- --environment ci-existing --out-dir /tmp/minne-existing-migration-report
-          npm run db:004-b:vocabulary-backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-vocabulary
-          npm run db:004-b:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-b-backfill
-          npm run db:004-c:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-c-backfill
-          npm run db:004-d:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-d-backfill
-          npm run db:004-e:backfill -- --apply --environment ci-existing --out-dir /tmp/minne-004-e-backfill
+          npm run db:migration:deploy-bootstrap
+          npx prisma migrate status
         env:
           DATABASE_URL: file:./ci-existing.db
+          DATA_DIR: /tmp/minne-ci-existing
+          MIGRATION_ENVIRONMENT: ci-existing-bootstrap
+          MINNE_ALLOW_LEGACY_BASELINE_ADOPTION: "true"
+          MINNE_RUN_SEMANTIC_BACKFILLS: "true"
       - run: npm run lint
       - run: npm run build
         env:
           DATABASE_URL: file:./ci-migrate.db
-          MINNE_V0_WRITE_REVISION_EVALUATION: "true"
-          MINNE_V0_WRITE_SELECTION_PARTICIPATION: "true"
-          MINNE_V0_WRITE_LIFECYCLE_DISCLOSURE: "true"
-          MINNE_V0_WRITE_PUBLICATION: "true"
-          MINNE_V0_WRITE_SCHEDULE: "true"
-          MINNE_V0_WRITE_DISPATCH: "true"
           MINNE_V0_SEMANTIC_READS: "true"
+      - name: Build production deployment image
+        run: docker build -t minneanalytics-004-g-ci .
