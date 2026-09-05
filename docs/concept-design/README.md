@@ -7,10 +7,10 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Concept model maturity:** v0 — formal specification, implementation reconciliation, and bounded semantic implementation complete
 - **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
 - **Implementation branch:** `concept-design/v0-implementation`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); Phase 004 (004-A through 004-H)
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); Phase 004 (004-A through 004-H); 005-A
 - **v0 closure:** all 18 semantic gaps and 4 policy gaps are `verified-closed` in the supported runtime scope
-- **Phase 005:** subgroup structure planned for post-v0 operational qualification, security hardening and production readiness
-- **Next:** 005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control
+- **Phase 005:** in progress — bounded qualification/hardening authority established by 005-A
+- **Next:** 005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification
 
 ## Start here
 
@@ -36,6 +36,7 @@ For current normative design knowledge, begin with:
 - [v0 Implementation Closure & Evidence Baseline](knowledge/reconciliation/implementation-closure-evidence-baseline.md)
 - [004-H v0 Implementation Exit Gate](knowledge/decisions/004-h-v0-implementation-exit-gate.md)
 - [Phase 005 subgroup structure](005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md)
+- [005-A Phase Authority & Qualification Gate](knowledge/decisions/005-a-phase-authority-and-qualification-gate.md)
 
 Canonical documentation behavior is governed by:
 
@@ -133,14 +134,17 @@ Phase 004 completion is **not** a claim that the current live AWS EFS database h
 
 Live deployment qualification, dependency/security triage, provider/integration qualification, performance/operations work, and future product backlog items belong to Phase 005 under the bounded subgroup plan below.
 
-## Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness — planned
+## Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness — in progress
 
 Phase 005 qualifies and hardens the accepted v0 under operational conditions. It does not reopen Phase 004 semantic closure and does not itself authorize product expansion, destructive cleanup, a database-topology migration, or production deployment.
 
 The governing subgroup plan is [Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness](005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md).
 
-1. **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control** — next
-2. **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification**
+The canonical Phase 005 authority boundary is [005-A Phase Authority & Qualification Gate](knowledge/decisions/005-a-phase-authority-and-qualification-gate.md).
+
+1. [005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control](005-A-phase-authority-scope-release-criteria-evidence-taxonomy-and-change-control.md) — **complete**
+   - establishes C0–C5 change classes, ENV-L/CI/Q/P environment authority, E0–E4 evidence strength, readiness terminology, release-candidate identity, stop/amend rules, and bounded subgroup authority without production-deployment or semantic-redesign authority.
+2. **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification** — next
 3. **005-C — Deployment Artifact, Infrastructure, Configuration & Environment Readiness**
 4. **005-D — Live AWS/EFS Migration, Data Qualification, Backup/Restore & Rollback Exercise**
 5. **005-E — External Provider, Dispatch, Storage & Integration Boundary Qualification**
@@ -150,9 +154,9 @@ The governing subgroup plan is [Phase 005 — Post-v0 Operational Qualification,
 9. **005-I — Compatibility Retention, External Consumer Inventory, Deprecation Readiness & Product Backlog Admission**
 10. **005-J — Phase 005 Consolidation & Production-Readiness Exit Review**
 
-The intended primary dependency sequence is `005-A → 005-B → 005-C → 005-D → 005-E → 005-F → 005-G → 005-H → 005-I → 005-J`. Evidence gathering may overlap after 005-A, but authoritative decisions must respect the dependency rules recorded in the Phase 005 plan.
+The intended primary dependency sequence is `005-A → 005-B → 005-C → 005-D → 005-E → 005-F → 005-G → 005-H → 005-I → 005-J`.
 
-No Phase 005 runtime/live-environment work is pre-authorized merely by this subdivision. 005-A must establish the qualification and change-control authority boundary first.
+005-A now provides the bounded authority contract for later packages. 005-B may perform C0–C2 dependency/security/runtime hardening on the repository branch while preserving accepted semantics and rerunning affected regression evidence. Live environment/data work remains dependency-gated until 005-D, and production mutation is not automatically authorized anywhere before the final readiness gate and separate release action.
 
 ## Knowledge architecture
 
@@ -168,6 +172,6 @@ Do not create a fourth prose layer that restates the same rules. Prefer links to
 
 The completed discovery/specification/reconciliation branch remains `concept-design/v0-discovery` at the 003-G baseline. The accepted v0 implementation is represented on `concept-design/v0-implementation`.
 
-The bounded runtime authorization granted by 003-G has now been consumed and closed by 004-H. Phase 005 planning does not reactivate that authorization. Runtime, live-environment, security, provider, infrastructure or destructive-cleanup changes require the bounded authority established by the applicable Phase 005 subgroup.
+The bounded runtime authorization granted by 003-G was consumed and closed by 004-H. Phase 005 authority now comes only from the [005-A Phase Authority & Qualification Gate](knowledge/decisions/005-a-phase-authority-and-qualification-gate.md) and the owning subgroup's dependency/exit rules.
 
 If future runtime evidence contradicts an accepted semantic target, amend the narrowest canonical owner intentionally rather than treating newer code as automatic authority.
