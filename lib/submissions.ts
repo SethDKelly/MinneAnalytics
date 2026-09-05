@@ -1,16 +1,25 @@
-import type { DeckStatus, ProgramStatus, Score, Submission } from "@prisma/client";
+import type { DeckStatus, ProgramStatus } from "@prisma/client";
 import {
-  aggregateCurrentVersion,
-  partitionReviewerQueue as partitionReviewerQueueRescoring,
-  type MyScore,
-} from "./rescoring";
+  evaluationApplicabilityForReviewer,
+  type EvaluationApplicability,
+  type SemanticConferenceSubmission,
+  type SemanticSubmissionState,
+} from "./concept-design/semantic-reads";
+import { partitionReviewerQueue as partitionReviewerQueueRescoring } from "./rescoring";
 import { EMPTY_AGGREGATE } from "./scoring";
 import { parseDegreesJson } from "./degrees";
 
-export type { MyScore };
+export type MyScore = {
+  evaluationRef: string | null;
+  value: number;
+  notes: string | null;
+  submissionRevisionId: string | null;
+  scoredAbstractVersion: number | null;
+};
+
 export { partitionReviewerQueueRescoring as partitionReviewerQueue };
 
-export type SubmissionWithScores = Submission & { scores: Score[] };
+export type SubmissionWithScores = SemanticConferenceSubmission;
 
 export type SubmissionListItem = {
   id: string;
@@ -20,11 +29,19 @@ export type SubmissionListItem = {
   lastName: string;
   organization: string;
   technicalLevel: number;
-  programStatus: ProgramStatus;
-  deckStatus: DeckStatus | null;
   degrees: string[];
   aggregate: { count: number; sum: number; average: number };
   myScore: MyScore | null;
+  myEvaluationState: EvaluationApplicability;
+  semantic: SemanticSubmissionState;
+  compatibility: {
+    programStatus: ProgramStatus;
+    deckStatus: DeckStatus | null;
+    abstractReviewStatus: string;
+  };
+  // Transitional display aliases. These are canonical-derived projections, not read authority.
+  programStatus: ProgramStatus;
+  deckStatus: DeckStatus | null;
   abstractVersion: number;
   abstractReviewStatus: string;
   isSponsorSession: boolean;
@@ -32,35 +49,56 @@ export type SubmissionListItem = {
 };
 
 export function toListItem(
-  sub: SubmissionWithScores,
+  submission: SubmissionWithScores,
   reviewerAccessId?: string
 ): SubmissionListItem {
-  const my = reviewerAccessId
-    ? sub.scores.find((s) => s.reviewerAccessId === reviewerAccessId)
+  const applicability = reviewerAccessId
+    ? evaluationApplicabilityForReviewer(submission, reviewerAccessId)
+    : {
+        state: "never-evaluated" as const,
+        evaluationRef: null,
+        subjectRevisionRef: null,
+        value: null,
+        notes: null,
+      };
+  const exactScore = applicability.evaluationRef
+    ? submission.scores.find((score) => score.id === applicability.evaluationRef)
     : undefined;
+  const compatibility = {
+    programStatus: submission.programStatus,
+    deckStatus: submission.deckStatus,
+    abstractReviewStatus: submission.abstractReviewStatus,
+  };
+
   return {
-    id: sub.id,
-    title: sub.title,
-    abstract: sub.abstract,
-    firstName: sub.firstName,
-    lastName: sub.lastName,
-    organization: sub.organization,
-    technicalLevel: sub.technicalLevel,
-    programStatus: sub.programStatus,
-    deckStatus: sub.deckStatus,
-    degrees: parseDegreesJson(sub.degrees),
-    aggregate: aggregateCurrentVersion(sub.scores ?? [], sub.abstractVersion),
-    myScore: my
-      ? {
-          value: my.value,
-          notes: my.notes,
-          scoredAbstractVersion: my.scoredAbstractVersion,
-        }
-      : null,
-    abstractVersion: sub.abstractVersion,
-    abstractReviewStatus: sub.abstractReviewStatus,
-    isSponsorSession: sub.isSponsorSession,
-    createdAt: sub.createdAt.toISOString(),
+    id: submission.id,
+    title: submission.title,
+    abstract: submission.abstract,
+    firstName: submission.firstName,
+    lastName: submission.lastName,
+    organization: submission.organization,
+    technicalLevel: submission.technicalLevel,
+    programStatus: compatibility.programStatus,
+    deckStatus: compatibility.deckStatus,
+    degrees: parseDegreesJson(submission.degrees),
+    aggregate: submission.semantic.evaluation.aggregate ?? EMPTY_AGGREGATE,
+    myScore:
+      applicability.value != null
+        ? {
+            evaluationRef: applicability.evaluationRef,
+            value: applicability.value,
+            notes: applicability.notes,
+            submissionRevisionId: applicability.subjectRevisionRef,
+            scoredAbstractVersion: exactScore?.scoredAbstractVersion ?? null,
+          }
+        : null,
+    myEvaluationState: applicability.state,
+    semantic: submission.semantic,
+    compatibility,
+    abstractVersion: submission.semantic.revision.ordinal,
+    abstractReviewStatus: compatibility.abstractReviewStatus,
+    isSponsorSession: submission.isSponsorSession,
+    createdAt: submission.createdAt.toISOString(),
   };
 }
 
@@ -68,13 +106,13 @@ export function sortByAggregate(
   items: SubmissionListItem[]
 ): SubmissionListItem[] {
   return [...items].sort((a, b) => {
-    const aggA = a.aggregate ?? EMPTY_AGGREGATE;
-    const aggB = b.aggregate ?? EMPTY_AGGREGATE;
-    if (aggB.average !== aggA.average) {
-      return aggB.average - aggA.average;
+    const aggregateA = a.aggregate ?? EMPTY_AGGREGATE;
+    const aggregateB = b.aggregate ?? EMPTY_AGGREGATE;
+    if (aggregateB.average !== aggregateA.average) {
+      return aggregateB.average - aggregateA.average;
     }
-    if (aggB.sum !== aggA.sum) {
-      return aggB.sum - aggA.sum;
+    if (aggregateB.sum !== aggregateA.sum) {
+      return aggregateB.sum - aggregateA.sum;
     }
     return a.title.localeCompare(b.title);
   });
