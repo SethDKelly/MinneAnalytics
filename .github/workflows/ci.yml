@@ -99,6 +99,15 @@ jobs:
         run: npm run db:004-g:repair-compatibility -- --apply --all
         env:
           DATABASE_URL: file:./ci-migrate.db
+      - name: Reconcile 004-H Coverage Target authority
+        run: npm run db:004-h:backfill -- --apply --environment ci --out-dir /tmp/minne-004-h
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+      - name: Verify 004-H consolidated residual closure
+        run: npm run db:004-h:verify
+        env:
+          DATABASE_URL: file:./ci-migrate.db
+          MINNE_V0_SEMANTIC_READS: "true"
       - name: Rehearse fresh deployment bootstrap
         run: npm run db:migration:deploy-bootstrap
         env:
@@ -123,4 +132,4 @@ jobs:
           DATABASE_URL: file:./ci-migrate.db
           MINNE_V0_SEMANTIC_READS: "true"
       - name: Build production deployment image
-        run: docker build -t minneanalytics-004-g-ci .
+        run: docker build -t minneanalytics-004-h-ci .
