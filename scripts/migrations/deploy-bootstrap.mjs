@@ -154,8 +154,14 @@ async function main() {
   console.log("Applying checked-in Prisma migrations...");
   deployMigrations();
 
-  if (enabled("SEED_ON_START")) {
-    console.log("Seeding database before semantic reconciliation...");
+  const seedRequested = enabled("SEED_ON_START");
+  if (seedRequested && !before.fresh) {
+    throw new Error(
+      "SEED_ON_START is only permitted for a fresh database; refusing to run the destructive demo seed against persistent data."
+    );
+  }
+  if (seedRequested) {
+    console.log("Seeding fresh database before semantic reconciliation...");
     run("npx", ["tsx", "prisma/seed.ts"]);
   }
 
@@ -175,6 +181,7 @@ async function main() {
         ok: true,
         databasePath,
         adoptedLegacyBaseline,
+        seededFreshDatabase: seedRequested,
         migrationHistoryPresent: after.hasMigrationTable,
         semanticBackfillsRun: enabled("MINNE_RUN_SEMANTIC_BACKFILLS", true),
       },
