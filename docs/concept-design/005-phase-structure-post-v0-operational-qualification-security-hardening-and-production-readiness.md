@@ -1,6 +1,6 @@
 # Phase 005 — Post-v0 Operational Qualification, Security Hardening & Production Readiness
 
-Status: **Planned — subgroup structure established; execution not yet authorized**  
+Status: **In progress — 005-A complete; bounded qualification authority established**  
 Branch: **`concept-design/v0-implementation`**  
 v0 semantic implementation exit: **004-H complete**
 
@@ -16,62 +16,55 @@ The governing posture is:
 
 > **Qualify the accepted semantics under real operational conditions; do not silently redesign them while hardening the system.**
 
-This phase therefore separates:
-
-- release/qualification evidence from semantic design authority;
-- security and dependency changes from product feature work;
-- live-environment migration evidence from CI simulation;
-- provider/resource-boundary qualification from domain facts;
-- performance/scaling evidence from topology changes;
-- usability/accessibility corrections from unreviewed product expansion;
-- compatibility deprecation evidence from destructive cleanup;
-- product backlog admission from implementation authorization.
+The canonical authority/change-control contract is now [005-A Phase Authority & Qualification Gate](knowledge/decisions/005-a-phase-authority-and-qualification-gate.md).
 
 ## 2. Phase-wide constraints
 
-Phase 005 planning establishes **no blanket runtime authorization**.
-
-005-A must define the authority and change-control boundary before later implementation or live-environment work proceeds.
+005-A establishes bounded package authority rather than blanket implementation authority.
 
 Across all subgroups:
 
 1. accepted v0 concept semantics remain authoritative;
-2. a hardening change that materially changes semantics must stop and amend the narrowest canonical owner before proceeding;
-3. retained compatibility projections remain subordinate unless an explicit later deprecation/removal gate says otherwise;
-4. live data must not be mutated merely to produce evidence;
-5. production-readiness claims require environment-specific evidence rather than extrapolation from CI;
-6. security findings must be classified rather than hidden behind a green semantic test suite;
-7. external provider uncertainty must preserve the Dispatch/resource-boundary rules accepted in Phase 004;
-8. SQLite single-writer constraints remain explicit until an independently designed topology change replaces them;
-9. accessibility/usability improvements may refine interaction, but behavior-changing product requests require backlog admission;
-10. destructive cleanup is not authorized merely because Phase 005 exists.
+2. every material change must be classified C0–C5 under the 005-A gate;
+3. semantic/design changes are C4 and require stop/amend rather than ad hoc implementation;
+4. topology/product/destructive compatibility changes are C5 and require separate admission/execution authority;
+5. retained compatibility projections remain subordinate unless a later explicit deprecation/removal gate says otherwise;
+6. live data must not be mutated merely to produce evidence;
+7. production-readiness claims require evidence of the strength appropriate to the property being claimed;
+8. CI evidence cannot be relabeled as live AWS/provider evidence;
+9. external provider uncertainty must preserve accepted Dispatch/resource-boundary rules;
+10. SQLite single-writer constraints remain explicit until a separately designed topology change replaces them;
+11. production mutation is not automatically authorized by Phase 005;
+12. destructive cleanup remains evidence-driven and separately gated.
 
 ## 3. Logical subgroups
 
-### 005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control
+### 005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control — complete
 
-Purpose:
+Established:
 
-- establish what Phase 005 may change and what still requires separate design authority;
-- define production-readiness vs deployment-readiness vs operational-readiness terminology;
-- define evidence classes and minimum exit criteria;
-- define environment scope (`local`, CI, AWS dev/staging, production if later authorized);
-- define change-control and stop/amend rules for semantic, security, infrastructure, dependency and UX findings;
-- decide branch/release-candidate discipline and the evidence retention model.
+- C0–C5 change classes;
+- ENV-L / ENV-CI / ENV-Q / ENV-P environment authority;
+- E0–E4 evidence strength;
+- evidence-domain tags and evidence-record requirements;
+- readiness terms from semantic acceptance through production release;
+- immutable release-candidate identity requirements;
+- evidence-currency/invalidation rules;
+- blocker / accepted-risk / out-of-scope / backlog dispositions;
+- stop/amend rules for semantic, provider, migration, topology, UX and compatibility contradictions;
+- bounded authority for 005-B through 005-J.
 
-Why first:
+005-A grants no automatic authority for production deployment, semantic redesign, destructive compatibility cleanup, database/topology migration or broad product implementation.
 
-Every later subgroup needs a shared definition of acceptable evidence and authority. Without this boundary, security or operational work could accidentally reopen domain semantics or overstate release readiness.
+Primary records:
 
-Primary output:
-
-- Phase 005 authority/qualification contract and work-package dependency map.
-
-No runtime or live-environment change is authorized merely by completing 005-A unless 005-A explicitly grants a bounded package authorization.
+- [005-A phase record](005-A-phase-authority-scope-release-criteria-evidence-taxonomy-and-change-control.md)
+- [005-A authority/evidence matrix](evidence/005-A-authority-evidence-and-release-gate-matrix.md)
+- [005-A canonical gate](knowledge/decisions/005-a-phase-authority-and-qualification-gate.md)
 
 ---
 
-### 005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification
+### 005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification — next
 
 Purpose:
 
@@ -83,13 +76,17 @@ Purpose:
 - review container/runtime privilege, filesystem, network and application security baselines;
 - re-run the complete v0 semantic/migration gate after security-relevant upgrades.
 
-Key boundary:
+Authority:
 
-A dependency upgrade is not allowed to silently change application semantics. Security remediation that requires semantic change must use the Phase 005 change-control path.
+- C0–C2 only under 005-A;
+- no live database migration;
+- no production credential mutation;
+- no production deployment;
+- if remediation changes accepted semantics, stop and reclassify C4.
 
 Dependency:
 
-- requires 005-A.
+- 005-A complete.
 
 ---
 
@@ -104,14 +101,10 @@ Purpose:
 - establish environment-specific preflight/readiness checks;
 - define configuration drift detection and safe rollout/abort criteria.
 
-Key boundary:
+Authority:
 
-This subgroup qualifies infrastructure and deployment mechanics. It does not yet claim that the mounted AWS database has been successfully migrated.
-
-Dependencies:
-
-- requires 005-A;
-- should incorporate 005-B security corrections before the live qualification baseline is frozen.
+- C0–C2 after the accepted 005-B security baseline;
+- no claim that mounted AWS data has already migrated.
 
 ---
 
@@ -119,24 +112,20 @@ Dependencies:
 
 Purpose:
 
-- exercise the migration-safe deployment workflow against the actual approved AWS qualification environment;
-- classify the mounted SQLite database before mutation;
-- authorize legacy-baseline adoption only when the database matches the recognized pre-004-A shape;
+- exercise the migration-safe deployment workflow against a specifically approved ENV-Q AWS environment;
+- classify mounted SQLite before mutation;
+- authorize legacy-baseline adoption only for the recognized pre-004-A shape;
 - retain and inspect backup/restore evidence;
 - execute and inspect semantic backfill/reconciliation reports;
 - fail closed on blocking defects or unrecognized non-empty databases;
-- verify post-migration organizer, reviewer, presenter and public flows;
-- rehearse supported semantic-read rollback without weakening canonical writer/security floors.
+- verify organizer, reviewer, presenter and public flows after migration;
+- rehearse supported semantic-read rollback without weakening writer/security floors.
 
-Key boundary:
+Authority:
 
-This is the first subgroup intended to turn CI migration claims into environment-specific operational evidence. It is not automatically a production deployment.
-
-Dependencies:
-
-- requires 005-A;
-- requires the accepted 005-B security baseline;
-- requires 005-C deployment/environment readiness.
+- first subgroup that may issue bounded C3 authority for a named ENV-Q environment;
+- requires accepted 005-B and 005-C results;
+- does not receive ENV-P authority from Phase 005 planning or 005-A.
 
 ---
 
@@ -147,18 +136,16 @@ Purpose:
 - replace or qualify the current email stub against the intended provider contract when provider integration is in scope;
 - preserve exact rendered message evidence, semantic rounds and stable idempotency identity;
 - classify known success, known failure and uncertain provider outcomes;
-- prove that uncertain handoff cannot be blindly retried;
+- prove uncertain handoff cannot be blindly retried;
 - qualify storage/resource-boundary behavior for ArtifactVersion persistence and orphan/recovery paths;
-- inventory any additional external integrations and verify timeout, retry, authorization and failure semantics.
+- inventory additional external integrations and verify timeout, retry, authorization and failure semantics.
 
-Product boundary:
+Authority:
 
-Automatic Feedback notification, if desired, is a separate Dispatch purpose/synchronization and may be admitted here only after 005-A confirms that it does not alter the accepted Feedback concept boundary.
+- C1–C3 using approved non-production credentials/environments;
+- provider limitations cannot override accepted Dispatch/ArtifactVersion semantics.
 
-Dependencies:
-
-- requires 005-A;
-- should run against the stable 005-C/005-D operational baseline where practical.
+Automatic Feedback notification, if desired, is a separate Dispatch purpose/synchronization and must not restore Feedback→email coupling.
 
 ---
 
@@ -166,22 +153,18 @@ Dependencies:
 
 Purpose:
 
-- establish logs, metrics and operational diagnostics sufficient to distinguish domain failure, migration failure, provider uncertainty, storage failure and infrastructure failure;
-- surface pending/blocked synchronization work and provider uncertainty where operationally relevant;
-- define health/readiness signals without converting them into new domain state;
-- establish alerting thresholds and incident triage paths;
+- establish logs, metrics and diagnostics sufficient to distinguish domain failure, migration failure, provider uncertainty, storage failure and infrastructure failure;
+- surface pending/blocked synchronization work where operationally relevant;
+- define health/readiness signals without converting them into domain state;
+- establish alerting and incident triage;
 - document backup, restore, forward-repair and read-rollback runbooks;
-- verify evidence retention and redaction of protected data;
-- define operator-facing recovery procedures for known failure classes.
+- verify evidence retention/redaction;
+- define operator recovery procedures for known failure classes.
 
-Key boundary:
+Authority:
 
-Observability describes and diagnoses system behavior; it must not become a competing semantic authority or a generic Audit Trail/Workflow concept.
-
-Dependencies:
-
-- requires 005-A;
-- informed by 005-C through 005-E.
+- C0–C2 plus controlled non-production recovery exercises;
+- observability remains descriptive/operational, not semantic authority.
 
 ---
 
@@ -189,23 +172,17 @@ Dependencies:
 
 Purpose:
 
-- establish representative workload profiles and performance budgets;
-- validate response-time and throughput behavior for submission, review, program management, Schedule, Dispatch and public access paths;
-- exercise concurrency-sensitive invariants such as Capacity allocation, expected-head Revision/Selection writes and Schedule apply;
-- test EFS/SQLite behavior under the supported single-writer topology;
-- verify recovery behavior under restart, partial failure and resource pressure;
-- identify the actual boundary at which SQLite/EFS or single-task ECS becomes unsuitable;
-- record scaling triggers without prematurely implementing a new database/topology.
+- establish representative workload profiles and budgets;
+- validate response-time/throughput for submission, review, program management, Schedule, Dispatch and public paths;
+- exercise Capacity, expected-head Revision/Selection and Schedule concurrency invariants;
+- test EFS/SQLite under the supported single-writer topology;
+- verify restart/partial-failure/resource-pressure recovery;
+- identify evidence-based scaling limits/triggers without prematurely replacing the topology.
 
-Key boundary:
+Authority:
 
-Phase 005 may establish that a topology change is needed. A move to horizontally scaled multi-writer infrastructure is a separately designed architecture change, not an implicit performance tweak.
-
-Dependencies:
-
-- requires 005-A;
-- should use the observability baseline from 005-F;
-- should test the stable deployed/integration posture from 005-D/005-E.
+- bounded non-production qualification and semantics-preserving C1/C2 tuning;
+- a database/topology migration is C5 and requires separate design/execution authority.
 
 ---
 
@@ -214,21 +191,15 @@ Dependencies:
 Purpose:
 
 - validate critical presenter, reviewer, organizer and public workflows end to end;
-- assess keyboard access, focus behavior, labels, contrast, responsive layouts and assistive-technology expectations;
-- exercise representative browsers/devices and failure/degraded-mode presentation;
-- validate that semantic reason codes and protected-information states are understandable in the UI;
-- distinguish interaction defects from requests for new product behavior;
-- capture operator/user findings without silently expanding the accepted v0 domain model.
+- assess keyboard access, focus behavior, labels, contrast, responsive layout and assistive-technology expectations;
+- exercise representative browsers/devices and degraded-mode presentation;
+- validate semantic reason codes and protected-information states are understandable;
+- distinguish interaction defects from requests for new product behavior.
 
-Key boundary:
+Authority:
 
-Accessibility and usability corrections may change presentation and interaction mechanics. New workflow states, authorities or domain behaviors require deliberate design admission rather than being hidden inside UX fixes.
-
-Dependencies:
-
-- requires 005-A;
-- should use the stable operational baseline after 005-D;
-- provider-dependent workflows should include 005-E results where applicable.
+- accessibility/usability qualification and C1 presentation/interaction corrections preserving semantic action/state meaning;
+- hidden new workflow/domain behavior is C4/C5 and must stop for admission/design.
 
 ---
 
@@ -238,25 +209,15 @@ Purpose:
 
 - re-inventory retained compatibility fields, projections and adapter routes;
 - identify known first-party and external consumers;
-- classify which compatibility surfaces still provide rollback or integration value;
+- classify rollback/integration value;
 - decide whether any surface is ready for a future deprecation/removal plan;
-- preserve history/migration evidence before any eventual physical cleanup;
-- consolidate operational/UX findings that represent genuine product changes;
-- classify those product changes as:
-  - configuration/policy refinement within current design;
-  - implementation refinement under existing semantics;
-  - synchronization/application-policy amendment;
-  - new/changed concept-design work;
-  - deferred backlog.
+- preserve history/migration evidence before eventual physical cleanup;
+- classify operational/UX findings that represent genuine product changes as policy refinement, implementation refinement, design amendment, new concept work or backlog.
 
-Key boundary:
+Authority:
 
-005-I is an **admission and deprecation-readiness gate**, not blanket authorization to delete compatibility structures or implement newly discovered product features.
-
-Dependencies:
-
-- requires 005-A;
-- benefits from evidence produced by 005-D through 005-H.
+- inventory/classification/admission only;
+- no destructive cleanup or product implementation merely because a finding is admitted.
 
 ---
 
@@ -265,7 +226,7 @@ Dependencies:
 Purpose:
 
 - consolidate 005-A through 005-I;
-- verify that qualification evidence is environment-specific and current;
+- verify evidence is current, environment-specific and tied to an immutable RC;
 - review security/dependency residual risk;
 - review live migration/backup/restore evidence;
 - review provider/integration uncertainty handling;
@@ -273,27 +234,23 @@ Purpose:
 - review performance/scaling limits;
 - review accessibility/usability findings;
 - review compatibility/deprecation and product-admission outcomes;
-- classify remaining issues as blocker, accepted residual risk, explicit non-production scope, or post-Phase-005 backlog;
-- decide whether the qualified release candidate may receive a production-readiness approval.
+- classify remaining issues as blocker, accepted residual risk, out-of-scope or backlog;
+- decide whether the qualified RC may receive production-readiness approval.
 
-Exit rule:
+Exit outcomes:
 
-005-J may conclude one of:
-
-1. **production-ready for the explicitly qualified scope/environment**;
+1. **production-ready for the explicitly qualified RC scope**;
 2. **operationally qualified but not production-approved**, with named blockers;
-3. **Phase 005 incomplete**, where a required safety/correctness/operational criterion has not been met.
+3. **Phase 005 incomplete**, where required criteria have not been met.
 
-It must not translate missing evidence into an optimistic release claim.
+005-J readiness approval is distinct from the operational fact of production deployment.
 
 ## 4. Dependency-safe progression
 
-Recommended primary sequence:
-
 ```text
-005-A  Authority / evidence / change control
+005-A  Authority / evidence / change control — complete
   ↓
-005-B  Dependency + security baseline
+005-B  Dependency + security baseline — next
   ↓
 005-C  Artifact / infrastructure / environment readiness
   ↓
@@ -312,43 +269,33 @@ Recommended primary sequence:
 005-J  Consolidation + production-readiness exit
 ```
 
-Some evidence gathering may overlap after 005-A, but authoritative decisions should respect these dependencies:
+Some evidence gathering may overlap, but authoritative decisions must respect dependencies. Material changes invalidate affected earlier evidence and require rerun or explicit applicability justification under 005-A.
 
-- 005-D must not precede infrastructure/environment readiness;
-- 005-G should not produce performance conclusions without usable diagnostics;
-- 005-I should use real operational/UX evidence rather than speculate about cleanup/product work;
-- 005-J must consume current evidence from all preceding subgroups.
+## 5. Explicit non-goals
 
-## 5. Explicit non-goals for Phase 005 planning
+Phase 005 does not automatically authorize:
 
-This subgroup plan does not itself authorize:
-
-- a new product feature set;
 - new Concept Design concepts;
+- a new product feature set;
 - horizontal multi-writer SQLite;
 - a database-platform migration;
 - destructive removal of compatibility fields/routes;
 - production deployment;
-- real-provider credential creation or secret rotation;
+- real production credential mutation;
 - broad UI redesign;
-- a generic authorization/workflow/audit platform;
-- refactoring code to mirror OKF or concept-document topology.
+- generic authorization/workflow/audit infrastructure;
+- refactoring code to mirror OKF topology.
 
-Any of these may become justified by Phase 005 evidence, but they require the appropriate explicit authority before execution.
+Any of these may become justified by Phase 005 evidence, but they require the appropriate explicit design/admission/execution authority.
 
-## 6. Phase 005 starting point
+## 6. Current handoff
 
-The logical subdivision is accepted as:
+Completed:
 
-1. **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control**
-2. **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification**
-3. **005-C — Deployment Artifact, Infrastructure, Configuration & Environment Readiness**
-4. **005-D — Live AWS/EFS Migration, Data Qualification, Backup/Restore & Rollback Exercise**
-5. **005-E — External Provider, Dispatch, Storage & Integration Boundary Qualification**
-6. **005-F — Observability, Diagnostics, Incident Response, Recovery & Operational Runbooks**
-7. **005-G — Performance, Load, Concurrency, Resilience & Scaling-Limit Validation**
-8. **005-H — Accessibility, Usability, Browser/Device & End-to-End Workflow Qualification**
-9. **005-I — Compatibility Retention, External Consumer Inventory, Deprecation Readiness & Product Backlog Admission**
-10. **005-J — Phase 005 Consolidation & Production-Readiness Exit Review**
+- **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control**
 
-Next activity: **005-A**.
+Next:
+
+- **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification**
+
+005-B begins under the C0–C2 repository/runtime hardening authority defined by the 005-A canonical gate.
