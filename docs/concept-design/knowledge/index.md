@@ -19,6 +19,7 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [002-G Formal Specification & Composition Gate](decisions/002-g-formal-specification-and-composition-gate.md) - Completes Phase 002 with all 17 concepts formally specified and hands the accepted model to implementation reconciliation.
 * [003-G Implementation Reconciliation Gate](decisions/003-g-implementation-reconciliation-gate.md) - Completes Phase 003 and authorizes bounded Phase 004 runtime implementation under the accepted reconciliation, migration, rollback-floor, and evidence rules.
 * [004-H v0 Implementation Exit Gate](decisions/004-h-v0-implementation-exit-gate.md) - Completes Phase 004 with all 18 semantic gaps and 4 policy gaps verified-closed in the supported v0 runtime scope while withholding any unsupported production-release claim.
+* [005-A Phase Authority & Qualification Gate](decisions/005-a-phase-authority-and-qualification-gate.md) - Establishes bounded Phase 005 hardening/qualification authority, environment scope, evidence strength, release terminology and stop/amend rules without reopening the accepted v0 semantic baseline.
 
 # Concept catalog
 
@@ -47,17 +48,27 @@ Historical phase records and evidence remain in the parent `docs/concept-design/
 * [v0 Implementation Execution Handoff](reconciliation/implementation-execution-handoff.md) - Historical Phase 004 package authorization, dependencies, execution constraints, and stop-and-amend rule.
 * [v0 Implementation Closure & Evidence Baseline](reconciliation/implementation-closure-evidence-baseline.md) - Runtime closure states, evidence requirements, high-risk verification, rollback-floor checks, and final closure reporting rules.
 
-# Phase 005 planning boundary
+# Phase 005 qualification boundary
 
 The historical Phase 005 subgroup plan is [Post-v0 Operational Qualification, Security Hardening & Production Readiness](../005-phase-structure-post-v0-operational-qualification-security-hardening-and-production-readiness.md).
 
-It divides the next stage into ten dependency-aware groups from authority/evidence governance through security, deployment, live migration, provider qualification, operations, performance, accessibility/usability, compatibility/product admission, and a final production-readiness gate.
+The canonical qualification/change-control authority is [005-A Phase Authority & Qualification Gate](decisions/005-a-phase-authority-and-qualification-gate.md).
 
-The subdivision itself does **not** authorize runtime, live-environment, destructive-cleanup, provider, or production deployment changes. **005-A must establish the bounded authority and change-control rules first.**
+005-A establishes:
+
+- change classes C0–C5;
+- environment classes ENV-L/ENV-CI/ENV-Q/ENV-P;
+- evidence strength E0–E4;
+- readiness terms from semantic acceptance through production release;
+- immutable release-candidate evidence identity;
+- stop/amend rules when hardening would change semantics or topology;
+- bounded subgroup authority for 005-B through 005-J.
+
+It grants no automatic production deployment, semantic redesign, destructive compatibility cleanup or topology-migration authority.
 
 # Current maturity
 
-**Phase 001 discovery, Phase 002 formal specification, Phase 003 implementation reconciliation, and Phase 004 v0 implementation execution are complete. Phase 005 is planned and has not yet begun execution.**
+**Phase 001 discovery, Phase 002 formal specification, Phase 003 implementation reconciliation, and Phase 004 v0 implementation execution are complete. Phase 005 is in progress; 005-A is complete.**
 
 All 17 concepts are formally specified.
 
@@ -67,9 +78,9 @@ Implementation branch: `concept-design/v0-implementation` from the immutable 003
 
 The implementation exit does **not** claim that the current live AWS EFS database has already been migrated or that a production release has been approved.
 
-Next: **005-A — Phase Authority, Scope, Release Criteria, Evidence Taxonomy & Change Control**.
+Next: **005-B — Dependency, Supply-Chain, Secrets & Runtime Security Qualification** under the C0–C2 authority established by 005-A.
 
-The bounded runtime authorization granted by 003-G was consumed by completed Phase 004 and is not reactivated by Phase 005 planning.
+Production mutation remains outside the default Phase 005 authority. A later 005-D package may authorize bounded execution only against a specifically named approved non-production qualification environment after its prerequisites pass.
 
 # Historical design and implementation record
 
