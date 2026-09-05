@@ -15,22 +15,54 @@ export function slugifyThemeName(name: string): string {
   return base || "theme";
 }
 
-export function formatThemeDisplayName(theme: { name: string; removedAt: Date | null }): string {
-  return theme.removedAt ? `${theme.name} (removed)` : theme.name;
+export function formatThemeDisplayName(theme: {
+  name: string;
+  removedAt: Date | null;
+  currentTermState?: { label: string; availability: "AVAILABLE" | "RETIRED" } | null;
+}): string {
+  const label = theme.currentTermState?.label ?? theme.name;
+  const retired = theme.currentTermState
+    ? theme.currentTermState.availability === "RETIRED"
+    : Boolean(theme.removedAt);
+  return retired ? `${label} (removed)` : label;
 }
 
 export async function getSelectableThemes(conferenceId: string) {
+  const semanticReads = isImplementationGateEnabled("semanticReads");
   return prisma.theme.findMany({
-    where: { conferenceId, removedAt: null },
+    where: semanticReads
+      ? {
+          conferenceId,
+          currentTermState: { is: { availability: "AVAILABLE" } },
+        }
+      : { conferenceId, removedAt: null },
     orderBy: [{ source: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    include: semanticReads ? { currentTermState: true } : undefined,
   });
 }
 
 export async function getConferenceThemesForAdmin(conferenceId: string) {
-  return prisma.theme.findMany({
+  const semanticReads = isImplementationGateEnabled("semanticReads");
+  if (!semanticReads) {
+    return prisma.theme.findMany({
+      where: { conferenceId },
+      orderBy: [{ removedAt: "asc" }, { source: "asc" }, { sortOrder: "asc" }],
+      include: { _count: { select: { submissions: true } } },
+    });
+  }
+
+  const themes = await prisma.theme.findMany({
     where: { conferenceId },
-    orderBy: [{ removedAt: "asc" }, { source: "asc" }, { sortOrder: "asc" }],
-    include: { _count: { select: { submissions: true } } },
+    orderBy: [{ source: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    include: {
+      currentTermState: true,
+      _count: { select: { submissions: true } },
+    },
+  });
+  return themes.sort((a, b) => {
+    const aRetired = a.currentTermState?.availability === "RETIRED" ? 1 : 0;
+    const bRetired = b.currentTermState?.availability === "RETIRED" ? 1 : 0;
+    return aRetired - bRetired || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
   });
 }
 
@@ -46,11 +78,15 @@ export async function findOrCreatePresenterTheme(params: {
       conferenceId: params.conferenceId,
       slug,
     },
+    include: { currentTermState: true },
   });
   const canonicalWrites = isImplementationGateEnabled("revisionEvaluationWrites");
 
   if (existing) {
-    if (existing.removedAt) {
+    const retired = canonicalWrites
+      ? existing.currentTermState?.availability === "RETIRED"
+      : Boolean(existing.removedAt);
+    if (retired) {
       if (canonicalWrites) {
         return prisma.$transaction(async (tx) => {
           await tx.theme.update({
@@ -61,6 +97,16 @@ export async function findOrCreatePresenterTheme(params: {
                 params.proposedBySubmissionId ?? existing.proposedBySubmissionId,
             },
           });
+          if (!existing.currentTermState) {
+            await establishInitialTermState(tx, {
+              themeId: existing.id,
+              label: existing.name,
+              availability: existing.removedAt ? "RETIRED" : "AVAILABLE",
+              recordedByRef: params.proposedBySubmissionId ?? null,
+              provenance: "BACKFILLED_CURRENT_STATE",
+              observedAt: new Date(),
+            });
+          }
           await recordTermState(tx, {
             themeId: existing.id,
             label: params.name.trim(),
@@ -127,10 +173,11 @@ export function themeOptionFromRow(theme: {
   id: string;
   name: string;
   source: ThemeSource;
+  currentTermState?: { label: string } | null;
 }) {
   return {
     id: theme.id,
-    name: theme.name,
+    name: theme.currentTermState?.label ?? theme.name,
     source: theme.source,
   };
 }
