@@ -7,8 +7,8 @@ This directory contains the repository's Daniel Jackson–style Concept Design r
 - **Concept model maturity:** v0 — formal concept specification and implementation reconciliation complete; runtime implementation in progress
 - **Design/reconciliation baseline:** `concept-design/v0-discovery` at `e50bcea4e70e26e9b9f1a9560ea68b99f0d798bb`
 - **Working implementation branch:** `concept-design/v0-implementation`
-- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C; 004-D; 004-E
-- **Next:** 004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement
+- **Completed:** Phase 001 (001-A through 001-G); Phase 002 (002-A through 002-G); Phase 003 (003-A through 003-G); 004-A; 004-B; 004-C; 004-D; 004-E; 004-F
+- **Next:** 004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate
 
 ## Start here
 
@@ -108,11 +108,12 @@ Phase 004 executes the accepted reconciliation architecture. The authoritative p
    - established canonical Proposal-offer Window + suspension policy, monotonic Archive closure, action-oriented capabilities at migrated commands, explicit exact-Revision edit exceptions, native Controlled Disclosure staging/reveal, blind-mode locking, and truthful legacy disclosure-cohort handling.
 5. [004-E — Publication, Public Access, Schedule & Dispatch Hardening](004-E-publication-public-access-schedule-and-dispatch-hardening.md) — **complete**
    - established exact ArtifactVersion Publication history and public-token authorization, share-policy provenance and SYNC-008 cleanup, non-mutating Schedule proposals with expected-base atomic apply, and exact Dispatch message/round/attempt evidence with uncertain-outcome protection.
-6. **004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement** — next
-7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate**
+6. [004-F — Semantic Read Models, API/UI Cutover & Compatibility Retirement](004-F-semantic-read-models-api-ui-cutover-and-compatibility-retirement.md) — **complete**
+   - moved first-party presenter/reviewer/organizer/Schedule/Dispatch/public-availability/export consumers to canonical semantic reads, introduced exact Revision-aware evaluation applicability and explicit protected-information states, replaced first-party generic Selection/Deliverable status mutations with action-oriented endpoints, and proved authority cutover under deliberate compatibility drift.
+7. **004-G — Migration Validation, Rollback Rehearsal & Legacy Cleanup Gate** — next
 8. **004-H — Phase 004 Consolidation & v0 Implementation Exit Review**
 
-Completed package records establish bounded runtime implementation evidence. They do not by themselves mark their SG/SG-P items globally `verified-closed`; semantic read/consumer migration, legacy-authority retirement, rollback floors, migration validation, and final closure accounting remain assigned to later Phase 004 packages.
+Completed package records establish bounded runtime implementation evidence. They do not by themselves mark their SG/SG-P items globally `verified-closed`; cross-environment migration validation, rollback rehearsal, residual-consumer inventory, destructive-cleanup eligibility, and final closure accounting remain assigned to 004-G/004-H.
 
 Destructive cleanup is not pre-authorized and remains conditional on the 004-G removal gate.
 
