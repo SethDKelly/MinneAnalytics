@@ -1,129 +1,111 @@
-import type { EmailTemplateKey, ProgramStatus, ThemeSource } from "@prisma/client";
-import { formatThemeDisplayName } from "@/lib/themes";
+import type { EmailTemplateKey } from "@prisma/client";
+import type { SemanticConferenceSubmission } from "@/lib/concept-design/semantic-reads";
+import { selectionLabel } from "@/lib/concept-design/semantic-reads";
 import {
-  buildScoresSummary,
+  buildEvaluationsSummary,
   degreesDisplay,
   type ExportRow,
 } from "@/lib/export-csv";
-import { aggregateCurrentVersion } from "@/lib/rescoring";
 
-type ThemeJoin = {
-  theme: { name: string; source: ThemeSource; removedAt: Date | null };
-};
-
-type ScoreRow = {
-  value: number;
-  notes: string | null;
-  scoredAbstractVersion: number | null;
-  reviewerAccessId: string;
-};
-
-type FeedbackRow = {
+export type FeedbackExportRow = {
+  submissionId: string;
   kind: string;
   body: string;
   createdAt: Date;
-  abstractVersion: number | null;
+  submissionRevisionId: string | null;
+  submissionRevisionVersion: number | null;
 };
 
-type EmailSendRow = {
+export type DispatchExportRow = {
+  submissionId: string | null;
   templateKey: EmailTemplateKey;
   round: number;
   sentAt: Date;
 };
 
-export type SubmissionForExport = {
-  id: string;
-  title: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  organization: string;
-  programStatus: ProgramStatus;
-  deckStatus: string | null;
-  deckShareable: boolean;
-  vipRegistered: boolean;
-  isSponsorSession: boolean;
-  technicalLevel: number;
-  abstractVersion: number;
-  abstractReviewStatus: string;
-  degrees: string;
-  createdAt: Date;
-  scores: ScoreRow[];
-  themes: ThemeJoin[];
-  presenterFeedback: FeedbackRow[];
-  emailSendRecords: EmailSendRow[];
-};
-
 export function buildExportRows(
-  submissions: SubmissionForExport[],
-  labelById: Record<string, string>
+  submissions: SemanticConferenceSubmission[],
+  labelById: Record<string, string>,
+  feedbackRows: FeedbackExportRow[],
+  dispatchRows: DispatchExportRow[]
 ): ExportRow[] {
-  return submissions.map((s) => {
-    const agg = aggregateCurrentVersion(
-      s.scores,
-      s.abstractVersion
-    );
-    const themeNames = s.themes.map((t) => formatThemeDisplayName(t.theme));
-    const themeSources = s.themes.map((t) => t.theme.source).join("; ");
+  const feedbackBySubmission = new Map<string, FeedbackExportRow[]>();
+  for (const feedback of feedbackRows) {
+    const current = feedbackBySubmission.get(feedback.submissionId) ?? [];
+    current.push(feedback);
+    feedbackBySubmission.set(feedback.submissionId, current);
+  }
+  const sendsBySubmission = new Map<string, DispatchExportRow[]>();
+  for (const send of dispatchRows) {
+    if (!send.submissionId) continue;
+    const current = sendsBySubmission.get(send.submissionId) ?? [];
+    current.push(send);
+    sendsBySubmission.set(send.submissionId, current);
+  }
 
-    const feedbackSummary =
-      s.presenterFeedback.length === 0
-        ? ""
-        : s.presenterFeedback
-            .map((f) => {
-              const tag =
-                f.kind === "ABSTRACT" && f.abstractVersion != null
-                  ? `v${f.abstractVersion}`
-                  : f.kind;
-              const excerpt =
-                f.body.length > 80 ? `${f.body.slice(0, 80)}…` : f.body;
-              return `${tag}: ${excerpt}`;
-            })
-            .join(" | ");
-
-    const emailSendsSummary =
-      s.emailSendRecords.length === 0
-        ? ""
-        : s.emailSendRecords
-            .map(
-              (e) =>
-                `${e.templateKey} r${e.round} (${e.sentAt.toISOString().slice(0, 10)})`
-            )
-            .join(" | ");
+  return submissions.map((submission) => {
+    const feedback = feedbackBySubmission.get(submission.id) ?? [];
+    const sends = sendsBySubmission.get(submission.id) ?? [];
+    const feedbackSummary = feedback
+      .map((row) => {
+        const subject =
+          row.kind === "ABSTRACT"
+            ? row.submissionRevisionId
+              ? `Revision ${row.submissionRevisionVersion ?? "?"} (${row.submissionRevisionId})`
+              : "ABSTRACT legacy-subject-unknown"
+            : row.kind;
+        const excerpt = row.body.length > 80 ? `${row.body.slice(0, 80)}…` : row.body;
+        return `${subject}: ${excerpt}`;
+      })
+      .join(" | ");
+    const emailSendsSummary = sends
+      .map(
+        (send) =>
+          `${send.templateKey} r${send.round} (${send.sentAt.toISOString().slice(0, 10)})`
+      )
+      .join(" | ");
 
     return {
-      id: s.id,
-      title: s.title,
-      firstName: s.firstName,
-      lastName: s.lastName,
-      email: s.email,
-      organization: s.organization,
-      programStatus: s.programStatus,
-      deckStatus: s.deckStatus,
-      deckShareable: s.deckShareable,
-      vipRegistered: s.vipRegistered,
-      isSponsorSession: s.isSponsorSession,
-      technicalLevel: s.technicalLevel,
-      abstractVersion: s.abstractVersion,
-      abstractReviewStatus: s.abstractReviewStatus,
-      aggregateAverage: agg.average,
-      aggregateCount: agg.count,
-      degrees: degreesDisplay(s.degrees),
-      themeNames: themeNames.join("; "),
-      themeSources,
-      feedbackCount: s.presenterFeedback.length,
+      id: submission.id,
+      title: submission.title,
+      firstName: submission.firstName,
+      lastName: submission.lastName,
+      email: submission.email,
+      organization: submission.organization,
+      selectionDisposition: selectionLabel(submission.semantic.selection.disposition),
+      withdrawn: submission.semantic.withdrawal.withdrawn,
+      effectiveParticipation: submission.semantic.participation.effective,
+      currentRevisionRef: submission.semantic.revision.currentRevisionRef ?? "",
+      currentRevisionVersion: submission.semantic.revision.ordinal,
+      deliverableReadiness: submission.semantic.deliverable.readiness,
+      artifactVersionRef: submission.semantic.deliverable.currentArtifactVersionRef ?? "",
+      sharingEligible: submission.semantic.sharing.eligible,
+      publicationAvailability: submission.semantic.publication.availability,
+      vipRegistered: submission.vipRegistered,
+      isSponsorSession: submission.isSponsorSession,
+      technicalLevel: submission.technicalLevel,
+      aggregateAverage: submission.semantic.evaluation.aggregate.average,
+      aggregateCount: submission.semantic.evaluation.aggregate.count,
+      degrees: degreesDisplay(submission.degrees),
+      themeNames: submission.themes.map((theme) => theme.theme.name).join("; "),
+      feedbackCount: feedback.length,
       feedbackSummary,
       emailSendsSummary,
-      createdAt: s.createdAt.toISOString(),
-      scoresSummary: buildScoresSummary(
-        s.scores.map((sc) => ({
-          label: labelById[sc.reviewerAccessId] ?? "Reviewer",
-          value: sc.value,
-          notes: sc.notes,
-          scoredAbstractVersion: sc.scoredAbstractVersion,
-          abstractVersion: s.abstractVersion,
+      createdAt: submission.createdAt.toISOString(),
+      evaluationsSummary: buildEvaluationsSummary(
+        submission.evaluationHistory.map((evaluation) => ({
+          label: labelById[evaluation.reviewerAccessId] ?? "Reviewer",
+          value: evaluation.value,
+          notes: evaluation.notes,
+          subjectRevisionRef: evaluation.submissionRevisionId,
+          currentRevisionRef: submission.semantic.revision.currentRevisionRef,
         }))
       ),
+      compatProgramStatus: submission.compatibility.storedProgramStatus,
+      compatDeckStatus: submission.compatibility.storedDeckStatus ?? "",
+      compatAbstractReviewStatus: submission.abstractReviewStatus,
+      compatAbstractVersion: submission.compatibility.storedAbstractVersion,
+      compatDeckShareable: submission.compatibility.storedDeckShareable,
     };
   });
 }
