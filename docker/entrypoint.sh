@@ -3,13 +3,8 @@ set -e
 
 export DATABASE_URL="${DATABASE_URL:-file:/data/prisma/dev.db}"
 
-echo "Applying database schema..."
-npx prisma db push --skip-generate
+printf '%s\n' "Running controlled migration/bootstrap path..."
+node scripts/migrations/deploy-bootstrap.mjs
 
-if [ "${SEED_ON_START:-false}" = "true" ]; then
-  echo "Seeding database..."
-  npx tsx prisma/seed.ts
-fi
-
-echo "Starting Next.js..."
+printf '%s\n' "Starting Next.js..."
 exec node server.js
