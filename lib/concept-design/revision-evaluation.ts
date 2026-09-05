@@ -1,5 +1,9 @@
 import type { MigrationProvenance, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import {
+  consumeRevisionException,
+  revealPeerAggregateForEvaluation,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
 
 export type RevisionSnapshotInput = {
   title: string;
@@ -194,6 +198,11 @@ export async function appendCanonicalRevision(input: {
         },
       },
     });
+    await consumeRevisionException(
+      tx,
+      input.submissionId,
+      submission.currentRevision.id
+    );
 
     return { revision, replayed: false };
   });
@@ -204,11 +213,17 @@ export async function recordCanonicalEvaluation(input: {
   reviewerAccessId: string;
   value: number;
   notes?: string | null;
+  revealPeerAggregate?: boolean;
 }) {
   return prisma.$transaction(async (tx) => {
     const submission = await tx.submission.findUnique({
       where: { id: input.submissionId },
-      include: { currentRevision: true },
+      include: {
+        currentRevision: true,
+        conference: {
+          select: { id: true, blindReviewEnabled: true },
+        },
+      },
     });
     if (!submission?.currentRevisionId || !submission.currentRevision) {
       throw new CanonicalRevisionUnavailableError();
@@ -238,10 +253,30 @@ export async function recordCanonicalEvaluation(input: {
       },
     });
 
+    let disclosureMode: "not-requested" | "ordinary-visible" | "legacy-unknown" | "revealed" =
+      "not-requested";
+    if (input.revealPeerAggregate) {
+      const reviewer = await tx.reviewerAccess.findUnique({
+        where: { id: input.reviewerAccessId },
+        select: { id: true, conferenceId: true, createdAt: true },
+      });
+      if (!reviewer || reviewer.conferenceId !== submission.conferenceId) {
+        throw new Error("Evaluation reviewer is outside the submission context");
+      }
+      const disclosure = await revealPeerAggregateForEvaluation(tx, {
+        conference: submission.conference,
+        reviewer,
+        submissionId: submission.id,
+        revision: submission.currentRevision,
+      });
+      disclosureMode = disclosure.mode;
+    }
+
     return {
       evaluation,
       revisionId: submission.currentRevisionId,
       revisionVersion: submission.currentRevision.version,
+      disclosureMode,
     };
   });
 }
