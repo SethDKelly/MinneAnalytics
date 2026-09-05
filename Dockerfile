@@ -1,17 +1,17 @@
 FROM node:24-alpine AS deps
 WORKDIR /app
-ENV DATABASE_URL=file:./prisma/dev.db
+ENV DATABASE_URL=file:./build.db
 COPY package.json package-lock.json* ./
 COPY prisma/schema.prisma ./prisma/schema.prisma
 RUN npm ci
 
 FROM node:24-alpine AS builder
 WORKDIR /app
-ENV DATABASE_URL=file:./prisma/dev.db
+ENV DATABASE_URL=file:./build.db
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npx prisma migrate deploy && npm run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app
