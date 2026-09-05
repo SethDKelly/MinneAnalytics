@@ -7,7 +7,6 @@ import {
 } from "@/lib/concept-design/lifecycle-disclosure-policy";
 import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
 import { prisma } from "@/lib/db";
-import { emailPresenterFeedback } from "@/lib/email-stub";
 import { canScore, getReviewerByToken } from "@/lib/reviewer";
 import { presenterFeedbackSchema } from "@/lib/validation";
 
@@ -80,55 +79,28 @@ export async function POST(request: Request) {
   }
 
   const abstractVersion = isAbstract ? submission.abstractVersion : null;
-  const submissionRevisionId =
-    exactWrites && isAbstract ? submission.currentRevisionId : null;
+  const submissionRevisionId = exactWrites && isAbstract ? submission.currentRevisionId : null;
 
-  const feedback = await prisma.$transaction(async (tx) => {
-    const row = await tx.presenterFeedback.create({
-      data: {
-        submissionId: submission.id,
-        reviewerAccessId: reviewer.id,
-        kind: parsed.data.kind,
-        body: parsed.data.body.trim(),
-        abstractVersion,
-        submissionRevisionId,
-      },
-    });
-
-    if (
-      submission.abstractReviewStatus !== "REVISED" &&
-      submission.abstractReviewStatus !== "ACKNOWLEDGED"
-    ) {
-      await tx.submission.update({
-        where: { id: submission.id },
-        data: { abstractReviewStatus: "FEEDBACK_PENDING" },
-      });
-    }
-
-    return row;
+  // Feedback is intentionally record-only. It does not grant edit authority,
+  // mutate workflow/status projections, or synchronously send a notification.
+  // A notification, when required, must be initiated as an independent Dispatch.
+  const feedback = await prisma.presenterFeedback.create({
+    data: {
+      submissionId: submission.id,
+      reviewerAccessId: reviewer.id,
+      kind: parsed.data.kind,
+      body: parsed.data.body.trim(),
+      abstractVersion,
+      submissionRevisionId,
+    },
   });
-
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
-  emailPresenterFeedback({
-    email: submission.email,
-    presenterName: submission.firstName,
-    title: submission.title,
-    presenterPortalUrl: `${base}/presenter/ (use your private link from submission confirmation)`,
-    kind: parsed.data.kind,
-  });
-
-  const nextStatus =
-    submission.abstractReviewStatus === "REVISED" ||
-    submission.abstractReviewStatus === "ACKNOWLEDGED"
-      ? submission.abstractReviewStatus
-      : "FEEDBACK_PENDING";
 
   return NextResponse.json({
     ok: true,
     feedbackId: feedback.id,
     submissionRevisionId: feedback.submissionRevisionId,
-    abstractReviewStatus: nextStatus,
+    abstractReviewStatus: submission.abstractReviewStatus,
     revisionExceptionGranted: false,
+    notificationDispatchCreated: false,
   });
 }
