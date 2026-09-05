@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
 import { assertConferenceAcceptsMutations } from "@/lib/conference-active";
+import {
+  hasApplicationCapability,
+  reviewerActorRef,
+} from "@/lib/concept-design/lifecycle-disclosure-policy";
+import { isImplementationGateEnabled } from "@/lib/concept-design/implementation-gates";
+import {
+  PublicationPolicyError,
+  recordShareEligibilityChange,
+  usesExactPublicationAuthorization,
+} from "@/lib/concept-design/publication-public-access";
 import { prisma } from "@/lib/db";
 import { canSetDeckShareable, getReviewerByToken } from "@/lib/reviewer";
 
@@ -10,7 +20,45 @@ export async function PATCH(request: Request) {
   const shareable = Boolean(body.shareable);
 
   const reviewer = await getReviewerByToken(token);
-  if (!reviewer || !canSetDeckShareable(reviewer.role)) {
+  if (!reviewer) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const canonicalWrites =
+    isImplementationGateEnabled("publicationWrites") ||
+    (await usesExactPublicationAuthorization(reviewer.conferenceId));
+
+  if (canonicalWrites) {
+    if (!hasApplicationCapability(reviewer.role, "SET_PUBLIC_SHARING_POLICY")) {
+      return NextResponse.json({ error: "Public-sharing capability required" }, { status: 403 });
+    }
+    try {
+      const result = await recordShareEligibilityChange({
+        conferenceId: reviewer.conferenceId,
+        submissionId,
+        eligible: shareable,
+        actorRef: reviewerActorRef(reviewer.id),
+      });
+      return NextResponse.json({
+        ok: true,
+        shareEligibilityChangeId: result.change?.id ?? null,
+        deckShareable: shareable,
+        replayed: result.replayed,
+        cleanupPending: result.cleanupPending,
+      });
+    } catch (error) {
+      if (error instanceof PublicationPolicyError) {
+        const status = error.code.endsWith("NOT_FOUND") ? 404 : 409;
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status }
+        );
+      }
+      throw error;
+    }
+  }
+
+  if (!canSetDeckShareable(reviewer.role)) {
     return NextResponse.json({ error: "Board access required" }, { status: 403 });
   }
 
